@@ -1,13 +1,16 @@
-import React, { useEffect, useState } from 'react'
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
-import './App.css'
-import Header from './components/Header/Header'
-import Footer from './components/Footer/Footer'
-import SignUp from './pages/SignUp/SignUp'
-import SignIn from './pages/SignIn/SignIn'
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import './App.css';
+import Header from './components/Header/Header';
+import Footer from './components/Footer/Footer';
+import SignUp from './pages/SignUp/SignUp';
+import SignIn from './pages/SignIn/SignIn';
+import RequestPasswordReset from './pages/RequestPasswordReset/RequestPasswordReset'; // Import RequestPasswordReset
+import VerifyResetToken from './pages/VerifyResetToken/VerifyResetToken'; // Import VerifyResetToken
+import ResetPassword from './pages/ResetPassword/ResetPassword'; // Import ResetPassword
 import ActivityManagement from './pages/ActivityManagement/ActivityManagement';
 import Destinations from './pages/Destinations/Destinations';
-import { AuthProvider, useAuth } from './context/AuthContext'
+import { AuthProvider, useAuth } from './context/AuthContext';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -32,15 +35,6 @@ const AdminRoute = ({ children }) => {
 };
 
 function App() {
-  const [backendMessage, setBackendMessage] = useState('')
-
-  useEffect(() => {
-    fetch('/api/test')
-      .then(response => response.json())
-      .then(data => setBackendMessage(data.message))
-      .catch(error => console.error('Error:', error))
-  }, [])
-
   return (
     <AuthProvider>
       <Router>
@@ -56,6 +50,9 @@ function App() {
             <Route path="/destinations" element={<Destinations />} />
             <Route path="/signup" element={<SignUp />} />
             <Route path="/signin" element={<SignIn />} />
+            <Route path="/request-password-reset" element={<RequestPasswordReset />} /> {/* Add this line */}
+            <Route path="/verify-reset-token" element={<VerifyResetToken />} /> {/* Add this line */}
+            <Route path="/reset-password" element={<ResetPassword />} /> {/* Ensure this line is correct */}
             <Route path="/activity-management" element={
               <AdminRoute>
                 <ActivityManagement />
@@ -66,7 +63,7 @@ function App() {
         </div>
       </Router>
     </AuthProvider>
-  )
+  );
 }
 
-export default App
+export default App;

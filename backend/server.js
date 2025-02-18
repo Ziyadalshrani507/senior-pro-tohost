@@ -6,6 +6,7 @@ require('dotenv').config();
 
 const authRoutes = require('./routes/authRoutes');
 const destinationRoutes = require('./routes/destinationRoutes');
+const passwordResetRoutes = require('./routes/passwordResetRoutes'); // Import passwordResetRoutes
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -28,6 +29,7 @@ app.use(express.static(path.join(__dirname, '../frontend/dist')));
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/destinations', destinationRoutes);
+app.use('/api/password-reset', passwordResetRoutes); // Use passwordResetRoutes
 
 // Error handling middleware
 app.use((err, req, res, next) => {

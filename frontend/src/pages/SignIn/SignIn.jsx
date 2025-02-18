@@ -88,7 +88,7 @@ const SignIn = () => {
         </div>
 
         <div className="forgot-password">
-          <Link to="/forgot-password">Forgot password?</Link>
+          <Link to="/request-password-reset">Forgot password?</Link> {/* Ensure this line is correct */}
         </div>
 
         <button type="submit" className="signin-button">
