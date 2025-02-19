@@ -8,17 +8,17 @@ const userSchema = new mongoose.Schema(
     // First name: required, trimmed, and with length constraints.
     firstName: {
       type: String,
-      required: [true, 'First name is required'],
+      required: true,
       trim: true,
-      minlength: [1, 'First name must have at least 1 character'],
+      minlength: [3, 'First name must have at least 3 characters'],
       maxlength: [50, 'First name must not exceed 50 characters']
     },
     // Last name: required, trimmed, and with length constraints.
     lastName: {
       type: String,
-      required: [true, 'Last name is required'],
+      required: true,
       trim: true,
-      minlength: [1, 'Last name must have at least 1 character'],
+      minlength: [3, 'Last name must have at least 3 characters'],
       maxlength: [50, 'Last name must not exceed 50 characters']
     },
     // Email: required, unique, lowercased, trimmed, and must match email format.
@@ -28,38 +28,41 @@ const userSchema = new mongoose.Schema(
       unique: true,
       lowercase: true,
       trim: true,
-      match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Please enter a valid email']
+      match: [
+        /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
+        'Please enter a valid email address'
+      ]
     },
-    // Password: required and with a minimum length constraint.
+    // Password: required, with minimum length.
     password: {
       type: String,
       required: [true, 'Password is required'],
-      minlength: [6, 'Password must have at least 6 characters']
+      minlength: [6, 'Password must be at least 6 characters long']
     },
-    // Gender: required and with allowed values.
+    // Gender: optional.
     gender: {
       type: String,
-      required: [true, 'Gender is required'],
-      enum: ['male', 'female']
+      enum: ['male', 'female', 'other', ''],
+      default: ''
     },
     // Preferences: defaults to an empty array.
     preferences: {
       type: [String],
       default: []
     },
-    // Role: allowed values are 'user' and 'admin' with a default of 'user'.
+    // Role: defaults to 'user'.
     role: {
       type: String,
-      enum: {
-        values: ['user', 'admin'],
-        message: 'Role must be either "user" or "admin"'
-      },
+      enum: ['user', 'admin'],
       default: 'user'
     },
-    // Profile picture: stored as a string; defaults to null if not provided.
+    // Profile picture stored as Base64
     profilePicture: {
-      type: String,
-      default: null
+      data: String, // Base64 encoded image data
+      contentType: String // MIME type of the image
+    },
+    phone: {
+      type: String
     }
   },
   {
@@ -86,7 +89,11 @@ userSchema.pre('save', async function (next) {
 
 // Method to compare passwords
 userSchema.methods.comparePassword = async function(candidatePassword) {
-  return await bcrypt.compare(candidatePassword, this.password);
+  try {
+    return await bcrypt.compare(candidatePassword, this.password);
+  } catch (error) {
+    throw error;
+  }
 };
 
 module.exports = mongoose.model('User', userSchema);

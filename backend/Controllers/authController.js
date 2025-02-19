@@ -39,7 +39,8 @@ exports.signup = async (req, res) => {
         lastName: user.lastName,
         email: user.email,
         gender: user.gender,
-        role: user.role
+        role: user.role,
+        profilePicture: user.profilePicture
       }
     });
   } catch (error) {
@@ -76,7 +77,8 @@ exports.signin = async (req, res) => {
         lastName: user.lastName,
         email: user.email,
         gender: user.gender,
-        role: user.role
+        role: user.role,
+        profilePicture: user.profilePicture
       }
     });
   } catch (error) {

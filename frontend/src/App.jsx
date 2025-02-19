@@ -1,5 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import './App.css';
 import Header from './components/Header/Header';
 import Footer from './components/Footer/Footer';
@@ -10,6 +12,7 @@ import VerifyResetToken from './pages/VerifyResetToken/VerifyResetToken'; // Imp
 import ResetPassword from './pages/ResetPassword/ResetPassword'; // Import ResetPassword
 import ActivityManagement from './pages/ActivityManagement/ActivityManagement';
 import Destinations from './pages/Destinations/Destinations';
+import Profile from './pages/Profile/Profile'; // Import Profile
 import { AuthProvider, useAuth } from './context/AuthContext';
 
 // Protected Route Component
@@ -58,8 +61,14 @@ function App() {
                 <ActivityManagement />
               </AdminRoute>
             } />
+            <Route path="/profile" element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            } />
           </Routes>
           <Footer />
+          <ToastContainer />
         </div>
       </Router>
     </AuthProvider>

@@ -7,6 +7,7 @@ A modern web application for managing and discovering tourism activities and des
 - **Activity Discovery**: Browse and search through various tourism activities
 - **Destination Management**: Add, edit, and manage tourism destinations by admin only 
 - **Advanced Filtering**: Filter activities by price, location, and categories
+- **User Profiles**: Manage your profile with customizable information and profile pictures
 - **Responsive Design**: Works seamlessly on desktop and mobile devices
 - **User-friendly Interface**: Modern UI with intuitive navigation
 
@@ -23,6 +24,7 @@ A modern web application for managing and discovering tourism activities and des
 - Express.js
 - MongoDB
 - JWT for authentication
+- Multer for file handling
 
 ## 📋 Prerequisites
 
@@ -60,6 +62,7 @@ Before running this project, make sure you have:
    MONGODB_URI=your_mongodb_connection_string
    JWT_SECRET=your_jwt_secret
    PORT=5000
+   FRONTEND_URL=http://localhost:5173
    ```
 
    Create a `.env` file in the frontend directory with:
@@ -99,6 +102,12 @@ The application will be available at `http://localhost:5173`
    - Register a new account
    - Log in to access additional features
    - Manage your profile
+
+4. **Profile Management**
+   - Update personal information (first name, last name, email, phone)
+   - Upload and manage profile pictures
+   - Secure password handling
+   - Email verification
 
 ## 🤝 Contributing
 
