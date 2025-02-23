@@ -42,7 +42,7 @@ const userSchema = new mongoose.Schema(
     // Gender: optional.
     gender: {
       type: String,
-      enum: ['male', 'female', 'other', ''],
+      enum: ['male', 'female'],
       default: ''
     },
     // Preferences: defaults to an empty array.

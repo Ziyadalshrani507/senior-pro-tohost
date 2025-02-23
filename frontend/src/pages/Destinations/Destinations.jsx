@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './Destinations.css';
 
 const Destinations = () => {
+  const navigate = useNavigate();
   const [destinations, setDestinations] = useState([]);
   const [filteredDestinations, setFilteredDestinations] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -134,8 +136,8 @@ const Destinations = () => {
     });
   };
 
-  const handlePriceRangeChange = (field, value) => {
-    handleFilterChange('priceRange', { [field]: value });
+  const handleDestinationClick = (destinationId) => {
+    navigate(`/destinations/${destinationId}`);
   };
 
   return (
@@ -169,35 +171,14 @@ const Destinations = () => {
                         type="number"
                         placeholder="Min"
                         value={filters.priceRange.min}
-                        onChange={(e) => setFilters({
-                          ...filters,
-                          priceRange: { ...filters.priceRange, min: e.target.value }
-                        })}
+                        onChange={(e) => handleFilterChange('priceRange', { min: e.target.value })}
                       />
                       <input
                         type="number"
                         placeholder="Max"
                         value={filters.priceRange.max}
-                        onChange={(e) => setFilters({
-                          ...filters,
-                          priceRange: { ...filters.priceRange, max: e.target.value }
-                        })}
+                        onChange={(e) => handleFilterChange('priceRange', { max: e.target.value })}
                       />
-                    </div>
-                  </div>
-                  <div className="filter-group">
-                    <h3>Cities</h3>
-                    <div className="checkbox-group">
-                      {schemaOptions.cities.map(city => (
-                        <label key={city} className="checkbox-label">
-                          <input
-                            type="checkbox"
-                            checked={filters.cities.includes(city)}
-                            onChange={() => handleFilterChange('cities', city)}
-                          />
-                          {city}
-                        </label>
-                      ))}
                     </div>
                   </div>
                   <div className="filter-group">
@@ -215,9 +196,26 @@ const Destinations = () => {
                       ))}
                     </div>
                   </div>
+                </div>
+                <div className="filter-row">
+                  <div className="filter-group">
+                    <h3>Cities</h3>
+                    <div className="checkbox-group scrollable">
+                      {schemaOptions.cities.map(city => (
+                        <label key={city} className="checkbox-label">
+                          <input
+                            type="checkbox"
+                            checked={filters.cities.includes(city)}
+                            onChange={() => handleFilterChange('cities', city)}
+                          />
+                          {city}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
                   <div className="filter-group">
                     <h3>Categories</h3>
-                    <div className="checkbox-group">
+                    <div className="checkbox-group scrollable">
                       {schemaOptions.categories.map(category => (
                         <label key={category} className="checkbox-label">
                           <input
@@ -238,53 +236,66 @@ const Destinations = () => {
       </div>
 
       <div className="destinations-content">
-        {Object.entries(groupedDestinations).map(([city, cityDestinations]) => (
-          <div key={city} className="city-section">
-            <h2 className="city-title">{city}</h2>
-            <div className="destinations-grid">
-              {cityDestinations.map(destination => (
-                <div key={destination._id} className="destination-card">
-                  <div className="destination-image">
-                    {destination.pictureUrls && destination.pictureUrls[0] ? (
-                      <img
-                        src={destination.pictureUrls[0]}
-                        alt={destination.name}
-                        onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.src = '/placeholder-image.jpg';
-                        }}
-                      />
-                    ) : (
-                      <div className="no-image">No Image Available</div>
-                    )}
-                  </div>
-                  <div className="destination-content">
-                    <h3>{destination.name}</h3>
-                    <p className="description">{destination.description}</p>
-                    <div className="destination-details">
-                      <span className="cost">
-                        {destination.cost === 0 ? 'Free' : `${destination.cost} SAR`}
-                      </span>
-                      {destination.rating > 0 && (
-                        <span className="rating">
-                          <i className="bi bi-star-fill"></i>
-                          {destination.rating.toFixed(1)}
-                        </span>
+        {Object.entries(groupedDestinations).length === 0 ? (
+          <div className="no-results">
+            No destinations found matching your criteria
+          </div>
+        ) : (
+          Object.entries(groupedDestinations).map(([city, cityDestinations]) => (
+            <div key={city} className="city-section">
+              <h2 className="city-title">{city}</h2>
+              <div className="destinations-grid">
+                {cityDestinations.map((destination) => (
+                  <div
+                    key={destination._id}
+                    className="destination-card"
+                    onClick={() => handleDestinationClick(destination._id)}
+                  >
+                    <div className="destination-image">
+                      {destination.pictureUrls && destination.pictureUrls.length > 0 ? (
+                        <img
+                          src={destination.pictureUrls[0]}
+                          alt={destination.name}
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = '/placeholder-image.jpg';
+                          }}
+                        />
+                      ) : (
+                        <div className="placeholder-image">
+                          <i className="bi bi-image"></i>
+                          <span>No image available</span>
+                        </div>
                       )}
                     </div>
-                    <div className="destination-categories">
-                      {destination.categories?.map(category => (
-                        <span key={category} className="category-tag">
-                          {category}
+                    <div className="destination-info">
+                      <h3>{destination.name}</h3>
+                      <p className="type">{destination.type}</p>
+                      <p className="description">{destination.description}</p>
+                      <div className="destination-footer">
+                        <span className="cost">
+                          {typeof destination.cost === 'number' 
+                            ? `${destination.cost} SAR`
+                            : 'Price not available'}
                         </span>
-                      ))}
+                        {destination.categories && (
+                          <div className="categories">
+                            {destination.categories.slice(0, 2).map((category, index) => (
+                              <span key={index} className="category">{category}</span>
+                            ))}
+                            {destination.categories.length > 2 && (
+                              <span className="category">+{destination.categories.length - 2}</span>
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
     </div>
   );

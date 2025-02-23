@@ -59,12 +59,24 @@ const Header = () => {
                 <i className="bi bi-geo-alt"></i> Destinations
               </Link>
             </li>
+            <li className="nav-item">
+              <Link className={`nav-link ${isActive('/restaurants')}`} to="/restaurants">
+                <i className="bi bi-shop"></i> Restaurants
+              </Link>
+            </li>
             {user && user.role === 'admin' && (
-              <li className="nav-item">
-                <Link to="/activity-management" className={`nav-link ${isActive('/activity-management')}`}>
-                  <i className="bi bi-calendar-event"></i> Activity Management
-                </Link>
-              </li>
+              <>
+                <li className="nav-item">
+                  <Link to="/activity-management" className={`nav-link ${isActive('/activity-management')}`}>
+                    <i className="bi bi-calendar-event"></i> Activity Management
+                  </Link>
+                </li>
+                <li className="nav-item">
+                  <Link to="/restaurant-management" className={`nav-link ${isActive('/restaurant-management')}`}>
+                    <i className="bi bi-shop-window"></i> Restaurant Management
+                  </Link>
+                </li>
+              </>
             )}
           </ul>
           <div className="auth-buttons">

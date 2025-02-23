@@ -1,0 +1,123 @@
+.restaurant-details-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.back-button {
+  background: #3498db;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1em;
+  margin-bottom: 20px;
+  transition: background-color 0.2s;
+}
+
+.back-button:hover {
+  background: #2980b9;
+}
+
+.restaurant-details {
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 30px;
+}
+
+.restaurant-details h1 {
+  color: #2c3e50;
+  margin-bottom: 30px;
+  font-size: 2em;
+}
+
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 30px;
+}
+
+.detail-section {
+  margin-bottom: 30px;
+}
+
+.detail-section h2 {
+  color: #34495e;
+  font-size: 1.5em;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #ecf0f1;
+  padding-bottom: 10px;
+}
+
+.detail-item {
+  margin: 15px 0;
+  display: flex;
+  align-items: baseline;
+}
+
+.label {
+  color: #7f8c8d;
+  min-width: 100px;
+  margin-right: 15px;
+  font-weight: 500;
+}
+
+.value {
+  color: #2c3e50;
+  flex: 1;
+}
+
+.value a {
+  color: #3498db;
+  text-decoration: none;
+}
+
+.value a:hover {
+  text-decoration: underline;
+}
+
+.stars {
+  color: #f1c40f;
+  margin-right: 5px;
+}
+
+.rating-number {
+  color: #7f8c8d;
+  font-size: 0.9em;
+}
+
+.loading, .error {
+  text-align: center;
+  padding: 40px;
+  font-size: 1.2em;
+  color: #7f8c8d;
+}
+
+.error {
+  color: #e74c3c;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .restaurant-details-container {
+    padding: 15px;
+  }
+
+  .restaurant-details {
+    padding: 20px;
+  }
+
+  .details-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-item {
+    flex-direction: column;
+  }
+
+  .label {
+    margin-bottom: 5px;
+  }
+}

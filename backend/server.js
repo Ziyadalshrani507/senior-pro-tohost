@@ -6,10 +6,11 @@ const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
 
-const authRoutes = require('./Routes/authRoutes');
-const destinationRoutes = require('./Routes/destinationRoutes');
-const passwordResetRoutes = require('./Routes/passwordResetRoutes');
-const profileRoutes = require('./Routes/profileRoutes');
+const authRoutes = require('./routes/authRoutes');
+const destinationRoutes = require('./routes/destinationRoutes');
+const passwordResetRoutes = require('./routes/passwordResetRoutes');
+const profileRoutes = require('./routes/profileRoutes');
+const restaurantRoutes = require('./routes/restaurantRoutes');
 const User = require('./Models/User');
 const { protect } = require('./middleware/authMiddleware');
 
@@ -59,6 +60,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/destinations', destinationRoutes);
 app.use('/api/password-reset', passwordResetRoutes);
 app.use('/api/user/profile', profileRoutes);
+app.use('/api/restaurants', restaurantRoutes);
 
 // Serve static files from the React app
 app.use(express.static(path.join(__dirname, '../frontend/dist')));

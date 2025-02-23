@@ -17,13 +17,13 @@ exports.validateSignup = (req, res, next) => {
   }
 
   // Password validation
-  if (password.length < 6) {
-    return res.status(400).json({ message: 'Password must be at least 6 characters long' });
+  if (password.length < 8) {
+    return res.status(400).json({ message: 'Password must be at least 8 characters long' });
   }
 
   // Gender validation
   if (!['male', 'female'].includes(gender)) {
-    return res.status(400).json({ message: 'Gender must be either male or female' });
+    return res.status(400).json({ message: 'Gender must be either male or female there is no third one' });
   }
 
   next();

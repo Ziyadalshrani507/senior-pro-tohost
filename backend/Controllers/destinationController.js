@@ -18,7 +18,7 @@ exports.getSchemaOptions = async (req, res) => {
 // Get all activities
 exports.getActivities = async (req, res) => {
   try {
-    const activities = await Destination.find({ isActivity: true });
+    const activities = await Destination.find();
     res.json(activities);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching activities', error: error.message });

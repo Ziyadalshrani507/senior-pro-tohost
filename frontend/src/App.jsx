@@ -7,12 +7,16 @@ import Header from './components/Header/Header';
 import Footer from './components/Footer/Footer';
 import SignUp from './pages/SignUp/SignUp';
 import SignIn from './pages/SignIn/SignIn';
-import RequestPasswordReset from './pages/RequestPasswordReset/RequestPasswordReset'; // Import RequestPasswordReset
-import VerifyResetToken from './pages/VerifyResetToken/VerifyResetToken'; // Import VerifyResetToken
-import ResetPassword from './pages/ResetPassword/ResetPassword'; // Import ResetPassword
+import RequestPasswordReset from './pages/RequestPasswordReset/RequestPasswordReset';
+import VerifyResetToken from './pages/VerifyResetToken/VerifyResetToken';
+import ResetPassword from './pages/ResetPassword/ResetPassword';
 import ActivityManagement from './pages/ActivityManagement/ActivityManagement';
 import Destinations from './pages/Destinations/Destinations';
-import Profile from './pages/Profile/Profile'; // Import Profile
+import DestinationDetails from './pages/DestinationDetails/DestinationDetails';
+import Profile from './pages/Profile/Profile';
+import Restaurants from './pages/Restaurants/Restaurants';
+import RestaurantDetails from './pages/RestaurantDetails/RestaurantDetails';
+import RestaurantManagement from './pages/RestaurantManagement/RestaurantManagement';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
 // Protected Route Component
@@ -51,11 +55,22 @@ function App() {
               </main>
             } />
             <Route path="/destinations" element={<Destinations />} />
+            <Route path="/destinations/:id" element={<DestinationDetails />} />
             <Route path="/signup" element={<SignUp />} />
             <Route path="/signin" element={<SignIn />} />
-            <Route path="/request-password-reset" element={<RequestPasswordReset />} /> {/* Add this line */}
-            <Route path="/verify-reset-token" element={<VerifyResetToken />} /> {/* Add this line */}
-            <Route path="/reset-password" element={<ResetPassword />} /> {/* Ensure this line is correct */}
+            <Route path="/request-password-reset" element={<RequestPasswordReset />} />
+            <Route path="/verify-reset-token" element={<VerifyResetToken />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/restaurants" element={<Restaurants />} />
+            <Route path="/restaurants/:id" element={<RestaurantDetails />} />
+            <Route
+              path="/restaurant-management"
+              element={
+                <AdminRoute>
+                  <RestaurantManagement />
+                </AdminRoute>
+              }
+            />
             <Route path="/activity-management" element={
               <AdminRoute>
                 <ActivityManagement />
@@ -67,8 +82,8 @@ function App() {
               </ProtectedRoute>
             } />
           </Routes>
-          <Footer />
           <ToastContainer />
+          <Footer />
         </div>
       </Router>
     </AuthProvider>

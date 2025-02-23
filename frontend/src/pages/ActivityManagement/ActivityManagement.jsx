@@ -116,6 +116,27 @@ const ActivityManagement = () => {
     }
   };
 
+  const handleImageUrlChange = (index, value) => {
+    setFormData(prev => ({
+      ...prev,
+      pictureUrls: prev.pictureUrls.map((url, i) => i === index ? value : url)
+    }));
+  };
+
+  const handleAddImageUrl = () => {
+    setFormData(prev => ({
+      ...prev,
+      pictureUrls: [...prev.pictureUrls, '']
+    }));
+  };
+
+  const handleRemoveImageUrl = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      pictureUrls: prev.pictureUrls.filter((_, i) => i !== index)
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -332,16 +353,35 @@ const ActivityManagement = () => {
           </div>
 
           <div className="form-group">
-            <label htmlFor="pictureUrls">Picture URLs</label>
-            <input
-              type="text"
-              id="pictureUrls"
-              name="pictureUrls"
-              value={formData.pictureUrls.join(', ')}
-              onChange={handleChange}
-              className="form-control"
-              placeholder="Enter URLs separated by commas"
-            />
+            <label>Image URLs:</label>
+            <div className="image-urls-container">
+              {formData.pictureUrls.map((url, index) => (
+                <div key={index} className="image-url-input">
+                  <input
+                    type="url"
+                    value={url}
+                    onChange={(e) => handleImageUrlChange(index, e.target.value)}
+                    placeholder="Enter image URL"
+                  />
+                  {formData.pictureUrls.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveImageUrl(index)}
+                      className="remove-url-btn"
+                    >
+                      <i className="bi bi-trash"></i>
+                    </button>
+                  )}
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={handleAddImageUrl}
+                className="add-url-btn"
+              >
+                <i className="bi bi-plus"></i> Add Another Image URL
+              </button>
+            </div>
           </div>
 
           <div className="form-buttons">
