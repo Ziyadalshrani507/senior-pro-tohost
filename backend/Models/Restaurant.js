@@ -68,7 +68,6 @@ const restaurantSchema = new mongoose.Schema({
       type: String,
       validate: {
         validator: function(v) {
-          // Allow empty email since it's optional
           return !v || /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(v.trim());
         },
         message: props => `${props.value} is not a valid email!`
@@ -78,7 +77,6 @@ const restaurantSchema = new mongoose.Schema({
       type: String,
       validate: {
         validator: function(v) {
-          // Allow empty website since it's optional
           return !v || /^https?:\/\/([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/.test(v.trim());
         },
         message: props => `${props.value} is not a valid URL!`
@@ -88,15 +86,19 @@ const restaurantSchema = new mongoose.Schema({
   categories: [{
     type: String
   }],
-  pictureUrls: [{
-    type: String,
+  pictureUrls: {
+    type: [String],
     validate: {
-      validator: function(v) {
-        return !v || /^https?:\/\/([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/.test(v.trim());
+      validator: function(urls) {
+        if (!urls) return true;
+        return urls.every(url => {
+          return !url || /^https?:\/\/([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/.test(url.trim());
+        });
       },
-      message: props => `${props.value} is not a valid URL!`
-    }
-  }],
+      message: props => `One or more image URLs are invalid!`
+    },
+    default: []
+  },
   rating: {
     type: Number,
     default: 0,

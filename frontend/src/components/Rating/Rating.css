@@ -1,0 +1,121 @@
+.rating-container {
+  padding: 20px;
+  border-radius: 8px;
+  background-color: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.rating-summary {
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.average-rating {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.rating-number {
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.rating-count {
+  color: #666;
+}
+
+.stars {
+  display: flex;
+  gap: 4px;
+}
+
+.star-filled {
+  color: #ffd700;
+}
+
+.star-empty {
+  color: #ddd;
+}
+
+.stars-input {
+  display: flex;
+  gap: 4px;
+  margin: 10px 0;
+}
+
+.stars-input svg {
+  cursor: pointer;
+  font-size: 24px;
+}
+
+.user-rating {
+  margin: 20px 0;
+  padding: 20px;
+  border: 1px solid #eee;
+  border-radius: 8px;
+}
+
+.user-rating textarea {
+  width: 100%;
+  margin: 10px 0;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  resize: vertical;
+  min-height: 100px;
+}
+
+.rating-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.rating-actions button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.rating-actions button:first-child {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.delete-rating {
+  background-color: #f44336;
+  color: white;
+}
+
+.all-ratings {
+  margin-top: 20px;
+}
+
+.rating-item {
+  padding: 15px;
+  border-bottom: 1px solid #eee;
+}
+
+.rating-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.user-name {
+  font-weight: 500;
+}
+
+.rating-comment {
+  margin: 8px 0;
+  color: #333;
+}
+
+.rating-date {
+  font-size: 0.9em;
+  color: #666;
+}

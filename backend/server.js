@@ -11,6 +11,7 @@ const destinationRoutes = require('./routes/destinationRoutes');
 const passwordResetRoutes = require('./routes/passwordResetRoutes');
 const profileRoutes = require('./routes/profileRoutes');
 const restaurantRoutes = require('./routes/restaurantRoutes');
+const ratingRoutes = require('./routes/ratingRoutes');
 const User = require('./Models/User');
 const { protect } = require('./middleware/authMiddleware');
 
@@ -61,6 +62,7 @@ app.use('/api/destinations', destinationRoutes);
 app.use('/api/password-reset', passwordResetRoutes);
 app.use('/api/user/profile', profileRoutes);
 app.use('/api/restaurants', restaurantRoutes);
+app.use('/api/ratings', ratingRoutes);
 
 // Serve static files from the React app
 app.use(express.static(path.join(__dirname, '../frontend/dist')));

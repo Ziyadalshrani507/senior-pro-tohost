@@ -9,31 +9,36 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [token, setToken] = useState(localStorage.getItem('token')); 
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    const savedToken = localStorage.getItem('token');
     const savedUser = localStorage.getItem('user');
     
-    if (token && savedUser) {
+    if (savedToken && savedUser) {
       try {
+        setToken(savedToken);
         setUser(JSON.parse(savedUser));
       } catch (error) {
         console.error('Error parsing saved user:', error);
         localStorage.removeItem('user');
         localStorage.removeItem('token');
+        setToken(null);
       }
     }
     setLoading(false);
   }, []);
 
-  const login = (userData, token) => {
+  const login = (userData, newToken) => {
     setUser(userData);
-    localStorage.setItem('token', token);
+    setToken(newToken);
+    localStorage.setItem('token', newToken);
     localStorage.setItem('user', JSON.stringify(userData));
   };
 
   const logout = () => {
     setUser(null);
+    setToken(null);
     localStorage.removeItem('token');
     localStorage.removeItem('user');
   };
@@ -45,6 +50,7 @@ export const AuthProvider = ({ children }) => {
 
   const value = {
     user,
+    token,
     login,
     logout,
     updateUser,

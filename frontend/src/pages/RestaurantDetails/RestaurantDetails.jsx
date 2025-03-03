@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { FaArrowLeft, FaMapMarkerAlt, FaUtensils } from 'react-icons/fa';
+import Rating from '../../components/Rating/Rating';
 import './RestaurantDetails.css';
 
 const RestaurantDetails = () => {
@@ -17,6 +19,7 @@ const RestaurantDetails = () => {
           throw new Error('Restaurant not found');
         }
         const data = await response.json();
+        console.log('Restaurant data:', data); // Debug log
         setRestaurant(data);
       } catch (error) {
         console.error('Error fetching restaurant:', error);
@@ -46,73 +49,60 @@ const RestaurantDetails = () => {
     );
   }
 
+  // Debug log for image URLs
+  console.log('Restaurant picture URLs:', restaurant.pictureUrls);
+
   return (
     <div className="restaurant-details-container">
       <button className="back-button" onClick={() => navigate('/restaurants')}>
-        ← Back to Restaurants
+        <FaArrowLeft /> Back to Restaurants
       </button>
       
       <div className="restaurant-details">
-        <h1>{restaurant.name}</h1>
-        
-        <div className="details-grid">
-          <div className="detail-section">
-            <h2>Basic Information</h2>
-            {restaurant.cuisine && (
-              <p className="detail-item">
-                <span className="label">Cuisine:</span>
-                <span className="value">{restaurant.cuisine}</span>
-              </p>
-            )}
-            <p className="detail-item">
-              <span className="label">Price Range:</span>
-              <span className="value">{restaurant.priceRange || 'Not specified'}</span>
-            </p>
-            {restaurant.rating !== null && (
-              <p className="detail-item">
-                <span className="label">Rating:</span>
-                <span className="value">
-                  <span className="stars">
-                    {'★'.repeat(Math.floor(restaurant.rating))}
-                    {'☆'.repeat(5 - Math.floor(restaurant.rating))}
-                  </span>
-                  <span className="rating-number">({restaurant.rating})</span>
-                </span>
-              </p>
-            )}
+        <div className="restaurant-header">
+          <h1>{restaurant.name}</h1>
+          <div className="restaurant-meta">
+            <span className="meta-item">
+              <FaMapMarkerAlt /> {restaurant.locationCity}
+            </span>
+            <span className="meta-item">
+              <FaUtensils /> {restaurant.cuisine}
+            </span>
           </div>
+        </div>
 
-          <div className="detail-section">
-            <h2>Location & Contact</h2>
-            <p className="detail-item">
-              <span className="label">City:</span>
-              <span className="value">{restaurant.locationCity}</span>
-            </p>
-            {restaurant.address && (
-              <p className="detail-item">
-                <span className="label">Address:</span>
-                <span className="value">{restaurant.address}</span>
-              </p>
-            )}
-            {restaurant.phone && (
-              <p className="detail-item">
-                <span className="label">Phone:</span>
-                <span className="value">
-                  <a href={`tel:${restaurant.phone}`}>{restaurant.phone}</a>
-                </span>
-              </p>
-            )}
-            {restaurant.website && (
-              <p className="detail-item">
-                <span className="label">Website:</span>
-                <span className="value">
-                  <a href={restaurant.website} target="_blank" rel="noopener noreferrer">
-                    Visit Website
-                  </a>
-                </span>
-              </p>
-            )}
+        <div className="image-gallery">
+          {Array.isArray(restaurant.pictureUrls) && restaurant.pictureUrls.length > 0 ? (
+            <div className="gallery-grid">
+              {restaurant.pictureUrls.map((url, index) => (
+                <div key={index} className="gallery-item">
+                  <img 
+                    src={url} 
+                    alt={`${restaurant.name} - ${index + 1}`} 
+                    loading="lazy"
+                    onError={(e) => {
+                      console.error('Image failed to load:', url);
+                      e.target.src = '/placeholder-image.jpg'; // You can add a placeholder image
+                      e.target.alt = 'Image not available';
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="no-images">No images available</p>
+          )}
+        </div>
+
+        <div className="restaurant-content">
+          <div className="description">
+            <h2>About</h2>
+            <p>{restaurant.description || 'No description available'}</p>
           </div>
+        </div>
+
+        <div className="rating-section">
+          <Rating itemId={restaurant._id} itemType="restaurant" />
         </div>
       </div>
     </div>
