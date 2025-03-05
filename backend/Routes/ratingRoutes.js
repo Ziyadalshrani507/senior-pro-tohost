@@ -1,109 +1,102 @@
 const express = require('express');
 const router = express.Router();
+const { protect, admin } = require('../middleware/authMiddleware');
+const { validateRating, validateRatingUpdate } = require('../middleware/ratingValidation');
 const Rating = require('../Models/Rating');
 const Destination = require('../Models/Destination');
 const { Restaurant } = require('../Models/Restaurant');
-const { protect } = require('../middleware/authMiddleware');
+const {
+  addRating,
+  updateRating,
+  deleteRating,
+  getItemRatings,
+  getUserRatings,
+  toggleLike
+} = require('../Controllers/ratingController');
 
-// Add a new rating
-router.post('/', protect, async (req, res) => {
+// Protected routes
+router.post('/', protect, validateRating, addRating);
+router.put('/:id', protect, validateRatingUpdate, updateRating);
+router.delete('/:id', protect, deleteRating);
+router.get('/user/ratings', protect, getUserRatings);
+router.post('/:id/like', protect, toggleLike);
+
+// Admin routes
+router.get('/moderation/queue', protect, admin, async (req, res) => {
   try {
-    const { itemId, itemType, rating, comment } = req.body;
-    const userId = req.user._id;
+    const { status = 'pending', page = 1, limit = 20 } = req.query;
+    
+    const ratings = await Rating.find({ status })
+      .populate('userId', 'name')
+      .populate({
+        path: 'itemId',
+        select: 'name title',
+        model: function(doc) {
+          return doc.itemType === 'destination' ? 'Destination' : 'Restaurant';
+        }
+      })
+      .sort('-createdAt')
+      .limit(limit * 1)
+      .skip((page - 1) * limit);
 
-    // Validate itemType
-    if (!['destination', 'restaurant'].includes(itemType)) {
-      return res.status(400).json({ message: 'Invalid item type' });
+    const count = await Rating.countDocuments({ status });
+
+    res.status(200).json({
+      ratings,
+      totalPages: Math.ceil(count / limit),
+      currentPage: page,
+      totalRatings: count
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+router.patch('/moderation/:id', protect, admin, async (req, res) => {
+  try {
+    const { status, moderationNotes } = req.body;
+    
+    if (!['pending', 'approved', 'flagged', 'rejected'].includes(status)) {
+      return res.status(400).json({ message: 'Invalid status' });
     }
 
-    // Validate rating
-    if (!rating || rating < 1 || rating > 5) {
-      return res.status(400).json({ message: 'Rating must be between 1 and 5' });
-    }
-
-    // Check if item exists
-    const Model = itemType === 'destination' ? Destination : Restaurant;
-    const item = await Model.findById(itemId);
-    if (!item) {
-      return res.status(404).json({ message: `${itemType} not found` });
-    }
-
-    // Create or update rating
-    const ratingDoc = await Rating.findOneAndUpdate(
-      { userId, itemId, itemType },
-      { rating, comment },
-      { upsert: true, new: true, runValidators: true }
+    const rating = await Rating.findByIdAndUpdate(
+      req.params.id,
+      { status, moderationNotes },
+      { new: true }
     );
 
-    // Calculate new average rating
-    const ratings = await Rating.find({ itemId, itemType });
-    const averageRating = ratings.reduce((acc, curr) => acc + curr.rating, 0) / ratings.length;
-
-    // Update item's rating
-    await Model.findByIdAndUpdate(itemId, { 
-      rating: averageRating,
-      ...(itemType === 'restaurant' && { reviews: ratings.length })
-    });
-
-    res.status(200).json(ratingDoc);
-  } catch (error) {
-    console.error('Error in rating:', error);
-    res.status(500).json({ message: error.message || 'Error processing rating' });
-  }
-});
-
-// Get ratings for an item
-router.get('/:itemType/:itemId', async (req, res) => {
-  try {
-    const { itemType, itemId } = req.params;
-
-    // Validate itemType
-    if (!['destination', 'restaurant'].includes(itemType)) {
-      return res.status(400).json({ message: 'Invalid item type' });
-    }
-
-    const ratings = await Rating.find({ itemId, itemType })
-      .populate('userId', 'name')
-      .sort('-createdAt');
-
-    res.status(200).json(ratings);
-  } catch (error) {
-    console.error('Error fetching ratings:', error);
-    res.status(500).json({ message: error.message || 'Error fetching ratings' });
-  }
-});
-
-// Delete a rating
-router.delete('/:id', protect, async (req, res) => {
-  try {
-    const rating = await Rating.findOne({ _id: req.params.id, userId: req.user._id });
-    
     if (!rating) {
-      return res.status(404).json({ message: 'Rating not found or unauthorized' });
+      return res.status(404).json({ message: 'Rating not found' });
     }
 
-    await rating.deleteOne();
+    // Recalculate average rating if status changes affect visibility
+    if (['approved', 'rejected'].includes(status)) {
+      const { itemId, itemType } = rating;
+      const Model = itemType === 'destination' ? Destination : Restaurant;
+      
+      const ratings = await Rating.find({ 
+        itemId, 
+        itemType,
+        status: { $in: ['approved', 'pending'] }
+      });
+      const averageRating = ratings.length > 0 
+        ? ratings.reduce((acc, curr) => acc + curr.rating, 0) / ratings.length 
+        : 0;
 
-    // Recalculate average rating
-    const { itemId, itemType } = rating;
-    const Model = itemType === 'destination' ? Destination : Restaurant;
-    
-    const ratings = await Rating.find({ itemId, itemType });
-    const averageRating = ratings.length > 0 
-      ? ratings.reduce((acc, curr) => acc + curr.rating, 0) / ratings.length
-      : 0;
+      await Model.findByIdAndUpdate(itemId, { 
+        rating: averageRating,
+        ...(itemType === 'restaurant' && { reviews: ratings.length })
+      });
+    }
 
-    // Update item's rating
-    await Model.findByIdAndUpdate(itemId, { 
-      rating: averageRating,
-      ...(itemType === 'restaurant' && { reviews: ratings.length })
-    });
-
-    res.status(200).json({ message: 'Rating deleted successfully' });
+    res.status(200).json(rating);
   } catch (error) {
-    console.error('Error deleting rating:', error);
-    res.status(500).json({ message: error.message || 'Error deleting rating' });
+    res.status(500).json({ message: error.message });
   }
 });
+
+// Public routes - must be last due to :itemType/:itemId pattern
+router.get('/:itemType/:itemId', getItemRatings);
 
 module.exports = router;

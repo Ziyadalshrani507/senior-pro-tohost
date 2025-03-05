@@ -67,13 +67,8 @@ const Header = () => {
             {user && user.role === 'admin' && (
               <>
                 <li className="nav-item">
-                  <Link to="/activity-management" className={`nav-link ${isActive('/activity-management')}`}>
-                    <i className="bi bi-calendar-event"></i> Activity Management
-                  </Link>
-                </li>
-                <li className="nav-item">
-                  <Link to="/restaurant-management" className={`nav-link ${isActive('/restaurant-management')}`}>
-                    <i className="bi bi-shop-window"></i> Restaurant Management
+                  <Link to="/admin/dashboard" className={`nav-link ${isActive('/admin/dashboard')}`}>
+                    <i className="bi bi-speedometer2"></i> Dashboard
                   </Link>
                 </li>
               </>

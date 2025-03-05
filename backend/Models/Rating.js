@@ -24,11 +24,47 @@ const ratingSchema = new Schema({
   },
   comment: {
     type: String,
-    maxLength: 500
+    maxLength: 1000,
+    required: true
+  },
+  status: {
+    type: String,
+    enum: ['pending', 'approved', 'flagged', 'rejected'],
+    default: 'pending'
+  },
+  likes: [{
+    type: Schema.Types.ObjectId,
+    ref: 'User'
+  }],
+  isEdited: {
+    type: Boolean,
+    default: false
+  },
+  moderationNotes: {
+    type: String
+  },
+  visitDate: {
+    type: Date
   }
 }, { timestamps: true });
 
-// Ensure a user can only rate an item once
-ratingSchema.index({ userId: 1, itemId: 1, itemType: 1 }, { unique: true });
+// Add compound index for efficient querying
+ratingSchema.index({ itemId: 1, itemType: 1, createdAt: -1 });
+
+// Add text index for search and moderation
+ratingSchema.index({ comment: 'text' });
+
+// Method to check for duplicate content
+ratingSchema.methods.isDuplicate = async function() {
+  const timeWindow = new Date(Date.now() - 24 * 60 * 60 * 1000); // 24 hours
+  const duplicates = await this.constructor.find({
+    userId: this.userId,
+    itemId: this.itemId,
+    itemType: this.itemType,
+    createdAt: { $gte: timeWindow },
+    comment: this.comment
+  });
+  return duplicates.length > 0;
+};
 
 module.exports = mongoose.model('Rating', ratingSchema);
