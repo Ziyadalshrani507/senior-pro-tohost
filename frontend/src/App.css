@@ -13,9 +13,10 @@
   padding-bottom: 2rem;
 }
 
+/* Remove the problematic rule and replace with a more flexible one */
 .app > *:not(nav):not(footer) {
   padding-top: 80px;
-  min-height: calc(100vh - 80px);
+  flex: 1;
 }
 
 h1 {

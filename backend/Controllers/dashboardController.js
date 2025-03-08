@@ -112,16 +112,34 @@ exports.getSchemaOptions = async (req, res) => {
   try {
     const { type } = req.query;
     const Model = type === 'destinations' ? Destination : Restaurant;
-    const schema = Model.schema;
-
-    const options = {
-      cities: schema.path('locationCity').enumValues,
-      types: type === 'destinations' ? schema.path('type').enumValues : [],
-      categories: type === 'destinations' ? schema.path('categories.0').enumValues : []
+    
+    // Get distinct values for cities
+    const cities = await Model.distinct('locationCity');
+    
+    let options = {
+      cities: cities.sort(),
+      categories: []
     };
+
+    if (type === 'destinations') {
+      // Add destination-specific options
+      const types = await Model.distinct('type');
+      options = {
+        ...options,
+        types: types.sort()
+      };
+    } else {
+      // Add restaurant-specific options
+      const cuisines = await Model.distinct('cuisine');
+      options = {
+        ...options,
+        cuisines: cuisines.sort()
+      };
+    }
 
     res.json(options);
   } catch (error) {
+    console.error('Error fetching schema options:', error);
     res.status(500).json({ 
       message: 'Error fetching schema options', 
       error: error.message 

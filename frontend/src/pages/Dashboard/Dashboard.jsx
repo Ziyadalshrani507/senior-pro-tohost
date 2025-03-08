@@ -1,19 +1,22 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'react-toastify';
 import { FaSearch, FaPlus, FaEdit, FaTrash, FaFilter, FaSort, FaSpinner, FaExclamationTriangle, FaStar, FaMapMarkerAlt, FaUtensils } from 'react-icons/fa';
 import ItemModal from './ItemModal';
 import DashboardStats from './DashboardStats';
+import FilterPanel from '../../components/FilterPanel/FilterPanel';
 import { useDebounce } from '../../hooks/useDebounce';
 import './Dashboard.css';
 
 const ITEMS_PER_PAGE = 12;
+const API_BASE_URL = process.env.REACT_APP_API_URL || '';
 
 const Dashboard = () => {
   const { token } = useAuth();
   const [state, setState] = useState({
     activeTab: 'destinations',
-    items: [],
+    allItems: [],
+    filteredItems: [],
     loading: true,
     error: null,
     stats: {
@@ -23,7 +26,11 @@ const Dashboard = () => {
     filters: {
       search: '',
       city: '',
-      type: '',
+      cuisine: '',
+      priceRange: '',
+      rating: '',
+      popularity: '',
+      locationCity: '',
       sortBy: 'name',
       page: 1
     },
@@ -32,8 +39,9 @@ const Dashboard = () => {
     currentItem: null,
     schemaOptions: {
       cities: [],
-      types: [],
-      categories: []
+      cuisines: [],
+      categories: [],
+      types: []
     },
     isDeleting: false
   });
@@ -42,64 +50,61 @@ const Dashboard = () => {
     setState(prev => ({ ...prev, ...payload }));
   };
 
-  // Use custom debounce hook
-  const debouncedSearch = useDebounce();
-
   // Fetch schema options for dropdowns
   const fetchSchemaOptions = useCallback(async () => {
     try {
-      const endpoint = `/api/dashboard/schema-options?type=${state.activeTab}`;
+      const endpoint = `${API_BASE_URL}/api/${state.activeTab}/schema-options`;
+      
       const response = await fetch(endpoint, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
       });
       
-      if (!response.ok) throw new Error('Failed to fetch schema options');
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to fetch schema options');
+      }
       
       const options = await response.json();
-      createAction('SET_SCHEMA_OPTIONS', {
-        schemaOptions: options || { cities: [], types: [], categories: [] }
-      });
+      createAction('SET_SCHEMA_OPTIONS', { schemaOptions: options });
     } catch (err) {
-      console.error('Error fetching schema options:', err);
-      toast.error('Failed to load form options');
-      // Set default empty options to prevent map errors
-      createAction('SET_SCHEMA_OPTIONS', {
-        schemaOptions: { cities: [], types: [], categories: [] }
-      });
+      console.error('Schema options error:', err);
+      toast.error('Failed to load filter options');
     }
   }, [state.activeTab, token]);
 
+  // Fetch all data at once
   const fetchData = useCallback(async () => {
     try {
       createAction('SET_LOADING', { loading: true });
       createAction('SET_ERROR', { error: null });
       
-      const endpoint = state.activeTab === 'destinations' ? '/api/destinations' : '/api/restaurants';
-      const queryParams = new URLSearchParams({
-        search: state.filters.search,
-        city: state.filters.city,
-        type: state.filters.type,
-        sort: state.filters.sortBy,
-        page: state.filters.page,
-        limit: ITEMS_PER_PAGE
+      const endpoint = `${API_BASE_URL}/api/${state.activeTab}`;
+      
+      const response = await fetch(endpoint, {
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
       });
 
-      const response = await fetch(`${endpoint}?${queryParams}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-
-      if (!response.ok) throw new Error('Failed to fetch data');
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || `Failed to fetch ${state.activeTab}`);
+      }
       
       const data = await response.json();
+      const items = Array.isArray(data) ? data : data.items || [];
       
-      // Update items
-      createAction('SET_ITEMS', { items: data.items || data });
+      // Store all items
+      createAction('SET_ALL_ITEMS', { allItems: items });
       
       // Calculate stats
-      const totalItems = data.total || data.length;
-      const activeItems = data.items?.filter(item => !item.isDeleted).length || data.filter(item => !item.isDeleted).length;
-      const avgRating = data.items?.reduce((acc, item) => acc + (item.rating || 0), 0) / totalItems || 
-                       data.reduce((acc, item) => acc + (item.rating || 0), 0) / totalItems;
+      const totalItems = items.length;
+      const activeItems = items.filter(item => !item.isDeleted).length;
+      const avgRating = items.reduce((acc, item) => acc + (item.rating || 0), 0) / totalItems || 0;
       
       createAction('SET_STATS', {
         stats: {
@@ -107,50 +112,97 @@ const Dashboard = () => {
           [state.activeTab]: {
             total: totalItems,
             activeItems,
-            avgRating: avgRating || 0
+            avgRating: Number(avgRating.toFixed(1))
           }
         }
       });
 
     } catch (err) {
+      console.error('Fetch error:', err);
       createAction('SET_ERROR', { error: err.message });
       toast.error(`Error fetching ${state.activeTab}: ${err.message}`);
     } finally {
       createAction('SET_LOADING', { loading: false });
     }
-  }, [state.activeTab, state.filters, token]);
+  }, [state.activeTab, token]);
 
-  // Memoized handlers
-  const handleSearch = useCallback(
-    (value) => {
-      debouncedSearch(() => {
-        createAction('SET_FILTERS', {
-          filters: { ...state.filters, search: value, page: 1 }
+  // Client-side filtering and sorting logic
+  const applyFilters = useCallback(() => {
+    let filtered = [...state.allItems];
+
+    // Apply search filter
+    if (state.filters.search) {
+      const searchLower = state.filters.search.toLowerCase();
+      filtered = filtered.filter(item => 
+        item.name.toLowerCase().includes(searchLower) ||
+        item.locationCity?.toLowerCase().includes(searchLower) ||
+        item.categories?.some(cat => cat.toLowerCase().includes(searchLower))
+      );
+    }
+
+    // Apply type-specific filters
+    if (state.activeTab === 'destinations') {
+      if (state.filters.city) {
+        filtered = filtered.filter(item => item.locationCity === state.filters.city);
+      }
+      if (state.filters.popularity) {
+        filtered = filtered.filter(item => {
+          const rating = item.rating || 0;
+          switch (state.filters.popularity) {
+            case 'high': return rating >= 4;
+            case 'medium': return rating >= 3 && rating < 4;
+            case 'low': return rating < 3;
+            default: return true;
+          }
         });
-      });
-    },
-    [debouncedSearch, state.filters]
-  );
+      }
+    } else {
+      // Restaurant filters
+      if (state.filters.cuisine) {
+        filtered = filtered.filter(item => item.cuisine === state.filters.cuisine);
+      }
+      if (state.filters.priceRange) {
+        filtered = filtered.filter(item => item.priceRange === state.filters.priceRange);
+      }
+      if (state.filters.rating) {
+        filtered = filtered.filter(item => item.rating >= Number(state.filters.rating));
+      }
+      if (state.filters.locationCity) {
+        filtered = filtered.filter(item => item.locationCity === state.filters.locationCity);
+      }
+    }
 
-  const handleFilterChange = useCallback((key, value) => {
-    createAction('SET_FILTERS', {
-      filters: { ...state.filters, [key]: value, page: 1 }
+    // Apply sorting
+    filtered.sort((a, b) => {
+      switch (state.filters.sortBy) {
+        case 'rating':
+          return (b.rating || 0) - (a.rating || 0);
+        case 'price':
+          return (a.priceRange?.length || 0) - (b.priceRange?.length || 0);
+        default:
+          return a.name.localeCompare(b.name);
+      }
     });
-  }, [state.filters]);
 
+    // Update filtered items
+    createAction('SET_FILTERED_ITEMS', { filteredItems: filtered });
+  }, [state.allItems, state.filters, state.activeTab]);
+
+  // Handle editing an item
   const handleEdit = useCallback((item) => {
     createAction('SET_CURRENT_ITEM', { currentItem: item });
     createAction('SET_MODAL_OPEN', { isModalOpen: true });
   }, []);
 
+  // Handle saving an item (create or update)
   const handleSave = useCallback(async (formData) => {
     try {
-      const endpoint = state.activeTab === 'destinations' ? '/api/destinations' : '/api/restaurants';
-      const method = formData._id ? 'PUT' : 'POST';
-      const url = formData._id ? `${endpoint}/${formData._id}` : endpoint;
+      const isEditing = !!formData._id;
+      const endpoint = `${API_BASE_URL}/api/${state.activeTab}`;
+      const url = isEditing ? `${endpoint}/${formData._id}` : endpoint;
 
       const response = await fetch(url, {
-        method,
+        method: isEditing ? 'PUT' : 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
@@ -163,229 +215,217 @@ const Dashboard = () => {
         throw new Error(error.message || 'Failed to save item');
       }
 
-      toast.success(`${state.activeTab.slice(0, -1)} ${formData._id ? 'updated' : 'created'} successfully`);
-      fetchData();
+      const savedItem = await response.json();
+
+      // Update local state
+      createAction('SET_ALL_ITEMS', {
+        allItems: isEditing 
+          ? state.allItems.map(item => item._id === savedItem._id ? savedItem : item)
+          : [...state.allItems, savedItem]
+      });
+
+      toast.success(`Item ${isEditing ? 'updated' : 'created'} successfully`);
       createAction('SET_MODAL_OPEN', { isModalOpen: false });
       createAction('SET_CURRENT_ITEM', { currentItem: null });
-    } catch (err) {
-      toast.error(err.message);
-    }
-  }, [state.activeTab, token, fetchData]);
+      
+      // Refresh data to update stats
+      fetchData();
 
-  const handleDelete = useCallback(async (ids) => {
-    if (!window.confirm(`Are you sure you want to delete ${ids.length} item(s)?`)) return;
+    } catch (error) {
+      console.error('Save error:', error);
+      toast.error(error.message);
+      throw error;
+    }
+  }, [state.activeTab, state.allItems, token, fetchData]);
+
+  // Handle deleting items
+  const handleDelete = useCallback(async (itemIds) => {
+    if (!window.confirm('Are you sure you want to delete the selected items?')) {
+      return;
+    }
 
     try {
       createAction('SET_DELETING', { isDeleting: true });
-      const endpoint = state.activeTab === 'destinations' ? '/api/destinations' : '/api/restaurants';
-      
-      const deletePromises = ids.map(id =>
+      const endpoint = `${API_BASE_URL}/api/${state.activeTab}`;
+
+      const deletePromises = itemIds.map(id =>
         fetch(`${endpoint}/${id}`, {
           method: 'DELETE',
-          headers: { 'Authorization': `Bearer ${token}` }
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }).then(async response => {
+          if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Failed to delete item');
+          }
+          return response;
         })
       );
 
       await Promise.all(deletePromises);
-      
-      toast.success(`${ids.length} item(s) deleted successfully`);
-      createAction('SET_SELECTED_ITEMS', { selectedItems: [] });
-      fetchData();
-    } catch (err) {
-      toast.error(`Failed to delete items: ${err.message}`);
+
+      // Update local state
+      createAction('SET_ALL_ITEMS', {
+        allItems: state.allItems.filter(item => !itemIds.includes(item._id))
+      });
+
+      toast.success('Items deleted successfully');
+      fetchData(); // Refresh data and stats
+
+    } catch (error) {
+      console.error('Delete error:', error);
+      toast.error('Failed to delete items: ' + error.message);
     } finally {
       createAction('SET_DELETING', { isDeleting: false });
     }
-  }, [state.activeTab, token, fetchData]);
+  }, [state.activeTab, state.allItems, token, fetchData]);
 
-  // Effects
+  // Effect to apply filters whenever filters or items change
+  useEffect(() => {
+    applyFilters();
+  }, [state.filters, state.allItems, applyFilters]);
+
+  // Effect to fetch data when tab changes
   useEffect(() => {
     fetchData();
     fetchSchemaOptions();
-  }, [fetchData, fetchSchemaOptions]);
+  }, [state.activeTab, fetchData, fetchSchemaOptions]);
 
-  useEffect(() => {
-    createAction('SET_SELECTED_ITEMS', { selectedItems: [] });
-  }, [state.activeTab]);
+  // Pagination
+  const paginatedItems = useMemo(() => {
+    const start = (state.filters.page - 1) * ITEMS_PER_PAGE;
+    return state.filteredItems.slice(start, start + ITEMS_PER_PAGE);
+  }, [state.filteredItems, state.filters.page]);
 
-  // Render helpers
-  const renderFilters = () => (
-    <div className="search-filters">
-      <div className="search-bar">
-        <FaSearch />
-        <input
-          type="text"
-          placeholder="Search by name..."
-          onChange={(e) => handleSearch(e.target.value)}
-        />
-      </div>
-      
-      <select
-        value={state.filters.city}
-        onChange={(e) => handleFilterChange('city', e.target.value)}
-      >
-        <option value="">All Cities</option>
-        {(state.schemaOptions.cities || []).map(city => (
-          <option key={city} value={city}>{city}</option>
-        ))}
-      </select>
-
-      {state.activeTab === 'destinations' && (
-        <select
-          value={state.filters.type}
-          onChange={(e) => handleFilterChange('type', e.target.value)}
-        >
-          <option value="">All Types</option>
-          {(state.schemaOptions.types || []).map(type => (
-            <option key={type} value={type}>{type}</option>
-          ))}
-        </select>
-      )}
-
-      <select
-        value={state.filters.sortBy}
-        onChange={(e) => handleFilterChange('sortBy', e.target.value)}
-      >
-        <option value="name">Name</option>
-        <option value="rating">Rating</option>
-        <option value="newest">Newest</option>
-        <option value="oldest">Oldest</option>
-      </select>
-    </div>
-  );
-
-  const renderItems = () => (
-    <section className="items-grid">
-      {state.loading ? (
-        <div className="loading">
-          <div className="loading-spinner" />
-          <p>Loading {state.activeTab}...</p>
-        </div>
-      ) : state.items.length === 0 ? (
-        <div className="empty-state">
-          <p>No {state.activeTab} found. Try adjusting your filters or add a new item.</p>
-        </div>
-      ) : (
-        state.items.map(item => (
-          <div key={item._id} className="item-card">
-            <input
-              type="checkbox"
-              checked={state.selectedItems.includes(item._id)}
-              onChange={() => {
-                createAction('SET_SELECTED_ITEMS', {
-                  selectedItems: state.selectedItems.includes(item._id)
-                    ? state.selectedItems.filter(id => id !== item._id)
-                    : [...state.selectedItems, item._id]
-                });
-              }}
-              className="item-checkbox"
-            />
-            <div className="image-container">
-              {item.pictureUrls?.[0] ? (
-                <img 
-                  src={item.pictureUrls[0]} 
-                  alt={item.name}
-                  onError={(e) => {
-                    e.target.src = '/no-image.jpg';
-                  }}
-                />
-              ) : (
-                <div className="no-image">
-                  <span>No image available</span>
-                </div>
-              )}
-            </div>
-            <div className="item-details">
-              <h3>{item.name}</h3>
-              <p>{item.locationCity}</p>
-              <div className="item-rating">
-                <FaStar /> {item.rating?.toFixed(1) || 'N/A'}
-              </div>
-            </div>
-            <div className="item-actions">
-              <button onClick={() => handleEdit(item)} title="Edit">
-                <FaEdit />
-              </button>
-              <button 
-                onClick={() => handleDelete([item._id])}
-                disabled={state.isDeleting}
-                title="Delete"
-              >
-                <FaTrash />
-              </button>
-            </div>
-          </div>
-        ))
-      )}
-    </section>
-  );
+  const totalPages = Math.ceil(state.filteredItems.length / ITEMS_PER_PAGE);
 
   return (
-    <div className="dashboard-container">
-      {state.error && (
-        <div className="error-banner">
-          <FaExclamationTriangle />
-          <span>{state.error}</span>
-        </div>
-      )}
-
-      <DashboardStats stats={state.stats} activeTab={state.activeTab} />
-
-      <nav className="dashboard-nav">
+    <div className="dashboard">
+      <div className="dashboard-header">
         <div className="tab-buttons">
-          <button
-            className={`tab-button ${state.activeTab === 'destinations' ? 'active' : ''}`}
+          <button 
+            className={state.activeTab === 'destinations' ? 'active' : ''} 
             onClick={() => createAction('SET_ACTIVE_TAB', { activeTab: 'destinations' })}
           >
             <FaMapMarkerAlt /> Destinations
           </button>
-          <button
-            className={`tab-button ${state.activeTab === 'restaurants' ? 'active' : ''}`}
+          <button 
+            className={state.activeTab === 'restaurants' ? 'active' : ''} 
             onClick={() => createAction('SET_ACTIVE_TAB', { activeTab: 'restaurants' })}
           >
             <FaUtensils /> Restaurants
           </button>
         </div>
-      </nav>
 
-      <section className="dashboard-controls">
-        {renderFilters()}
-        <div className="action-buttons">
-          <button 
-            className="add-button" 
-            onClick={() => {
-              createAction('SET_CURRENT_ITEM', { currentItem: null });
-              createAction('SET_MODAL_OPEN', { isModalOpen: true });
-            }}
+        <div className="dashboard-actions">
+          <button
+            className="add-btn"
+            onClick={() => handleEdit(null)}
+            title="Add new item"
           >
             <FaPlus /> Add New
           </button>
           {state.selectedItems.length > 0 && (
-            <button 
-              className="delete-button" 
+            <button
+              className="delete-btn"
               onClick={() => handleDelete(state.selectedItems)}
               disabled={state.isDeleting}
             >
-              {state.isDeleting ? <FaSpinner className="spin" /> : <FaTrash />}
+              {state.isDeleting ? <FaSpinner className="spinner" /> : <FaTrash />}
               Delete Selected ({state.selectedItems.length})
             </button>
           )}
         </div>
-      </section>
+      </div>
 
-      {renderItems()}
-
-      <ItemModal
-        isOpen={state.isModalOpen}
-        onClose={() => {
-          createAction('SET_MODAL_OPEN', { isModalOpen: false });
-          createAction('SET_CURRENT_ITEM', { currentItem: null });
-        }}
-        item={state.currentItem}
+      <DashboardStats 
+        stats={state.stats[state.activeTab]} 
         type={state.activeTab}
-        onSave={handleSave}
-        schemaOptions={state.schemaOptions}
       />
+
+      <FilterPanel
+        type={state.activeTab}
+        filters={state.filters}
+        schemaOptions={state.schemaOptions}
+        onFilterChange={(key, value) => createAction('SET_FILTERS', { 
+          filters: { ...state.filters, [key]: value, page: 1 } 
+        })}
+        onResetFilters={() => createAction('SET_FILTERS', { 
+          filters: { search: '', city: '', cuisine: '', priceRange: '', rating: '', 
+                    popularity: '', locationCity: '', sortBy: 'name', page: 1 } 
+        })}
+      />
+
+      {state.loading ? (
+        <div className="loading">
+          <FaSpinner className="spinner" /> Loading...
+        </div>
+      ) : state.error ? (
+        <div className="error">
+          <FaExclamationTriangle /> {state.error}
+        </div>
+      ) : (
+        <>
+          <div className="items-grid">
+            {paginatedItems.map(item => (
+              <div key={item._id} className="item-card">
+                <div className="item-header">
+                  <h3>{item.name}</h3>
+                  <div className="item-actions">
+                    <button onClick={() => handleEdit(item)}><FaEdit /></button>
+                    <button onClick={() => handleDelete([item._id])}><FaTrash /></button>
+                  </div>
+                </div>
+                <div className="item-content">
+                  <p>{item.description}</p>
+                  <div className="item-meta">
+                    <span><FaMapMarkerAlt /> {item.locationCity}</span>
+                    {item.rating && <span><FaStar /> {item.rating.toFixed(1)}</span>}
+                    {item.priceRange && <span>{item.priceRange}</span>}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {totalPages > 1 && (
+            <div className="pagination">
+              <button 
+                disabled={state.filters.page === 1}
+                onClick={() => createAction('SET_FILTERS', { 
+                  filters: { ...state.filters, page: state.filters.page - 1 } 
+                })}
+              >
+                Previous
+              </button>
+              <span>Page {state.filters.page} of {totalPages}</span>
+              <button 
+                disabled={state.filters.page === totalPages}
+                onClick={() => createAction('SET_FILTERS', { 
+                  filters: { ...state.filters, page: state.filters.page + 1 } 
+                })}
+              >
+                Next
+              </button>
+            </div>
+          )}
+        </>
+      )}
+
+      {state.isModalOpen && (
+        <ItemModal
+          item={state.currentItem}
+          type={state.activeTab}
+          schemaOptions={state.schemaOptions}
+          onSave={handleSave}
+          onClose={() => {
+            createAction('SET_MODAL_OPEN', { isModalOpen: false });
+            createAction('SET_CURRENT_ITEM', { currentItem: null });
+          }}
+        />
+      )}
     </div>
   );
 };
