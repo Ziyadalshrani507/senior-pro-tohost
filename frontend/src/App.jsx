@@ -17,6 +17,7 @@ import Restaurants from './pages/Restaurants/Restaurants';
 import RestaurantDetails from './pages/RestaurantDetails/RestaurantDetails';
 import Dashboard from './pages/Dashboard/Dashboard';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import ChatWidget from './components/ChatWidget/ChatWidget';
 
 // Error Boundary Component
 class ErrorBoundary extends React.Component {
@@ -115,6 +116,7 @@ function App() {
             </Routes>
             <ToastContainer />
             <Footer />
+            <ChatWidget />
           </div>
         </Router>
       </AuthProvider>

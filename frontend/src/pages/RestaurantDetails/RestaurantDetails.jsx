@@ -29,10 +29,9 @@ const RestaurantDetails = () => {
         setLoading(false);
       }
     };
-
+  
     fetchRestaurant();
   }, [id, navigate]);
-
   if (loading) {
     return (
       <div className="restaurant-details-container">

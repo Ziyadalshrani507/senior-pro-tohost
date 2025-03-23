@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@botpress/webchat": "^2.3.8",
     "nodemailer": "^6.10.0"
   }
 }
