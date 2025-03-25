@@ -14,6 +14,7 @@ const Rating = ({ itemId, itemType }) => {
   const [totalPages, setTotalPages] = useState(1);
   const [isEditing, setIsEditing] = useState(null);
   const { user, token } = useAuth();
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     if (itemId && itemType) {
@@ -23,33 +24,37 @@ const Rating = ({ itemId, itemType }) => {
 
   const fetchRatings = async () => {
     try {
+      setError(null);
       const response = await fetch(`/api/ratings/${itemType}/${itemId}?page=${currentPage}&limit=10`);
       if (!response.ok) throw new Error('Failed to fetch ratings');
       const data = await response.json();
       setAllRatings(data.ratings);
       setTotalPages(data.totalPages);
       
-      if (user) {
-        const userReviews = data.ratings.filter(r => r.userId._id === user._id);
+      // Only filter user ratings if user is logged in
+      if (user && data.ratings) {
+        const userReviews = data.ratings.filter(r => r.userId && r.userId._id === user._id);
         setUserRatings(userReviews);
       }
     } catch (error) {
       console.error('Error fetching ratings:', error);
+      setError('Failed to load ratings. Please try again later.');
     }
   };
 
   const handleRatingSubmit = async () => {
     if (!user || !token) {
-      alert('Please log in to rate');
+      setError('Please log in to rate');
       return;
     }
 
     if (!comment || comment.trim().length < 10) {
-      alert('Please write a review of at least 10 characters');
+      setError('Please write a review of at least 10 characters');
       return;
     }
 
     try {
+      setError(null);
       const response = await fetch('/api/ratings', {
         method: 'POST',
         headers: {
@@ -77,14 +82,18 @@ const Rating = ({ itemId, itemType }) => {
       fetchRatings();
     } catch (error) {
       console.error('Error submitting rating:', error);
-      alert(error.message || 'Error submitting rating. Please try again.');
+      setError(error.message || 'Error submitting rating. Please try again.');
     }
   };
 
   const handleRatingUpdate = async (ratingId) => {
-    if (!token) return;
+    if (!user || !token) {
+      setError('Please log in to update your rating');
+      return;
+    }
 
     try {
+      setError(null);
       const response = await fetch(`/api/ratings/${ratingId}`, {
         method: 'PUT',
         headers: {
@@ -104,20 +113,25 @@ const Rating = ({ itemId, itemType }) => {
       }
 
       setIsEditing(null);
-      setRating(0);
-      setComment('');
-      setVisitDate('');
       fetchRatings();
     } catch (error) {
       console.error('Error updating rating:', error);
-      alert(error.message || 'Error updating rating. Please try again.');
+      setError(error.message || 'Error updating rating. Please try again.');
     }
   };
 
   const handleRatingDelete = async (ratingId) => {
-    if (!token || !window.confirm('Are you sure you want to delete this review?')) return;
+    if (!user || !token) {
+      setError('Please log in to delete your rating');
+      return;
+    }
+
+    if (!window.confirm('Are you sure you want to delete this rating?')) {
+      return;
+    }
 
     try {
+      setError(null);
       const response = await fetch(`/api/ratings/${ratingId}`, {
         method: 'DELETE',
         headers: {
@@ -133,199 +147,111 @@ const Rating = ({ itemId, itemType }) => {
       fetchRatings();
     } catch (error) {
       console.error('Error deleting rating:', error);
-      alert(error.message || 'Error deleting rating. Please try again.');
+      setError(error.message || 'Error deleting rating. Please try again.');
     }
   };
 
-  const handleLikeToggle = async (ratingId) => {
-    if (!user || !token) {
-      alert('Please log in to like reviews');
-      return;
-    }
-
-    try {
-      const response = await fetch(`/api/ratings/${ratingId}/like`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to toggle like');
-      }
-
-      fetchRatings();
-    } catch (error) {
-      console.error('Error toggling like:', error);
-      alert(error.message || 'Error toggling like. Please try again.');
-    }
-  };
-
-  const startEditing = (rating) => {
-    setIsEditing(rating._id);
-    setRating(rating.rating);
-    setComment(rating.comment);
-    setVisitDate(rating.visitDate ? rating.visitDate.split('T')[0] : '');
-  };
-
-  const cancelEditing = () => {
-    setIsEditing(null);
-    setRating(0);
-    setComment('');
-    setVisitDate('');
-  };
-
-  const averageRating = allRatings.length > 0
-    ? allRatings.reduce((acc, curr) => acc + curr.rating, 0) / allRatings.length
-    : 0;
+  if (!itemId || !itemType) {
+    return <div className="rating-error">Invalid item information</div>;
+  }
 
   return (
     <div className="rating-container">
-      <div className="rating-summary">
-        <div className="average-rating">
-          <span className="rating-number">{averageRating.toFixed(1)}</span>
-          <div className="stars">
-            {[...Array(5)].map((_, index) => (
-              <FaStar
-                key={index}
-                className={index < Math.round(averageRating) ? 'star-filled' : 'star-empty'}
-              />
-            ))}
-          </div>
-          <span className="rating-count">({allRatings.length} reviews)</span>
-        </div>
-      </div>
-
-      {user && (
-        <div className="user-rating">
-          <h4>{isEditing ? 'Edit Your Review' : 'Write a Review'}</h4>
-          <div className="rating-form">
-            <div className="stars-input">
-              {[...Array(5)].map((_, index) => {
-                const ratingValue = index + 1;
-                return (
-                  <FaStar
-                    key={index}
-                    className={ratingValue <= (hover || rating) ? 'star-filled' : 'star-empty'}
-                    onClick={() => setRating(ratingValue)}
-                    onMouseEnter={() => setHover(ratingValue)}
-                    onMouseLeave={() => setHover(0)}
-                  />
-                );
-              })}
-            </div>
-            <div className="form-group">
-              <label>
-                <FaCalendarAlt /> Visit Date:
-                <input
-                  type="date"
-                  value={visitDate}
-                  onChange={(e) => setVisitDate(e.target.value)}
-                  max={new Date().toISOString().split('T')[0]}
+      {error && <div className="rating-error">{error}</div>}
+      
+      {user ? (
+        <div className="rating-form">
+          <h3>Rate this {itemType}</h3>
+          <div className="star-rating">
+            {[...Array(5)].map((_, index) => {
+              const ratingValue = index + 1;
+              return (
+                <FaStar
+                  key={index}
+                  className={ratingValue <= (hover || rating) ? 'star active' : 'star'}
+                  onClick={() => setRating(ratingValue)}
+                  onMouseEnter={() => setHover(ratingValue)}
+                  onMouseLeave={() => setHover(0)}
                 />
-              </label>
-            </div>
-            <textarea
-              placeholder="Share your experience (minimum 10 characters)"
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              maxLength={1000}
-              rows={4}
-            />
-            <div className="rating-actions">
-              <button 
-                onClick={isEditing ? () => handleRatingUpdate(isEditing) : handleRatingSubmit}
-                disabled={!rating || !comment || comment.trim().length < 10}
-                className={(!rating || !comment || comment.trim().length < 10) ? 'disabled' : ''}
-              >
-                {isEditing ? 'Update Review' : 'Submit Review'}
-              </button>
-              {isEditing && (
-                <button onClick={cancelEditing} className="cancel-edit">
-                  Cancel
-                </button>
-              )}
-            </div>
+              );
+            })}
           </div>
+          <textarea
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            placeholder="Write your review (minimum 10 characters)"
+            className="rating-comment"
+          />
+          <input
+            type="date"
+            value={visitDate}
+            onChange={(e) => setVisitDate(e.target.value)}
+            className="rating-date"
+          />
+          <button onClick={isEditing ? () => handleRatingUpdate(isEditing) : handleRatingSubmit}>
+            {isEditing ? 'Update Rating' : 'Submit Rating'}
+          </button>
+        </div>
+      ) : (
+        <div className="login-prompt">
+          Please log in to rate this {itemType}
         </div>
       )}
 
-      <div className="all-ratings">
-        <h4>Reviews</h4>
+      <div className="ratings-list">
+        <h3>Reviews</h3>
         {allRatings.length > 0 ? (
           <>
-            {allRatings.map((rating) => (
-              <div key={rating._id} className="rating-item">
+            {allRatings.map((r) => (
+              <div key={r._id} className="rating-item">
                 <div className="rating-header">
-                  <span className="user-name">{rating.userId.name}</span>
-                  <div className="stars">
+                  <div className="rating-stars">
                     {[...Array(5)].map((_, index) => (
                       <FaStar
                         key={index}
-                        className={index < rating.rating ? 'star-filled' : 'star-empty'}
+                        className={index < r.rating ? 'star active' : 'star'}
                       />
                     ))}
                   </div>
+                  {user && r.userId && r.userId._id === user._id && (
+                    <div className="rating-actions">
+                      <FaEdit onClick={() => {
+                        setIsEditing(r._id);
+                        setRating(r.rating);
+                        setComment(r.comment);
+                        setVisitDate(r.visitDate);
+                      }} />
+                      <FaTrash onClick={() => handleRatingDelete(r._id)} />
+                    </div>
+                  )}
                 </div>
-                <p className="rating-comment">{rating.comment}</p>
-                <div className="rating-footer">
-                  <span className="rating-date">
-                    {new Date(rating.createdAt).toLocaleDateString()}
-                    {rating.isEdited && <span className="edited-tag">(edited)</span>}
-                    {rating.visitDate && (
-                      <span className="visit-date">
-                        Visited: {new Date(rating.visitDate).toLocaleDateString()}
-                      </span>
-                    )}
-                  </span>
-                  <div className="rating-actions">
-                    <button 
-                      onClick={() => handleLikeToggle(rating._id)}
-                      className={`like-button ${rating.likes.includes(user?._id) ? 'liked' : ''}`}
-                    >
-                      <FaThumbsUp /> {rating.likes.length}
-                    </button>
-                    {user && rating.userId._id === user._id && (
-                      <>
-                        <button onClick={() => startEditing(rating)} className="edit-button">
-                          <FaEdit />
-                        </button>
-                        <button onClick={() => handleRatingDelete(rating._id)} className="delete-button">
-                          <FaTrash />
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </div>
-                {rating.status === 'flagged' && (
-                  <div className="review-status">
-                    This review has been flagged for moderation.
+                <p className="rating-comment">{r.comment}</p>
+                {r.visitDate && (
+                  <div className="rating-date">
+                    <FaCalendarAlt /> {new Date(r.visitDate).toLocaleDateString()}
                   </div>
                 )}
+                <div className="rating-user">
+                  By: {r.userId ? r.userId.firstName : 'Anonymous'}
+                </div>
               </div>
             ))}
             {totalPages > 1 && (
               <div className="pagination">
-                <button 
-                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                  disabled={currentPage === 1}
-                >
-                  Previous
-                </button>
-                <span>Page {currentPage} of {totalPages}</span>
-                <button 
-                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                  disabled={currentPage === totalPages}
-                >
-                  Next
-                </button>
+                {[...Array(totalPages)].map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setCurrentPage(index + 1)}
+                    className={currentPage === index + 1 ? 'active' : ''}
+                  >
+                    {index + 1}
+                  </button>
+                ))}
               </div>
             )}
           </>
         ) : (
-          <p className="no-ratings">No reviews yet. Be the first to share your experience!</p>
+          <p>No reviews yet. Be the first to review!</p>
         )}
       </div>
     </div>
