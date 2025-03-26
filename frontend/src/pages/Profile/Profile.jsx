@@ -5,6 +5,7 @@ import './Profile.css';
 const Profile = () => {
   const [user, setUser] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState('Reviews');
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -161,9 +162,9 @@ const Profile = () => {
   }
 
   return (
-    <div className="profile-container">
-      <div className="profile-card">
-        <div className="profile-header">
+    <div className="app-container">
+      <div className="profile-sidebar">
+        <div className="profile-info">
           <div className="profile-picture-container">
             <div 
               className="profile-picture" 
@@ -202,100 +203,90 @@ const Profile = () => {
               style={{ display: 'none' }}
             />
           </div>
-          <div className="profile-info">
-            <h2 className="profile-name">{`${user.firstName} ${user.lastName}`}</h2>
-           
+          <div className="user-details">
+            <h2>{`${user.firstName || ''} ${user.lastName || ''}`}</h2>
+            <p className="user-email">{user.email}</p>
+            <p className="user-phone">{user.phone || 'No phone number'}</p>
           </div>
-        </div>
-
-        <div className="profile-content">
-          <form onSubmit={handleSubmit}>
-            <div className="form-group">
-              <label>First Name</label>
-              {isEditing ? (
-                <input
-                  type="text"
-                  name="firstName"
-                  value={formData.firstName}
-                  onChange={handleInputChange}
-                  required
-                />
-              ) : (
-                <p>{user.firstName}</p>
-              )}
+          {isEditing ? (
+            <div className="edit-form">
+              <input
+                type="text"
+                name="firstName"
+                value={formData.firstName}
+                onChange={handleInputChange}
+                placeholder="First Name"
+              />
+              <input
+                type="text"
+                name="lastName"
+                value={formData.lastName}
+                onChange={handleInputChange}
+                placeholder="Last Name"
+              />
+              <input
+                type="tel"
+                name="phone"
+                value={formData.phone}
+                onChange={handleInputChange}
+                placeholder="Phone Number"
+              />
+              <div className="profile-actions">
+                <button className="save-button" onClick={handleSubmit}>Save Changes</button>
+                <button className="cancel-button" onClick={handleEditToggle}>Cancel</button>
+              </div>
             </div>
-
-            <div className="form-group">
-              <label>Last Name</label>
-              {isEditing ? (
-                <input
-                  type="text"
-                  name="lastName"
-                  value={formData.lastName}
-                  onChange={handleInputChange}
-                  required
-                />
-              ) : (
-                <p>{user.lastName}</p>
-              )}
-            </div>
-
-            <div className="form-group">
-              <label>Email</label>
-              {isEditing ? (
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  required
-                />
-              ) : (
-                <p>{user.email}</p>
-              )}
-            </div>
-
-            <div className="form-group">
-              <label>Phone</label>
-              {isEditing ? (
-                <input
-                  type="tel"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleInputChange}
-                />
-              ) : (
-                <p>{user.phone || 'Not set'}</p>
-              )}
-            </div>
-
+          ) : (
             <div className="profile-actions">
-              {isEditing ? (
-                <>
-                  <button type="submit" className="save-button">
-                    Save Changes
-                  </button>
-                  <button 
-                    type="button" 
-                    className="cancel-button"
-                    onClick={handleEditToggle}
-                  >
-                    Cancel
-                  </button>
-                </>
-              ) : (
-                <button 
-                  type="button" 
-                  className="edit-button"
-                  onClick={handleEditToggle}
-                >
-                  Edit Profile
-                </button>
-              )}
+              <button className="edit-button" onClick={handleEditToggle}>Edit Profile</button>
             </div>
-          </form>
+          )}
         </div>
       </div>
+      <main className="content-area">
+        <div className="content-header">
+          <select 
+            value={selectedCategory} 
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            className="category-dropdown"
+          >
+            <option value="Reviews">Reviews</option>
+            <option value="Itineraries">Itineraries</option>
+            <option value="Favorites">Favorites</option>
+          </select>
+        </div>
+        <div className="content-grid">
+          {selectedCategory === 'Reviews' && (
+            <div className="reviews-grid">
+              <p>Your reviews will appear here</p>
+            </div>
+          )}
+          {selectedCategory === 'Itineraries' && (
+            <div className="itineraries-grid">
+              <div className="grid-item">
+                <div className="item-image"></div>
+                <h3>Itinerary Title</h3>
+                <p>Description</p>
+              </div>
+              <div className="grid-item">
+                <div className="item-image"></div>
+                <h3>Itinerary Title</h3>
+                <p>Description</p>
+              </div>
+              <div className="grid-item">
+                <div className="item-image"></div>
+                <h3>Itinerary Title</h3>
+                <p>Description</p>
+              </div>
+            </div>
+          )}
+          {selectedCategory === 'Favorites' && (
+            <div className="favorites-grid">
+              <p>Your favorites will appear here</p>
+            </div>
+          )}
+        </div>
+      </main>
     </div>
   );
 };

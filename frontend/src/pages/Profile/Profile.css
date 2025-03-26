@@ -1,3 +1,224 @@
+.app-container {
+  display: flex;
+  min-height: calc(100vh - 80px);
+  background-color: #f8f9fa;
+}
+
+.profile-sidebar {
+  width: 300px;
+  background-color: #1a1a1a;
+  color: white;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.profile-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.profile-picture-container {
+  width: 120px;
+  height: 120px;
+  position: relative;
+}
+
+.profile-picture {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background-color: #333;
+  border: 3px solid #444;
+  cursor: pointer;
+  position: relative;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.user-details {
+  text-align: center;
+  width: 100%;
+}
+
+.user-details h2 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.5rem;
+}
+
+.user-details p {
+  margin: 0.25rem 0;
+  font-size: 0.9rem;
+  color: #aaa;
+}
+
+.profile-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.nav-item {
+  padding: 1rem;
+  border: none;
+  background: none;
+  color: #aaa;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+.nav-item:hover {
+  background-color: #333;
+  color: white;
+}
+
+.nav-item.active {
+  background-color: #007bff;
+  color: white;
+}
+
+.content-area {
+  flex: 1;
+  padding: 2rem;
+  background-color: #f8f9fa;
+}
+
+.content-header {
+  margin-bottom: 2rem;
+  display: flex;
+  justify-content: flex-end;
+  padding-right: 2rem;
+}
+
+.category-dropdown {
+  padding: 0.75rem 2rem;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  font-size: 1rem;
+  background-color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 150px;
+}
+
+.category-dropdown:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+}
+
+.content-grid {
+  padding: 1rem;
+}
+
+.reviews-grid,
+.favorites-grid {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  min-height: 200px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.itineraries-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 2rem;
+}
+
+.grid-item {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+}
+
+.grid-item:hover {
+  transform: translateY(-5px);
+}
+
+.item-image {
+  width: 100%;
+  height: 200px;
+  background-color: #eee;
+}
+
+.grid-item h3 {
+  margin: 1rem;
+  font-size: 1.2rem;
+  color: #333;
+}
+
+.grid-item p {
+  margin: 0 1rem 1rem;
+  color: #666;
+}
+
+.edit-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.edit-form input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #444;
+  border-radius: 8px;
+  background-color: #333;
+  color: white;
+}
+
+.edit-form input::placeholder {
+  color: #888;
+}
+
+.profile-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+  width: 100%;
+}
+
+.profile-actions button {
+  flex: 1;
+  padding: 0.75rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.edit-button {
+  background-color: #007bff;
+  color: white;
+}
+
+.save-button {
+  background-color: #28a745;
+  color: white;
+}
+
+.cancel-button {
+  background-color: #dc3545;
+  color: white;
+}
+
+.profile-actions button:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
 .profile-container {
   min-height: calc(100vh - 80px);
   padding: 2rem;
@@ -146,6 +367,46 @@
 .profile-content {
   padding: 2rem;
   text-align: left;
+  display: flex;
+  gap: 2rem;
+}
+
+.profile-left-section {
+  flex: 0 0 300px;
+  border-right: 1px solid #dee2e6;
+  padding-right: 2rem;
+}
+
+.profile-right-section {
+  flex: 1;
+  min-width: 0;
+}
+
+.category-selector {
+  margin-bottom: 2rem;
+}
+
+.category-content {
+  background-color: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.category-content h3 {
+  margin: 0 0 1rem 0;
+  color: #212529;
+  font-size: 1.5rem;
+}
+
+.category-content p {
+  color: #6c757d;
+  margin: 0;
+}
+
+.reviews-section,
+.favorites-section {
+  min-height: 200px;
 }
 
 .form-group {
