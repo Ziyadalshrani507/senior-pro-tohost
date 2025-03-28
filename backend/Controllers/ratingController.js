@@ -139,6 +139,48 @@ const getItemRatings = async (req, res) => {
   }
 };
 
+// Get rating statistics for an item
+const getRatingStats = async (req, res) => {
+  try {
+    const { itemType, itemId } = req.params;
+
+    const [ratings, item] = await Promise.all([
+      Rating.find({ itemType, itemId }),
+      itemType === 'destination' 
+        ? Destination.findById(itemId) 
+        : Restaurant.findById(itemId)
+    ]);
+
+    if (!item) {
+      return res.status(404).json({ message: `${itemType} not found` });
+    }
+
+    const stats = {
+      average: 0,
+      total: ratings.length,
+      distribution: {
+        1: 0, 2: 0, 3: 0, 4: 0, 5: 0
+      }
+    };
+
+    if (ratings.length > 0) {
+      // Calculate distribution
+      ratings.forEach(rating => {
+        stats.distribution[rating.rating]++;
+      });
+
+      // Calculate average
+      const sum = ratings.reduce((acc, curr) => acc + curr.rating, 0);
+      stats.average = sum / ratings.length;
+    }
+
+    res.json(stats);
+  } catch (error) {
+    console.error('Error in getRatingStats:', error);
+    res.status(500).json({ message: 'Error fetching rating statistics' });
+  }
+};
+
 // Get user's ratings
 const getUserRatings = async (req, res) => {
   try {
@@ -211,5 +253,6 @@ module.exports = {
   deleteRating,
   getItemRatings,
   getUserRatings,
-  toggleLike
+  toggleLike,
+  getRatingStats
 };

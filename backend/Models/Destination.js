@@ -46,6 +46,25 @@ const destinationSchema = new Schema({
       "Ar Rass"
     ]
   },
+  coordinates: {
+    type: {
+      type: String,
+      enum: ['Point'],
+      default: 'Point'
+    },
+    coordinates: {
+      type: [Number],
+      required: true,
+      validate: {
+        validator: function(v) {
+          return v.length === 2 && 
+                 v[0] >= -180 && v[0] <= 180 && // longitude
+                 v[1] >= -90 && v[1] <= 90;     // latitude
+        },
+        message: 'Coordinates must be [longitude, latitude] with valid ranges'
+      }
+    }
+  },
   type: {
     type: String,
     enum: [
@@ -85,11 +104,13 @@ const destinationSchema = new Schema({
   pictureUrls: [{
     type: String,
   }],
-  
   isActivity: {
     type: Boolean,
     default: false,
   }
 }, { timestamps: true });
+
+// Create a 2dsphere index on coordinates
+destinationSchema.index({ coordinates: '2dsphere' });
 
 module.exports = mongoose.model('Destination', destinationSchema);

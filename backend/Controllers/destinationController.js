@@ -18,10 +18,55 @@ exports.getSchemaOptions = async (req, res) => {
 // Get all destinations
 exports.getDestinations = async (req, res) => {
   try {
-    const destinations = await Destination.find();
+    const { lat, lng, radius } = req.query;
+    let query = {};
+
+    // If coordinates and radius are provided, find destinations within the radius
+    if (lat && lng && radius) {
+      query = {
+        coordinates: {
+          $near: {
+            $geometry: {
+              type: 'Point',
+              coordinates: [parseFloat(lng), parseFloat(lat)]
+            },
+            $maxDistance: parseFloat(radius) * 1000 // Convert km to meters
+          }
+        }
+      };
+    }
+
+    const destinations = await Destination.find(query);
     res.json(destinations);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching destinations', error: error.message });
+  }
+};
+
+// Get destinations within radius
+exports.getNearbyDestinations = async (req, res) => {
+  try {
+    const { lat, lng, radius = 5 } = req.query; // radius in kilometers, default 5km
+
+    if (!lat || !lng) {
+      return res.status(400).json({ message: 'Latitude and longitude are required' });
+    }
+
+    const destinations = await Destination.find({
+      coordinates: {
+        $near: {
+          $geometry: {
+            type: 'Point',
+            coordinates: [parseFloat(lng), parseFloat(lat)]
+          },
+          $maxDistance: parseFloat(radius) * 1000 // Convert km to meters
+        }
+      }
+    });
+
+    res.json(destinations);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching nearby destinations', error: error.message });
   }
 };
 

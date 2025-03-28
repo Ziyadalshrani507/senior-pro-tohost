@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FaTimes, FaLink, FaTrash } from 'react-icons/fa';
+import MapPicker from '../../components/MapPicker/MapPicker';
 import './ItemModal.css';
 
 const ItemModal = ({ item, type, onSave, onClose, schemaOptions }) => {
@@ -8,6 +9,10 @@ const ItemModal = ({ item, type, onSave, onClose, schemaOptions }) => {
     description: '',
     locationCity: '',
     pictureUrls: [],
+    coordinates: {
+      type: 'Point',
+      coordinates: null // [longitude, latitude]
+    },
     // Destination specific fields
     type: '',
     cost: '',
@@ -33,7 +38,8 @@ const ItemModal = ({ item, type, onSave, onClose, schemaOptions }) => {
       setFormData({
         ...item,
         categories: item.categories || [],
-        contact: item.contact || { phone: '', email: '', website: '' }
+        contact: item.contact || { phone: '', email: '', website: '' },
+        coordinates: item.coordinates || { type: 'Point', coordinates: null }
       });
     } else {
       resetForm();
@@ -46,6 +52,10 @@ const ItemModal = ({ item, type, onSave, onClose, schemaOptions }) => {
       description: '',
       locationCity: '',
       pictureUrls: [],
+      coordinates: {
+        type: 'Point',
+        coordinates: null
+      },
       type: '',
       cost: '',
       categories: [],
@@ -73,6 +83,7 @@ const ItemModal = ({ item, type, onSave, onClose, schemaOptions }) => {
     if (type === 'destinations') {
       if (!formData.type?.trim()) newErrors.type = 'Type is required';
       if (!formData.cost?.toString().trim()) newErrors.cost = 'Cost is required';
+      if (!formData.coordinates?.coordinates) newErrors.coordinates = 'Location on map is required';
     } else {
       if (!formData.cuisine?.trim()) newErrors.cuisine = 'Cuisine is required';
       if (!formData.priceRange?.trim()) newErrors.priceRange = 'Price range is required';
@@ -88,7 +99,6 @@ const ItemModal = ({ item, type, onSave, onClose, schemaOptions }) => {
     e.preventDefault();
     
     if (!validateForm()) {
-      // toast.error('Please fill in all required fields');
       return;
     }
 
@@ -96,19 +106,18 @@ const ItemModal = ({ item, type, onSave, onClose, schemaOptions }) => {
     try {
       await onSave({
         ...formData,
-        // If editing, include the _id
         ...(item?._id && { _id: item._id })
       });
       onClose();
-      resetForm();
     } catch (error) {
-      setErrors({ submit: error.message });
+      console.error('Error saving item:', error);
+      setErrors({ submit: 'Error saving item. Please try again.' });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleChange = (e) => {
+  const handleInputChange = (e) => {
     const { name, value } = e.target;
     if (name.includes('.')) {
       const [parent, child] = name.split('.');
@@ -125,50 +134,41 @@ const ItemModal = ({ item, type, onSave, onClose, schemaOptions }) => {
         [name]: value
       }));
     }
-    // Clear error for this field if it exists
-    if (errors[name]) {
-      setErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors[name];
-        return newErrors;
-      });
-    }
   };
 
-  const handleImageUrlAdd = () => {
-    if (!imageUrl.trim()) return;
-    
-    try {
-      new URL(imageUrl);
+  const handleCategoryChange = (category) => {
+    setFormData(prev => ({
+      ...prev,
+      categories: prev.categories.includes(category)
+        ? prev.categories.filter(c => c !== category)
+        : [...prev.categories, category]
+    }));
+  };
+
+  const handleImageAdd = () => {
+    if (imageUrl.trim()) {
       setFormData(prev => ({
         ...prev,
-        pictureUrls: [...prev.pictureUrls, imageUrl]
+        pictureUrls: [...prev.pictureUrls, imageUrl.trim()]
       }));
       setImageUrl('');
-      setErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors.imageUrl;
-        return newErrors;
-      });
-    } catch (e) {
-      setErrors(prev => ({ ...prev, imageUrl: 'Please enter a valid URL' }));
     }
   };
 
-  const handleImageDelete = (index) => {
+  const handleImageRemove = (index) => {
     setFormData(prev => ({
       ...prev,
       pictureUrls: prev.pictureUrls.filter((_, i) => i !== index)
     }));
   };
 
-  const handleCategoryChange = (e) => {
-    const value = e.target.value;
+  const handleMapPositionChange = (coordinates) => {
     setFormData(prev => ({
       ...prev,
-      categories: prev.categories.includes(value)
-        ? prev.categories.filter(cat => cat !== value)
-        : [...prev.categories, value]
+      coordinates: {
+        type: 'Point',
+        coordinates
+      }
     }));
   };
 
@@ -185,18 +185,17 @@ const ItemModal = ({ item, type, onSave, onClose, schemaOptions }) => {
           <div className="error-message">{errors.submit}</div>
         )}
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} className="modal-form">
           <div className="form-group">
             <label>Name *</label>
             <input
               type="text"
               name="name"
               value={formData.name}
-              onChange={handleChange}
+              onChange={handleInputChange}
               className={errors.name ? 'error' : ''}
-              placeholder="Enter name"
             />
-            {errors.name && <span className="error-text">{errors.name}</span>}
+            {errors.name && <span className="error-message">{errors.name}</span>}
           </div>
 
           <div className="form-group">
@@ -204,11 +203,10 @@ const ItemModal = ({ item, type, onSave, onClose, schemaOptions }) => {
             <textarea
               name="description"
               value={formData.description}
-              onChange={handleChange}
+              onChange={handleInputChange}
               className={errors.description ? 'error' : ''}
-              placeholder="Enter description"
             />
-            {errors.description && <span className="error-text">{errors.description}</span>}
+            {errors.description && <span className="error-message">{errors.description}</span>}
           </div>
 
           <div className="form-group">
@@ -216,75 +214,91 @@ const ItemModal = ({ item, type, onSave, onClose, schemaOptions }) => {
             <select
               name="locationCity"
               value={formData.locationCity}
-              onChange={handleChange}
+              onChange={handleInputChange}
               className={errors.locationCity ? 'error' : ''}
             >
               <option value="">Select a city</option>
-              {schemaOptions.cities.map(city => (
+              {schemaOptions?.cities?.map(city => (
                 <option key={city} value={city}>{city}</option>
               ))}
             </select>
-            {errors.locationCity && <span className="error-text">{errors.locationCity}</span>}
+            {errors.locationCity && <span className="error-message">{errors.locationCity}</span>}
           </div>
 
-          {type === 'destinations' ? (
+          {type === 'destinations' && (
             <>
               <div className="form-group">
-                <label>Type *</label>
-                <input
-                  type="text"
-                  name="type"
-                  value={formData.type}
-                  onChange={handleChange}
-                  className={errors.type ? 'error' : ''}
-                  placeholder="e.g., Historical, Natural, Cultural"
+                <label>Location on Map *</label>
+                <MapPicker
+                  position={formData.coordinates?.coordinates}
+                  onPositionChange={handleMapPositionChange}
                 />
-                {errors.type && <span className="error-text">{errors.type}</span>}
+                {errors.coordinates && <span className="error-message">{errors.coordinates}</span>}
               </div>
 
               <div className="form-group">
-                <label>Cost *</label>
+                <label>Type *</label>
+                <select
+                  name="type"
+                  value={formData.type}
+                  onChange={handleInputChange}
+                  className={errors.type ? 'error' : ''}
+                >
+                  <option value="">Select a type</option>
+                  {schemaOptions?.types?.map(type => (
+                    <option key={type} value={type}>{type}</option>
+                  ))}
+                </select>
+                {errors.type && <span className="error-message">{errors.type}</span>}
+              </div>
+
+              <div className="form-group">
+                <label>Cost (SAR) *</label>
                 <input
                   type="number"
                   name="cost"
                   value={formData.cost}
-                  onChange={handleChange}
+                  onChange={handleInputChange}
                   className={errors.cost ? 'error' : ''}
-                  placeholder="Enter cost"
                   min="0"
                 />
-                {errors.cost && <span className="error-text">{errors.cost}</span>}
+                {errors.cost && <span className="error-message">{errors.cost}</span>}
               </div>
 
               <div className="form-group">
                 <label>Categories</label>
-                <select
-                  multiple
-                  value={formData.categories}
-                  onChange={handleCategoryChange}
-                >
-                  {schemaOptions.categories.map(category => (
-                    <option key={category} value={category}>{category}</option>
+                <div className="categories-grid">
+                  {schemaOptions?.categories?.map(category => (
+                    <label key={category} className="category-checkbox">
+                      <input
+                        type="checkbox"
+                        checked={formData.categories.includes(category)}
+                        onChange={() => handleCategoryChange(category)}
+                      />
+                      {category}
+                    </label>
                   ))}
-                </select>
+                </div>
               </div>
             </>
-          ) : (
+          )}
+
+          {type !== 'destinations' && (
             <>
               <div className="form-group">
                 <label>Cuisine *</label>
                 <select
                   name="cuisine"
                   value={formData.cuisine}
-                  onChange={handleChange}
+                  onChange={handleInputChange}
                   className={errors.cuisine ? 'error' : ''}
                 >
                   <option value="">Select cuisine</option>
-                  {schemaOptions.cuisines.map(cuisine => (
+                  {schemaOptions?.cuisines?.map(cuisine => (
                     <option key={cuisine} value={cuisine}>{cuisine}</option>
                   ))}
                 </select>
-                {errors.cuisine && <span className="error-text">{errors.cuisine}</span>}
+                {errors.cuisine && <span className="error-message">{errors.cuisine}</span>}
               </div>
 
               <div className="form-group">
@@ -292,7 +306,7 @@ const ItemModal = ({ item, type, onSave, onClose, schemaOptions }) => {
                 <select
                   name="priceRange"
                   value={formData.priceRange}
-                  onChange={handleChange}
+                  onChange={handleInputChange}
                   className={errors.priceRange ? 'error' : ''}
                 >
                   <option value="">Select price range</option>
@@ -301,7 +315,7 @@ const ItemModal = ({ item, type, onSave, onClose, schemaOptions }) => {
                   <option value="$$$">$$$ (Expensive)</option>
                   <option value="$$$$">$$$$ (Luxury)</option>
                 </select>
-                {errors.priceRange && <span className="error-text">{errors.priceRange}</span>}
+                {errors.priceRange && <span className="error-message">{errors.priceRange}</span>}
               </div>
 
               <div className="form-group">
@@ -310,11 +324,10 @@ const ItemModal = ({ item, type, onSave, onClose, schemaOptions }) => {
                   type="text"
                   name="address"
                   value={formData.address}
-                  onChange={handleChange}
+                  onChange={handleInputChange}
                   className={errors.address ? 'error' : ''}
-                  placeholder="Enter full address"
                 />
-                {errors.address && <span className="error-text">{errors.address}</span>}
+                {errors.address && <span className="error-message">{errors.address}</span>}
               </div>
 
               <div className="form-group">
@@ -324,26 +337,23 @@ const ItemModal = ({ item, type, onSave, onClose, schemaOptions }) => {
                     type="tel"
                     name="contact.phone"
                     value={formData.contact.phone}
-                    onChange={handleChange}
+                    onChange={handleInputChange}
                     className={errors.phone ? 'error' : ''}
-                    placeholder="Phone number *"
                   />
-                  {errors.phone && <span className="error-text">{errors.phone}</span>}
+                  {errors.phone && <span className="error-message">{errors.phone}</span>}
                   
                   <input
                     type="email"
                     name="contact.email"
                     value={formData.contact.email}
-                    onChange={handleChange}
-                    placeholder="Email address"
+                    onChange={handleInputChange}
                   />
                   
                   <input
                     type="url"
                     name="contact.website"
                     value={formData.contact.website}
-                    onChange={handleChange}
-                    placeholder="Website URL"
+                    onChange={handleInputChange}
                   />
                 </div>
               </div>
@@ -353,8 +363,7 @@ const ItemModal = ({ item, type, onSave, onClose, schemaOptions }) => {
                 <textarea
                   name="openingHours"
                   value={formData.openingHours}
-                  onChange={handleChange}
-                  placeholder="e.g., Mon-Fri: 9 AM - 10 PM&#10;Sat-Sun: 10 AM - 11 PM"
+                  onChange={handleInputChange}
                 />
               </div>
             </>
@@ -370,17 +379,17 @@ const ItemModal = ({ item, type, onSave, onClose, schemaOptions }) => {
                 placeholder="Enter image URL"
                 className={errors.imageUrl ? 'error' : ''}
               />
-              <button type="button" onClick={handleImageUrlAdd}>
+              <button type="button" onClick={handleImageAdd}>
                 <FaLink /> Add
               </button>
             </div>
-            {errors.imageUrl && <span className="error-text">{errors.imageUrl}</span>}
+            {errors.imageUrl && <span className="error-message">{errors.imageUrl}</span>}
             
             <div className="image-list">
               {formData.pictureUrls.map((url, index) => (
                 <div key={index} className="image-item">
                   <img src={url} alt={`${formData.name} ${index + 1}`} />
-                  <button type="button" onClick={() => handleImageDelete(index)}>
+                  <button type="button" onClick={() => handleImageRemove(index)}>
                     <FaTrash />
                   </button>
                 </div>

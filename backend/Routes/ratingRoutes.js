@@ -11,8 +11,13 @@ const {
   deleteRating,
   getItemRatings,
   getUserRatings,
-  toggleLike
+  toggleLike,
+  getRatingStats
 } = require('../Controllers/ratingController');
+
+// Public routes
+router.get('/:itemType/:itemId', getItemRatings);
+router.get('/stats/:itemType/:itemId', getRatingStats);
 
 // Protected routes
 router.post('/', protect, validateRating, addRating);
@@ -95,8 +100,5 @@ router.patch('/moderation/:id', protect, admin, async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
-
-// Public routes - must be last due to :itemType/:itemId pattern
-router.get('/:itemType/:itemId', getItemRatings);
 
 module.exports = router;
