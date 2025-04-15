@@ -1,14 +1,39 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Destinations.css';
+import { toast } from 'react-toastify';
+import LikeButton from '../../components/LikeButton/LikeButton';
+import LoginPromptModal from '../../components/LoginPromptModal/LoginPromptModal';
+
+const ITEMS_PER_PAGE = 12;
 
 const Destinations = () => {
   const navigate = useNavigate();
-  const [destinations, setDestinations] = useState([]);
-  const [filteredDestinations, setFilteredDestinations] = useState([]);
+  const [allDestinations, setAllDestinations] = useState([]); // Store all destinations
+  const [filteredDestinations, setFilteredDestinations] = useState([]); // Store filtered results
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+  const [likesMap, setLikesMap] = useState({});
+
   const filterRef = useRef(null);
+  const observer = useRef(null);
+  const lastDestinationRef = useCallback(node => {
+    if (loading) return;
+    if (observer.current) observer.current.disconnect();
+    observer.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && hasMore) {
+        setPage(prevPage => prevPage + 1);
+      }
+    });
+    if (node) observer.current.observe(node);
+  }, [loading, hasMore]);
+
   const [filters, setFilters] = useState({
     cities: [],
     types: [],
@@ -18,12 +43,12 @@ const Destinations = () => {
       max: ''
     }
   });
+
   const [schemaOptions, setSchemaOptions] = useState({
     cities: [],
     types: [],
     categories: []
   });
-  const [groupedDestinations, setGroupedDestinations] = useState({});
 
   // Close filters when clicking outside
   useEffect(() => {
@@ -37,6 +62,9 @@ const Destinations = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Debounce search term
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
+
   // Fetch schema options for filters
   useEffect(() => {
     const fetchSchemaOptions = async () => {
@@ -47,77 +75,91 @@ const Destinations = () => {
         setSchemaOptions(data);
       } catch (error) {
         console.error('Error fetching schema options:', error);
+        setError('Failed to load filter options');
       }
     };
     fetchSchemaOptions();
   }, []);
 
-  // Fetch destinations
+  // Fetch all destinations and likes
   useEffect(() => {
-    const fetchDestinations = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetch('/api/destinations/activities');
-        if (!response.ok) throw new Error('Failed to fetch destinations');
-        const data = await response.json();
-        setDestinations(data);
+        setLoading(true);
+        const [destinationsResponse, likesResponse] = await Promise.all([
+          fetch('/api/destinations/activities'),
+          fetch('/api/likes/user', {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`,
+              'Content-Type': 'application/json'
+            }
+          })
+        ]);
+
+        if (!destinationsResponse.ok) throw new Error('Failed to fetch destinations');
+        const destinationsData = await destinationsResponse.json();
+        
+        if (Array.isArray(destinationsData)) {
+          setAllDestinations(destinationsData);
+          setFilteredDestinations(destinationsData);
+        }
+
+        if (likesResponse.ok) {
+          const likesData = await likesResponse.json();
+          const newLikesMap = {};
+          likesData.destinations?.forEach(dest => {
+            newLikesMap[dest._id] = true;
+          });
+          setLikesMap(newLikesMap);
+        }
+
+        setInitialLoading(false);
       } catch (error) {
-        console.error('Error fetching destinations:', error);
+        console.error('Error fetching data:', error);
+        setError('Failed to load destinations');
+      } finally {
+        setLoading(false);
       }
     };
-    fetchDestinations();
-  }, []);
 
-  // Apply filters and search
+    fetchData();
+  }, []); // Only fetch once on mount
+
+  // Filter destinations based on search term
   useEffect(() => {
-    let filtered = [...destinations];
-
-    // Apply search term
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase();
-      filtered = filtered.filter(dest => 
-        dest.name.toLowerCase().includes(term) ||
-        dest.description.toLowerCase().includes(term)
-      );
+    if (!debouncedSearchTerm) {
+      setFilteredDestinations(allDestinations);
+      return;
     }
 
-    // Apply city filter
-    if (filters.cities.length > 0) {
-      filtered = filtered.filter(dest => filters.cities.includes(dest.locationCity));
-    }
+    const searchTerm = debouncedSearchTerm.toLowerCase();
+    const filtered = allDestinations.filter(dest => 
+      dest.name?.toLowerCase().includes(searchTerm) ||
+      dest.locationCity?.toLowerCase().includes(searchTerm) ||
+      dest.description?.toLowerCase().includes(searchTerm)
+    );
+    
+    setFilteredDestinations(filtered);
+  }, [debouncedSearchTerm, allDestinations]);
 
-    // Apply type filter
-    if (filters.types.length > 0) {
-      filtered = filtered.filter(dest => filters.types.includes(dest.type));
+  // Group destinations by city - memoized
+  const groupedDestinations = useMemo(() => {
+    if (!filteredDestinations || filteredDestinations.length === 0) {
+      return {};
     }
-
-    // Apply category filter
-    if (filters.categories.length > 0) {
-      filtered = filtered.filter(dest => 
-        dest.categories?.some(cat => filters.categories.includes(cat))
-      );
-    }
-
-    // Apply price range filter
-    if (filters.priceRange.min !== '') {
-      filtered = filtered.filter(dest => dest.cost >= Number(filters.priceRange.min));
-    }
-    if (filters.priceRange.max !== '') {
-      filtered = filtered.filter(dest => dest.cost <= Number(filters.priceRange.max));
-    }
-
-    // Group by city
-    const grouped = filtered.reduce((acc, dest) => {
+    
+    return filteredDestinations.reduce((acc, dest) => {
+      if (!dest || !dest.locationCity) return acc;
       const city = dest.locationCity;
       if (!acc[city]) acc[city] = [];
       acc[city].push(dest);
       return acc;
     }, {});
-
-    setGroupedDestinations(grouped);
-    setFilteredDestinations(filtered);
-  }, [destinations, searchTerm, filters]);
+  }, [filteredDestinations]);
 
   const handleFilterChange = (type, value) => {
+    setPage(1);
+    setFilteredDestinations([]);
     setFilters(prev => {
       const newFilters = { ...prev };
       
@@ -136,9 +178,18 @@ const Destinations = () => {
     });
   };
 
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+    setInitialLoading(false); // No need for loading state with client-side filtering
+  };
+
   const handleDestinationClick = (destinationId) => {
     navigate(`/destinations/${destinationId}`);
   };
+
+  if (error) {
+    return <div className="error-message">{error}</div>;
+  }
 
   return (
     <div className="destinations-page">
@@ -147,11 +198,16 @@ const Destinations = () => {
           <div className="search-container">
             <input
               type="text"
-              placeholder="Search destinations..."
+              placeholder="Search by name, city, or description..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={handleSearchChange}
               className="search-input"
             />
+            {debouncedSearchTerm && (
+              <div className="search-stats">
+                Found {filteredDestinations.length} results
+              </div>
+            )}
           </div>
           <div className="filter-container" ref={filterRef}>
             <button 
@@ -236,7 +292,9 @@ const Destinations = () => {
       </div>
 
       <div className="destinations-content">
-        {Object.entries(groupedDestinations).length === 0 ? (
+        {initialLoading ? (
+          <div className="loading-spinner">Loading destinations...</div>
+        ) : Object.entries(groupedDestinations).length === 0 ? (
           <div className="no-results">
             No destinations found matching your criteria
           </div>
@@ -245,60 +303,104 @@ const Destinations = () => {
             <div key={city} className="city-section">
               <h2 className="city-title">{city}</h2>
               <div className="destinations-grid">
-                {cityDestinations.map((destination) => (
+                {cityDestinations.map((destination, index) => (
                   <div
-                    key={destination._id}
+                    key={destination._id || index}
                     className="destination-card"
-                    onClick={() => handleDestinationClick(destination._id)}
                   >
-                    <div className="destination-image">
-                      {destination.pictureUrls && destination.pictureUrls.length > 0 ? (
+                    <div 
+                      className="destination-content"
+                      onClick={() => handleDestinationClick(destination._id)}
+                    >
+                      {(destination?.images?.[0] || destination?.pictureUrls?.[0]) ? (
                         <img
-                          src={destination.pictureUrls[0]}
-                          alt={destination.name}
+                          src={destination.images?.[0] || destination.pictureUrls?.[0]}
+                          alt={destination?.name || 'Destination'}
+                          className="destination-image"
+                          loading="lazy"
                           onError={(e) => {
-                            e.target.onerror = null;
-                            e.target.src = '/placeholder-image.jpg';
+                            e.target.parentElement.innerHTML = `
+                              <div class="no-image-placeholder">
+                                <i class="bi bi-image"></i>
+                                <span>No Image Available</span>
+                              </div>
+                            `;
                           }}
                         />
                       ) : (
-                        <div className="placeholder-image">
+                        <div className="no-image-placeholder">
                           <i className="bi bi-image"></i>
-                          <span>No image available</span>
+                          <span>No Image Available</span>
                         </div>
                       )}
-                    </div>
-                    <div className="destination-info">
-                      <h3>{destination.name}</h3>
-                      <p className="type">{destination.type}</p>
-                      <p className="description">{destination.description}</p>
-                      <div className="destination-footer">
-                        <span className="cost">
-                          {typeof destination.cost === 'number' 
-                            ? `${destination.cost} SAR`
-                            : 'Price not available'}
-                        </span>
-                        {destination.categories && (
-                          <div className="categories">
-                            {destination.categories.slice(0, 2).map((category, index) => (
-                              <span key={index} className="category">{category}</span>
-                            ))}
-                            {destination.categories.length > 2 && (
-                              <span className="category">+{destination.categories.length - 2}</span>
-                            )}
-                          </div>
-                        )}
+                      <div className="destination-info">
+                        <h3>{destination.name}</h3>
+                        <p className="destination-location">
+                          <i className="bi bi-geo-alt"></i>
+                          {destination.locationCity}
+                        </p>
+                        <div className="destination-type">
+                          {destination.type}
+                        </div>
                       </div>
                     </div>
+                    <LikeButton
+                      placeType="destination"
+                      placeId={destination._id}
+                      initialLikeCount={destination.likeCount || 0}
+                      isInitiallyLiked={likesMap[destination._id] || false}
+                      onLoginRequired={() => setShowLoginPrompt(true)}
+                      onLikeToggle={(isLiked, likeCount) => {
+                        // Update the likes map
+                        setLikesMap(prev => ({
+                          ...prev,
+                          [destination._id]: isLiked
+                        }));
+                        
+                        // Update the destination's like count
+                        setAllDestinations(prev =>
+                          prev.map(d =>
+                            d._id === destination._id
+                              ? { ...d, likeCount }
+                              : d
+                          )
+                        );
+                      }}
+                    />
                   </div>
                 ))}
               </div>
             </div>
           ))
         )}
+        {loading && !initialLoading && (
+          <div className="loading-more">Loading more destinations...</div>
+        )}
       </div>
+      
+      <LoginPromptModal
+        isOpen={showLoginPrompt}
+        onClose={() => setShowLoginPrompt(false)}
+      />
     </div>
   );
 };
+
+// Custom debounce hook
+function useDebounce(value, delay) {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
 
 export default Destinations;

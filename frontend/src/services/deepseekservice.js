@@ -1,21 +1,25 @@
-import axios from 'axios';
-
-const API_URL = '/api/deepseek/v1/query'; // Use the proxy URL
-const API_KEY = process.env.REACT_APP_DEEPSEEK_API_KEY; // Use the environment variable for the API key
+const API_URL = 'https://api.deepseek.com/v1/chat/completions';
+const API_KEY = import.meta.env.VITE_DEEPSEEK_API_KEY;
 
 export const queryDeepSeek = async (query) => {
   try {
-    console.log('Sending query to DeepSeek:', query); // Debug log
-    const response = await axios.post(API_URL, { query }, {
+    const response = await fetch(API_URL, {
+      method: 'POST',
       headers: {
-        'Authorization': `Bearer ${API_KEY}`,
-        'Content-Type': 'application/json'
-      }
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${API_KEY}`
+      },
+      body: JSON.stringify({ query })
     });
-    console.log('Received response from DeepSeek:', response.data); // Debug log
-    return response.data;
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.choices[0].message.content;
   } catch (error) {
-    console.error('Error querying DeepSeek API:', error);
+    console.error('Error calling DeepSeek API:', error);
     throw error;
   }
 };

@@ -4,12 +4,15 @@ import './Restaurants.css';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'react-toastify';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+
 const Restaurants = () => {
   const [restaurants, setRestaurants] = useState([]);
   const [filteredRestaurants, setFilteredRestaurants] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
+  const [likesMap, setLikesMap] = useState(new Map());
   const filterRef = useRef(null);
   const [filters, setFilters] = useState({
     cities: [],
@@ -40,21 +43,52 @@ const Restaurants = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Handle like toggle
+  const handleLikeToggle = (restaurantId, isLiked, newLikeCount) => {
+    setRestaurants(prevRestaurants =>
+      prevRestaurants.map(restaurant =>
+        restaurant._id === restaurantId
+          ? { ...restaurant, likeCount: newLikeCount, isLiked }
+          : restaurant
+      )
+    );
+    setFilteredRestaurants(prevRestaurants =>
+      prevRestaurants.map(restaurant =>
+        restaurant._id === restaurantId
+          ? { ...restaurant, likeCount: newLikeCount, isLiked }
+          : restaurant
+      )
+    );
+  };
+
   // Fetch cities and restaurants
   useEffect(() => {
     const fetchData = async () => {
       try {
         // Fetch cities
-        const citiesResponse = await fetch('/api/restaurants/cities');
+        const citiesResponse = await fetch(`${API_BASE_URL}/restaurants/cities`);
         if (!citiesResponse.ok) throw new Error('Failed to fetch cities');
         const citiesData = await citiesResponse.json();
         setSchemaOptions(prev => ({ ...prev, cities: citiesData.cities }));
 
-        // Fetch restaurants
-        const restaurantsResponse = await fetch('/api/restaurants');
-        if (!restaurantsResponse.ok) throw new Error('Failed to fetch restaurants');
-        const restaurantsData = await restaurantsResponse.json();
-        setRestaurants(restaurantsData);
+        // Fetch restaurants with pagination
+        const restaurantsResponse = await fetch(`${API_BASE_URL}/restaurants?page=1&limit=50`);
+        if (!restaurantsResponse.ok) {
+          const errorData = await restaurantsResponse.json();
+          throw new Error(errorData.message || 'Failed to fetch restaurants');
+        }
+        const { restaurants: restaurantsData } = await restaurantsResponse.json();
+        
+        // Initialize likes map
+        const newLikesMap = new Map();
+        restaurantsData.forEach(restaurant => {
+          if (restaurant.likes && Array.isArray(restaurant.likes)) {
+            newLikesMap.set(restaurant._id, restaurant.likes);
+          }
+        });
+        setLikesMap(newLikesMap);
+        
+        setRestaurants(restaurantsData || []);
 
         // Extract unique cuisines
         const uniqueCuisines = [...new Set(restaurantsData
@@ -262,7 +296,11 @@ const Restaurants = () => {
               <h2 className="city-title">{city}</h2>
               <div className="restaurants-grid">
                 {cityRestaurants.map((restaurant) => (
-                  <Restaurant key={restaurant._id} restaurant={restaurant} />
+                  <Restaurant 
+                    key={restaurant._id} 
+                    restaurant={restaurant}
+                    onLikeToggle={handleLikeToggle}
+                  />
                 ))}
               </div>
             </div>

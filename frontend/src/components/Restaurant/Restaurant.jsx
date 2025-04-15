@@ -1,13 +1,23 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import LikeButton from '../LikeButton/LikeButton';
+import { useAuth } from '../../context/AuthContext';
+import { toast } from 'react-toastify';
 import './Restaurant.css';
 
-const Restaurant = ({ restaurant }) => {
+const Restaurant = ({ restaurant, onLikeToggle }) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
-  if (!restaurant) {
+  if (!restaurant || !restaurant._id) {
     return null;
   }
+
+  const handleLikeToggle = (isLiked, likeCount) => {
+    if (onLikeToggle) {
+      onLikeToggle(restaurant._id, isLiked, likeCount);
+    }
+  };
 
   // Format price range for display
   const formatPriceRange = (range) => {
@@ -28,8 +38,16 @@ const Restaurant = ({ restaurant }) => {
     );
   };
 
-  const handleClick = () => {
+  const handleClick = (e) => {
+    // Don't navigate if clicking the like button
+    if (e.target.closest('.like-button-container')) {
+      return;
+    }
     navigate(`/restaurants/${restaurant._id}`);
+  };
+
+  const handleLoginRequired = () => {
+    toast.info('Please log in to like restaurants');
   };
 
   return (
@@ -40,7 +58,19 @@ const Restaurant = ({ restaurant }) => {
         )}
       </div>
       <div className="restaurant-info">
-        <h3>{restaurant.name || 'Unnamed Restaurant'}</h3>
+        <div className="restaurant-header">
+          <h3>{restaurant.name || 'Unnamed Restaurant'}</h3>
+          <div className="like-button-wrapper">
+            <LikeButton
+              placeType="restaurant"
+              placeId={restaurant._id}
+              onLoginRequired={handleLoginRequired}
+              onLikeToggle={handleLikeToggle}
+              initialLikeCount={restaurant.likeCount || 0}
+              isInitiallyLiked={restaurant.isLiked || false}
+            />
+          </div>
+        </div>
         {restaurant.cuisine && (
           <p className="cuisine">{restaurant.cuisine}</p>
         )}

@@ -3,12 +3,35 @@ const { Restaurant, SAUDI_CITIES } = require('../Models/Restaurant');
 // Get all restaurants
 exports.getRestaurants = async (req, res) => {
     try {
-        const restaurants = await Restaurant.find();
-        console.log('Fetched all restaurants:', restaurants); // Debug log
-        res.json(restaurants);
+        const userId = req.user?._id;
+
+        // Get user's likes first if authenticated
+        let userLikes = [];
+        if (userId) {
+            const user = await Restaurant.find({ likes: userId }, '_id').lean();
+            userLikes = user.map(r => r._id.toString());
+        }
+
+        // Get all restaurants
+        const restaurants = await Restaurant.find()
+            .select('-__v')
+            .sort({ createdAt: -1 })
+            .lean();
+
+        // Add isLiked field based on user's likes
+        const restaurantsWithLikes = restaurants.map(restaurant => ({
+            ...restaurant,
+            isLiked: userLikes.includes(restaurant._id.toString()),
+            likes: undefined // Don't send the full likes array to client
+        }));
+
+        res.json({ restaurants: restaurantsWithLikes });
     } catch (error) {
         console.error('Error in getRestaurants:', error);
-        res.status(500).json({ message: 'Error fetching restaurants', error: error.message });
+        res.status(500).json({
+            message: 'Unable to fetch restaurants at this time',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
     }
 };
 
@@ -57,11 +80,16 @@ exports.getSchemaOptions = async (req, res) => {
 // Get available cities
 exports.getCities = async (req, res) => {
     try {
-        console.log('Fetching available cities:', SAUDI_CITIES); // Debug log
+        if (!SAUDI_CITIES || !Array.isArray(SAUDI_CITIES)) {
+            throw new Error('SAUDI_CITIES is not properly initialized');
+        }
         res.json({ cities: SAUDI_CITIES });
     } catch (error) {
         console.error('Error in getCities:', error);
-        res.status(500).json({ message: 'Error fetching cities', error: error.message });
+        res.status(500).json({
+            message: 'Unable to fetch cities at this time',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
     }
 };
 

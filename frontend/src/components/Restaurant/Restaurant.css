@@ -48,7 +48,15 @@
   padding: 10px 0;
 }
 
-.restaurant-info h3 {
+.restaurant-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  gap: 1rem;
+}
+
+.restaurant-header h3 {
   margin: 0 0 10px 0;
   color: #2c3e50;
   font-size: 1.4em;
