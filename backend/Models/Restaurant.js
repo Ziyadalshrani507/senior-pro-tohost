@@ -50,14 +50,33 @@ const restaurantSchema = new mongoose.Schema({
     enum: ['$', '$$', '$$$', '$$$$'],
     required: [true, 'Price range is required']
   },
-  address: {
-    type: String,
-    required: [true, 'Address is required']
-  },
   locationCity: {
     type: String,
     enum: SAUDI_CITIES,
     required: [true, 'City is required']
+  },
+  address: {
+    type: String,
+    required: [true, 'Address is required']
+  },
+  coordinates: {
+    type: {
+      type: String,
+      enum: ['Point'],
+      default: 'Point'
+    },
+    coordinates: {
+      type: [Number],
+      default: [0, 0],
+      validate: {
+        validator: function(v) {
+          return v.length === 2 && 
+                 v[0] >= -180 && v[0] <= 180 && // longitude
+                 v[1] >= -90 && v[1] <= 90;     // latitude
+        },
+        message: props => `${props.value} is not a valid coordinate pair!`
+      }
+    }
   },
   contact: {
     phone: {
@@ -68,7 +87,7 @@ const restaurantSchema = new mongoose.Schema({
       type: String,
       validate: {
         validator: function(v) {
-          return !v || /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(v.trim());
+          return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
         },
         message: props => `${props.value} is not a valid email!`
       }
@@ -77,51 +96,63 @@ const restaurantSchema = new mongoose.Schema({
       type: String,
       validate: {
         validator: function(v) {
-          return !v || /^https?:\/\/([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/.test(v.trim());
+          return /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/.test(v);
         },
         message: props => `${props.value} is not a valid URL!`
       }
     }
   },
   categories: [{
-    type: String
+    type: String,
+    enum: ['Fine Dining', 'Casual Dining', 'Fast Food', 'Cafe', 'Street Food', 'Traditional']
   }],
-  pictureUrls: {
+  images: {
     type: [String],
     validate: {
       validator: function(urls) {
-        if (!urls) return true;
-        return urls.every(url => {
-          return !url || /^https?:\/\/([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/.test(url.trim());
-        });
+        return urls.every(url => /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/.test(url));
       },
       message: props => `One or more image URLs are invalid!`
     },
     default: []
   },
   rating: {
-    type: Number,
-    default: 0,
-    min: 0,
-    max: 5
+    average: {
+      type: Number,
+      min: 0,
+      max: 5,
+      default: 0
+    },
+    count: {
+      type: Number,
+      default: 0
+    }
   },
-  reviews: {
+  likes: {
+    type: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    }],
+    default: [],
+    validate: {
+      validator: function(v) {
+        return Array.isArray(v);
+      },
+      message: 'Likes must be an array'
+    }
+  },
+  likeCount: {
     type: Number,
     default: 0,
     min: 0
-  },
-  openingHours: {
-    type: String
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now
-  },
-  updatedAt: {
-    type: Date,
-    default: Date.now
   }
+}, {
+  timestamps: true
 });
+
+// Create indexes for geospatial queries and likes
+restaurantSchema.index({ coordinates: '2dsphere' });
+restaurantSchema.index({ likes: 1 }); // Index for faster likes lookup
 
 // Update the updatedAt timestamp before saving
 restaurantSchema.pre('save', function(next) {
@@ -132,6 +163,6 @@ restaurantSchema.pre('save', function(next) {
 const Restaurant = mongoose.model('Restaurant', restaurantSchema);
 
 module.exports = {
-  Restaurant,
-  SAUDI_CITIES
+    Restaurant,
+    SAUDI_CITIES
 };

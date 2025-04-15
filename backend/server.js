@@ -6,13 +6,14 @@ const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
 
-const authRoutes = require('./routes/authRoutes');
-const destinationRoutes = require('./routes/destinationRoutes');
-const passwordResetRoutes = require('./routes/passwordResetRoutes');
-const profileRoutes = require('./routes/profileRoutes');
-const restaurantRoutes = require('./routes/restaurantRoutes');
-const ratingRoutes = require('./routes/ratingRoutes');
-const dashboardRoutes = require('./routes/dashboardRoutes');
+const authRoutes = require('./Routes/authRoutes');
+const destinationRoutes = require('./Routes/destinationRoutes');
+const passwordResetRoutes = require('./Routes/passwordResetRoutes');
+const profileRoutes = require('./Routes/profileRoutes');
+const restaurantRoutes = require('./Routes/restaurantRoutes');
+const ratingRoutes = require('./Routes/ratingRoutes');
+const dashboardRoutes = require('./Routes/dashboardRoutes');
+const likeRoutes = require('./Routes/likeRoutes');
 const User = require('./Models/User');
 const { protect } = require('./middleware/authMiddleware');
 
@@ -65,6 +66,7 @@ app.use('/api/user/profile', profileRoutes);
 app.use('/api/restaurants', restaurantRoutes);
 app.use('/api/ratings', ratingRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/likes', likeRoutes);
 
 // Serve static files from the React app
 app.use(express.static(path.join(__dirname, '../frontend/dist')));

@@ -132,9 +132,23 @@ exports.deleteDestination = async (req, res) => {
 // Get all activities
 exports.getActivities = async (req, res) => {
   try {
-    const activities = await Destination.find({ isActivity: true });
+    const { search } = req.query;
+    let query = { isActivity: true };
+
+    // Add search functionality
+    if (search) {
+      const searchRegex = new RegExp(search, 'i'); // Case-insensitive search
+      query.$or = [
+        { name: searchRegex },
+        { locationCity: searchRegex },
+        { description: searchRegex }
+      ];
+    }
+
+    const activities = await Destination.find(query);
     res.json(activities);
   } catch (error) {
+    console.error('Error fetching activities:', error);
     res.status(500).json({ message: 'Error fetching activities', error: error.message });
   }
 };

@@ -4,7 +4,6 @@ import { toast } from 'react-toastify';
 import { 
   FaArrowLeft, 
   FaMapMarkerAlt, 
-  FaTag, 
   FaInfoCircle, 
   FaMapMarked, 
   FaImage,
@@ -75,12 +74,11 @@ const DestinationDetails = () => {
             <span>
               <FaMapMarkerAlt /> {destination.locationCity}
             </span>
-            <span>
-              <FaTag /> {destination.type}
-            </span>
-            <span>
-              <FaMoneyBillWave /> {destination.cost} SAR
-            </span>
+            {destination.price && (
+              <span>
+                <FaMoneyBillWave /> {destination.price} SAR
+              </span>
+            )}
           </div>
         </div>
 
@@ -89,7 +87,7 @@ const DestinationDetails = () => {
             <div className="section-card">
               <h2><FaImage /> Gallery</h2>
               <ImageCarousel 
-                images={destination.pictureUrls} 
+                images={destination.pictureUrls || destination.images || []} 
                 altPrefix={destination.name}
               />
             </div>
@@ -117,22 +115,10 @@ const DestinationDetails = () => {
                 <strong><FaCity /> City:</strong>
                 <span>{destination.locationCity}</span>
               </div>
-              <div className="info-item">
-                <strong><FaTag /> Type:</strong>
-                <span>{destination.type}</span>
-              </div>
-              <div className="info-item">
-                <strong><FaMoneyBillWave /> Cost:</strong>
-                <span>{destination.cost} SAR</span>
-              </div>
-              {destination.categories && destination.categories.length > 0 && (
+              {destination.price && (
                 <div className="info-item">
-                  <strong><FaTag /> Categories:</strong>
-                  <div className="categories-list">
-                    {destination.categories.map((category, index) => (
-                      <span key={index} className="category-tag">{category}</span>
-                    ))}
-                  </div>
+                  <strong><FaMoneyBillWave /> Price:</strong>
+                  <span>{destination.price} SAR</span>
                 </div>
               )}
             </div>
