@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { toast } from 'react-toastify';
+import { FaPencilAlt, FaUser } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 import './Profile.css';
 
 const Profile = () => {
   const [user, setUser] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState('Reviews');
+  const [selectedTab, setSelectedTab] = useState('My Profile');
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -14,19 +16,39 @@ const Profile = () => {
   });
   const fileInputRef = useRef(null);
   const [isUploading, setIsUploading] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchUserProfile();
   }, []);
 
   const fetchUserProfile = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      toast.error('Please log in to view your profile');
+      navigate('/login');
+      return;
+    }
+
     try {
       const response = await fetch('/api/user/profile', {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${token}`
         }
       });
-      if (!response.ok) throw new Error('Failed to fetch profile');
+
+      if (response.status === 401) {
+        toast.error('Session expired. Please log in again');
+        localStorage.removeItem('token');
+        navigate('/login');
+        return;
+      }
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to fetch profile');
+      }
+
       const userData = await response.json();
       setUser(userData);
       setFormData({
@@ -37,29 +59,44 @@ const Profile = () => {
       });
     } catch (error) {
       console.error('Error fetching profile:', error);
-      toast.error('Failed to load profile');
+      toast.error(error.message || 'Failed to load profile');
     }
   };
 
-  const handleEditToggle = (e) => {
-    e.preventDefault(); // Prevent any default button behavior
-    if (isEditing) {
-      // Reset form data when canceling edit
-      setFormData({
-        firstName: user.firstName || '',
-        lastName: user.lastName || '',
-        email: user.email || '',
-        phone: user.phone || ''
+  const handlePhotoClick = () => {
+    fileInputRef.current.click();
+  };
+
+  const handlePhotoChange = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('profilePicture', file);
+
+    setIsUploading(true);
+    try {
+      const response = await fetch('/api/user/profile/picture', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: formData
       });
-    }
-    setIsEditing(!isEditing);
-  };
 
-  const handleInputChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to upload photo');
+      }
+      
+      await fetchUserProfile();
+      toast.success('Profile picture updated successfully');
+    } catch (error) {
+      console.error('Error uploading photo:', error);
+      toast.error(error.message || 'Failed to upload profile picture');
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -79,8 +116,8 @@ const Profile = () => {
         throw new Error(errorData.message || 'Failed to update profile');
       }
       
-      const result = await response.json();
-      setUser(result.user);
+      const updatedUser = await response.json();
+      setUser(updatedUser);
       setIsEditing(false);
       toast.success('Profile updated successfully');
     } catch (error) {
@@ -89,204 +126,152 @@ const Profile = () => {
     }
   };
 
-  const handlePictureClick = () => {
-    fileInputRef.current.click();
-  };
-
-  const handlePictureUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    // Validate file size (5MB limit)
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('File size must be less than 5MB');
-      return;
-    }
-
-    // Validate file type
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
-    if (!allowedTypes.includes(file.type)) {
-      toast.error('Only JPEG, PNG and GIF files are allowed');
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append('profilePicture', file);
-
-    setIsUploading(true);
-    try {
-      const response = await fetch('/api/user/profile/picture', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: formData
-      });
-
-      if (!response.ok) throw new Error('Failed to upload picture');
-      const result = await response.json();
-      setUser(prev => ({ ...prev, profilePicture: result.profilePicture }));
-      toast.success('Profile picture updated successfully');
-    } catch (error) {
-      console.error('Error uploading picture:', error);
-      toast.error('Failed to upload profile picture');
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
-  const handlePictureDelete = async () => {
-    if (!window.confirm('Are you sure you want to delete your profile picture?')) {
-      return;
-    }
-
-    try {
-      const response = await fetch('/api/user/profile/picture', {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-
-      if (!response.ok) throw new Error('Failed to delete picture');
-      setUser(prev => ({ ...prev, profilePicture: null }));
-      toast.success('Profile picture deleted successfully');
-    } catch (error) {
-      console.error('Error deleting picture:', error);
-      toast.error('Failed to delete profile picture');
-    }
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
   if (!user) {
-    return <div className="profile-loading">Loading...</div>;
+    return <div className="profile-container">Loading...</div>;
   }
 
   return (
-    <div className="app-container">
-      <div className="profile-sidebar">
-        <div className="profile-info">
-          <div className="profile-picture-container">
-            <div 
-              className="profile-picture" 
-              onClick={handlePictureClick}
-              style={{ 
-                backgroundImage: user.profilePicture?.data 
-                  ? `url(data:${user.profilePicture.contentType};base64,${user.profilePicture.data})` 
-                  : 'none' 
-              }}
+    <div className="profile-container">
+      <div className="sidebar">
+        <ul className="nav-tabs">
+          {['My Profile', 'Favorites', 'Itineraries', 'Reviews'].map((tab) => (
+            <li
+              key={tab}
+              className={`nav-item ${selectedTab === tab ? 'active' : ''}`}
+              onClick={() => setSelectedTab(tab)}
             >
-              {!user.profilePicture && (
-                <div className="profile-picture-placeholder">
-                  {user.firstName ? user.firstName[0].toUpperCase() : '?'}
-                </div>
-              )}
-              {isUploading && <div className="upload-overlay">Uploading...</div>}
-              <div className="profile-picture-hover">
-                <i className="bi bi-camera"></i>
-                <span>Change Picture</span>
+              {tab}
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div className="main-content">
+        <div className="profile-header">
+          <div className="profile-photo-section">
+            {user.profilePicture ? (
+              <img
+                src={user.profilePicture}
+                alt="Profile"
+                className="profile-photo"
+              />
+            ) : (
+              <div className="profile-photo">
+                <FaUser size={50} color="#666" />
               </div>
-            </div>
-            {user.profilePicture && (
-              <button 
-                className="delete-picture-button"
-                onClick={handlePictureDelete}
-                title="Delete profile picture"
-              >
-                <i className="bi bi-trash"></i>
-              </button>
             )}
+            <button className="photo-upload-button" onClick={handlePhotoClick}>
+              <FaPencilAlt />
+            </button>
             <input
               type="file"
               ref={fileInputRef}
-              onChange={handlePictureUpload}
-              accept="image/jpeg,image/png,image/gif"
-              style={{ display: 'none' }}
+              onChange={handlePhotoChange}
+              className="hidden"
+              accept="image/*"
             />
           </div>
-          <div className="user-details">
-            <h2>{`${user.firstName || ''} ${user.lastName || ''}`}</h2>
-            <p className="user-email">{user.email}</p>
-            <p className="user-phone">{user.phone || 'No phone number'}</p>
+          <div className="profile-info">
+            <h1 className="profile-name">{`${user.firstName} ${user.lastName}`}</h1>
+            <p className="profile-contact">{user.phone || 'No phone number added'}</p>
+            {!isEditing && (
+              <button className="edit-button" onClick={() => setIsEditing(true)}>
+                Edit Profile
+              </button>
+            )}
           </div>
-          {isEditing ? (
-            <div className="edit-form">
-              <input
-                type="text"
-                name="firstName"
-                value={formData.firstName}
-                onChange={handleInputChange}
-                placeholder="First Name"
-              />
-              <input
-                type="text"
-                name="lastName"
-                value={formData.lastName}
-                onChange={handleInputChange}
-                placeholder="Last Name"
-              />
-              <input
-                type="tel"
-                name="phone"
-                value={formData.phone}
-                onChange={handleInputChange}
-                placeholder="Phone Number"
-              />
-              <div className="profile-actions">
-                <button className="save-button" onClick={handleSubmit}>Save Changes</button>
-                <button className="cancel-button" onClick={handleEditToggle}>Cancel</button>
+        </div>
+
+        <div className="content-area">
+          {selectedTab === 'My Profile' && (
+            isEditing ? (
+              <form onSubmit={handleSubmit}>
+                <div className="form-group">
+                  <label>First Name</label>
+                  <input
+                    type="text"
+                    name="firstName"
+                    value={formData.firstName}
+                    onChange={handleInputChange}
+                    className="form-control"
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Last Name</label>
+                  <input
+                    type="text"
+                    name="lastName"
+                    value={formData.lastName}
+                    onChange={handleInputChange}
+                    className="form-control"
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Phone Number</label>
+                  <input
+                    type="tel"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleInputChange}
+                    className="form-control"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Email</label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    className="form-control"
+                    required
+                  />
+                </div>
+                <button type="submit" className="save-button">Save Changes</button>
+                <button
+                  type="button"
+                  className="save-button cancel-button"
+                  onClick={() => {
+                    setIsEditing(false);
+                    setFormData({
+                      firstName: user.firstName || '',
+                      lastName: user.lastName || '',
+                      email: user.email || '',
+                      phone: user.phone || ''
+                    });
+                  }}
+                >
+                  Cancel
+                </button>
+              </form>
+            ) : (
+              <div className="profile-details">
+                <p>Email: {user.email}</p>
+                <p>Phone: {user.phone || 'No phone number added'}</p>
               </div>
-            </div>
-          ) : (
-            <div className="profile-actions">
-              <button className="edit-button" onClick={handleEditToggle}>Edit Profile</button>
-            </div>
+            )
+          )}
+          {selectedTab === 'Favorites' && (
+            <div>Favorites content will go here</div>
+          )}
+          {selectedTab === 'Itineraries' && (
+            <div>Itineraries content will go here</div>
+          )}
+          {selectedTab === 'Reviews' && (
+            <div>Reviews content will go here</div>
           )}
         </div>
       </div>
-      <main className="content-area">
-        <div className="content-header">
-          <select 
-            value={selectedCategory} 
-            onChange={(e) => setSelectedCategory(e.target.value)}
-            className="category-dropdown"
-          >
-            <option value="Reviews">Reviews</option>
-            <option value="Itineraries">Itineraries</option>
-            <option value="Favorites">Favorites</option>
-          </select>
-        </div>
-        <div className="content-grid">
-          {selectedCategory === 'Reviews' && (
-            <div className="reviews-grid">
-              <p>Your reviews will appear here</p>
-            </div>
-          )}
-          {selectedCategory === 'Itineraries' && (
-            <div className="itineraries-grid">
-              <div className="grid-item">
-                <div className="item-image"></div>
-                <h3>Itinerary Title</h3>
-                <p>Description</p>
-              </div>
-              <div className="grid-item">
-                <div className="item-image"></div>
-                <h3>Itinerary Title</h3>
-                <p>Description</p>
-              </div>
-              <div className="grid-item">
-                <div className="item-image"></div>
-                <h3>Itinerary Title</h3>
-                <p>Description</p>
-              </div>
-            </div>
-          )}
-          {selectedCategory === 'Favorites' && (
-            <div className="favorites-grid">
-              <p>Your favorites will appear here</p>
-            </div>
-          )}
-        </div>
-      </main>
     </div>
   );
 };
