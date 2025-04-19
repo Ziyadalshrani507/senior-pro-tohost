@@ -17,6 +17,9 @@ const likeRoutes = require('./Routes/likeRoutes');
 const User = require('./Models/User');
 const { protect } = require('./middleware/authMiddleware');
 
+const hotelRoutes = require('./Routes/hotelRoutes');
+
+
 const app = express();
 const PORT = process.env.PORT || 5001;
 
@@ -26,6 +29,8 @@ app.use(cors({
   credentials: true
 }));
 app.use(express.json());
+
+app.use('/api/hotels', hotelRoutes);
 
 // Configure multer for profile picture uploads
 const storage = multer.diskStorage({

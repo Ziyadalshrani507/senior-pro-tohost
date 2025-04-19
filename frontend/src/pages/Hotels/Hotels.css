@@ -1,0 +1,82 @@
+.hotels-page {
+  padding: 20px;
+}
+
+.hotels-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.hotel-card {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 16px;
+  text-align: center;
+  background-color: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
+}
+
+.hotel-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.hotel-card img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.hotel-details-container {
+  padding: 20px;
+}
+
+.hotel-details {
+  text-align: center;
+}
+
+.hotel-details img {
+  width: 100%;
+  max-width: 600px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+
+.date-picker {
+  margin: 20px 0;
+  display: flex;
+  gap: 20px;
+}
+
+.date-picker label {
+  display: flex;
+  flex-direction: column;
+  font-size: 1rem;
+}
+
+.book-button {
+  padding: 10px 20px;
+  background-color: #006c35;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.book-button:hover {
+  background-color: #004d26;
+}
+
+.back-button {
+  margin-bottom: 20px;
+  padding: 10px 20px;
+  background-color: #006c35;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}

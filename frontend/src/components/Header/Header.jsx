@@ -64,7 +64,11 @@ const Header = () => {
                 <i className="bi bi-shop"></i> Restaurants
               </Link>
             </li>
-            {user && user.role === 'admin' && (
+                        <li className="nav-item">
+              <Link className={`nav-link ${isActive('/hotels')}`} to="/hotels">
+                <i className="bi bi-building"></i> Hotels
+              </Link>
+            </li>{user && user.role === 'admin' && (
               <>
                 <li className="nav-item">
                   <Link to="/admin/dashboard" className={`nav-link ${isActive('/admin/dashboard')}`}>
