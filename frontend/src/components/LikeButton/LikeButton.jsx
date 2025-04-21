@@ -4,7 +4,8 @@ import { FaHeart, FaRegHeart } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import './LikeButton.css';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+import { getApiBaseUrl } from '../../utils/apiBaseUrl';
+const API_BASE_URL = getApiBaseUrl();
 
 const LikeButton = ({ 
   placeType, 
