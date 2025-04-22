@@ -19,6 +19,9 @@ import Dashboard from './pages/Dashboard/Dashboard';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import ChatWidget from './components/ChatWidget/ChatWidget';
 
+import Hotels from './pages/Hotels/Hotels';
+
+
 // Error Boundary Component
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -93,6 +96,7 @@ function App() {
                   <p>Discover amazing destinations and plan your next adventure!</p>
                 </main>
               } />
+              <Route path="/hotels" element={<Hotels />} />
               <Route path="/destinations" element={<Destinations />} />
               <Route path="/destinations/:id" element={<DestinationDetails />} />
               <Route path="/signup" element={<SignUp />} />
