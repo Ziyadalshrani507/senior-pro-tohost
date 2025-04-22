@@ -301,19 +301,18 @@ const Destinations = () => {
             No destinations found matching your criteria
           </div>
         ) : (
-          Object.entries(groupedDestinations).map(([city, cityDestinations]) => (
-            <div key={city} className="city-section">
-              <h2 className="city-title">{city}</h2>
-              <div className="destinations-grid">
-                {cityDestinations.map((destination, index) => (
+          <>
+            {Object.entries(groupedDestinations).map(([city, cityDestinations]) => (
+              <div key={city} className="city-section">
+                <h2 className="city-title">{city}</h2>
+                <div className="destinations-grid">
+                  {cityDestinations.map((destination, index) => (
                   <div
                     key={destination._id || index}
                     className="destination-card"
+                    onClick={() => handleDestinationClick(destination._id)}
                   >
-                    <div 
-                      className="destination-content"
-                      onClick={() => handleDestinationClick(destination._id)}
-                    >
+                    <div className="image-container">
                       {(destination?.images?.[0] || destination?.pictureUrls?.[0]) ? (
                         <img
                           src={destination.images?.[0] || destination.pictureUrls?.[0]}
@@ -335,45 +334,46 @@ const Destinations = () => {
                           <span>No Image Available</span>
                         </div>
                       )}
-                      <div className="destination-info">
-                        <h3>{destination.name}</h3>
-                        <p className="destination-location">
-                          <i className="bi bi-geo-alt"></i>
-                          {destination.locationCity}
-                        </p>
-                        <div className="destination-type">
-                          {destination.type}
-                        </div>
-                      </div>
+                      <LikeButton
+                        placeType="destination"
+                        placeId={destination._id}
+                        initialLikeCount={destination.likeCount || 0}
+                        isInitiallyLiked={likesMap[destination._id] || false}
+                        onLoginRequired={() => setShowLoginPrompt(true)}
+                        onLikeToggle={(isLiked, likeCount) => {
+                          // Update the likes map
+                          setLikesMap(prev => ({
+                            ...prev,
+                            [destination._id]: isLiked
+                          }));
+                          
+                          // Update the destination's like count
+                          setAllDestinations(prev =>
+                            prev.map(d =>
+                              d._id === destination._id
+                                ? { ...d, likeCount }
+                                : d
+                            )
+                          );
+                        }}
+                      />
                     </div>
-                    <LikeButton
-                      placeType="destination"
-                      placeId={destination._id}
-                      initialLikeCount={destination.likeCount || 0}
-                      isInitiallyLiked={likesMap[destination._id] || false}
-                      onLoginRequired={() => setShowLoginPrompt(true)}
-                      onLikeToggle={(isLiked, likeCount) => {
-                        // Update the likes map
-                        setLikesMap(prev => ({
-                          ...prev,
-                          [destination._id]: isLiked
-                        }));
-                        
-                        // Update the destination's like count
-                        setAllDestinations(prev =>
-                          prev.map(d =>
-                            d._id === destination._id
-                              ? { ...d, likeCount }
-                              : d
-                          )
-                        );
-                      }}
-                    />
+                    <div className="destination-info">
+                      <h3>{destination.name}</h3>
+                      <p className="destination-description">
+                        {destination.description ? 
+                          (destination.description.length > 70 ? 
+                            `${destination.description.substring(0, 70)}...` : 
+                            destination.description) : 
+                          'No description available'}
+                      </p>
+                    </div>
                   </div>
                 ))}
               </div>
-            </div>
-          ))
+              </div>
+            ))}
+          </>
         )}
         {loading && !initialLoading && (
           <div className="loading-more">Loading more destinations...</div>

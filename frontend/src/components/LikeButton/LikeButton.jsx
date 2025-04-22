@@ -17,7 +17,6 @@ const LikeButton = ({
 }) => {
   const { user, token } = useAuth();
   const [isLiked, setIsLiked] = useState(isInitiallyLiked);
-  const [isLoading, setIsLoading] = useState(false);
   const [likeCount, setLikeCount] = useState(initialLikeCount);
   const [error, setError] = useState(null);
 
@@ -58,9 +57,6 @@ const LikeButton = ({
       return;
     }
 
-    if (isLoading) return;
-
-    setIsLoading(true);
     setError(null);
 
     // Optimistic update
@@ -110,19 +106,16 @@ const LikeButton = ({
       
       setError(error.message);
       toast.error(error.message || 'Failed to toggle like');
-    } finally {
-      setIsLoading(false);
     }
   };
 
   return (
     <div className="like-button-container">
       <button 
-        className={`like-button ${isLiked ? 'liked' : ''} ${isLoading ? 'loading' : ''} ${error ? 'error' : ''}`}
+        className={`like-button ${isLiked ? 'liked' : ''}`}
         onClick={handleLikeClick}
         aria-label={isLiked ? 'Unlike' : 'Like'}
-        disabled={isLoading}
-        title={error || (isLiked ? 'Unlike' : 'Like')}
+        title={isLiked ? 'Unlike' : 'Like'}
       >
         {isLiked ? <FaHeart /> : <FaRegHeart />}
         <span className="like-count">{likeCount}</span>

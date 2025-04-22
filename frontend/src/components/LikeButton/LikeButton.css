@@ -1,8 +1,8 @@
 .like-button-container {
   position: absolute;
-  top: 12px;
-  right: 12px;
-  z-index: 10;
+  top: 15px;
+  right: 15px;
+  z-index: 20;
 }
 
 .like-button {
@@ -10,33 +10,30 @@
   border: none;
   padding: 8px;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 4px;
-  border-radius: 20px;
   min-width: 40px;
   height: 40px;
-  background-color: rgba(255, 255, 255, 0.95);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  backdrop-filter: blur(4px);
+  outline: none;
 }
 
 .like-button svg {
-  width: 20px;
-  height: 20px;
-  color: #666;
+  width: 26px;
+  height: 26px;
+  color: #fff;
+  filter: drop-shadow(0px 1px 3px rgba(0, 0, 0, 0.8));
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .like-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: scale(1.15);
 }
 
 .like-button.liked {
-  background-color: rgba(255, 75, 75, 0.1);
+  opacity: 1;
 }
 
 .like-button.liked svg {
@@ -50,19 +47,7 @@
   transform: scale(1.1);
 }
 
-.like-button.loading {
-  pointer-events: none;
-  opacity: 0.7;
-}
-
-.like-button.loading svg {
-  animation: pulse 1.5s ease-in-out infinite;
-}
-
-.like-button.error {
-  background-color: rgba(255, 75, 75, 0.1);
-  box-shadow: 0 0 0 2px rgba(255, 75, 75, 0.3);
-}
+/* Removed loading and error styles */
 
 .like-button .like-count {
   font-size: 14px;
@@ -76,14 +61,7 @@
   color: #ff4b4b;
 }
 
-@keyframes pulse {
-  0%, 100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.15);
-  }
-}
+/* Removed pulse animation */
 
 @keyframes pop {
   0% {
