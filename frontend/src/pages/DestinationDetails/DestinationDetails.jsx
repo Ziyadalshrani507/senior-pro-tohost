@@ -14,6 +14,7 @@ import {
 import Rating from '../../components/Rating/Rating';
 import LocationMap from '../../components/LocationMap/LocationMap';
 import ImageCarousel from '../../components/ImageCarousel/ImageCarousel';
+import { getApiBaseUrl } from '../../utils/apiBaseUrl';
 import './DestinationDetails.css';
 
 const DestinationDetails = () => {
@@ -21,11 +22,12 @@ const DestinationDetails = () => {
   const navigate = useNavigate();
   const [destination, setDestination] = useState(null);
   const [loading, setLoading] = useState(true);
+  const API_BASE_URL = getApiBaseUrl();
 
   useEffect(() => {
     const fetchDestination = async () => {
       try {
-        const response = await fetch(`/api/destinations/${id}`);
+        const response = await fetch(`${API_BASE_URL}/destinations/${id}`);
         if (!response.ok) {
           throw new Error('Destination not found');
         }

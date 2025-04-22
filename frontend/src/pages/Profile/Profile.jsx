@@ -3,6 +3,7 @@ import { toast } from 'react-toastify';
 import { FaPencilAlt, FaUser } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import './Profile.css';
+import { getApiBaseUrl } from '../../utils/apiBaseUrl';
 
 const Profile = () => {
   const [user, setUser] = useState(null);
@@ -17,6 +18,7 @@ const Profile = () => {
   const fileInputRef = useRef(null);
   const [isUploading, setIsUploading] = useState(false);
   const navigate = useNavigate();
+  const API_BASE_URL = getApiBaseUrl();
 
   useEffect(() => {
     fetchUserProfile();
@@ -31,7 +33,7 @@ const Profile = () => {
     }
 
     try {
-      const response = await fetch('/api/user/profile', {
+      const response = await fetch(`${API_BASE_URL}/user/profile`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -76,7 +78,7 @@ const Profile = () => {
 
     setIsUploading(true);
     try {
-      const response = await fetch('/api/user/profile/picture', {
+      const response = await fetch(`${API_BASE_URL}/user/profile/picture`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -102,7 +104,7 @@ const Profile = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch('/api/user/profile', {
+      const response = await fetch(`${API_BASE_URL}/user/profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

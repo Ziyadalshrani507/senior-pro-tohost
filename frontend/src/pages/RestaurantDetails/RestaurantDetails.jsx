@@ -3,17 +3,19 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { FaArrowLeft, FaUtensils, FaStar } from 'react-icons/fa';
 import './RestaurantDetails.css';
+import { getApiBaseUrl } from '../../utils/apiBaseUrl';
 
 const RestaurantDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [restaurant, setRestaurant] = useState(null);
   const [loading, setLoading] = useState(true);
+  const API_BASE_URL = getApiBaseUrl();
 
   useEffect(() => {
     const fetchRestaurant = async () => {
       try {
-        const response = await fetch(`/api/restaurants/${id}`);
+        const response = await fetch(`${API_BASE_URL}/restaurants/${id}`);
         if (!response.ok) {
           throw new Error('Restaurant not found');
         }

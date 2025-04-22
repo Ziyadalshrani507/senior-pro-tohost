@@ -4,6 +4,7 @@ import './Destinations.css';
 import { toast } from 'react-toastify';
 import LikeButton from '../../components/LikeButton/LikeButton';
 import LoginPromptModal from '../../components/LoginPromptModal/LoginPromptModal';
+import { getApiBaseUrl } from '../../utils/apiBaseUrl';
 
 const ITEMS_PER_PAGE = 12;
 
@@ -20,6 +21,7 @@ const Destinations = () => {
   const [initialLoading, setInitialLoading] = useState(true);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [likesMap, setLikesMap] = useState({});
+  const API_BASE_URL = getApiBaseUrl();
 
   const filterRef = useRef(null);
   const observer = useRef(null);
@@ -69,7 +71,7 @@ const Destinations = () => {
   useEffect(() => {
     const fetchSchemaOptions = async () => {
       try {
-        const response = await fetch('/api/destinations/schema-options');
+        const response = await fetch(`${API_BASE_URL}/destinations/schema-options`);
         if (!response.ok) throw new Error('Failed to fetch schema options');
         const data = await response.json();
         setSchemaOptions(data);
@@ -87,8 +89,8 @@ const Destinations = () => {
       try {
         setLoading(true);
         const [destinationsResponse, likesResponse] = await Promise.all([
-          fetch('/api/destinations/activities'),
-          fetch('/api/likes/user', {
+          fetch(`${API_BASE_URL}/destinations/activities`),
+          fetch(`${API_BASE_URL}/likes/user`, {
             headers: {
               'Authorization': `Bearer ${localStorage.getItem('token')}`,
               'Content-Type': 'application/json'

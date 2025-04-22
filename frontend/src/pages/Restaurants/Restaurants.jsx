@@ -4,7 +4,8 @@ import './Restaurants.css';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'react-toastify';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+import { getApiBaseUrl } from '../../utils/apiBaseUrl';
+const API_BASE_URL = getApiBaseUrl();
 
 const Restaurants = () => {
   const [restaurants, setRestaurants] = useState([]);
