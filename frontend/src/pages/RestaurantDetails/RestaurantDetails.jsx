@@ -1,9 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { FaArrowLeft, FaUtensils, FaStar } from 'react-icons/fa';
-import './RestaurantDetails.css';
+import { 
+  FaArrowLeft, 
+  FaMapMarkerAlt, 
+  FaInfoCircle, 
+  FaMapMarked, 
+  FaImage,
+  FaStar,
+  FaMoneyBillWave,
+  FaUtensils
+} from 'react-icons/fa';
+import Rating from '../../components/Rating/Rating';
+import LocationMap from '../../components/LocationMap/LocationMap';
+import ImageCarousel from '../../components/ImageCarousel/ImageCarousel';
 import { getApiBaseUrl } from '../../utils/apiBaseUrl';
+import './RestaurantDetails.css';
 
 const RestaurantDetails = () => {
   const { id } = useParams();
@@ -22,6 +34,7 @@ const RestaurantDetails = () => {
         const data = await response.json();
         setRestaurant(data);
       } catch (error) {
+        console.error('Error fetching restaurant:', error);
         toast.error('Failed to load restaurant details');
         navigate('/restaurants');
       } finally {
@@ -34,7 +47,7 @@ const RestaurantDetails = () => {
 
   if (loading) {
     return (
-      <div className="restaurant-details-container">
+      <div className="restaurant-details-page">
         <div className="loading">Loading restaurant details...</div>
       </div>
     );
@@ -42,81 +55,76 @@ const RestaurantDetails = () => {
 
   if (!restaurant) {
     return (
-      <div className="restaurant-details-container">
-        <div className="error-message">Restaurant not found</div>
+      <div className="restaurant-details-page">
+        <div className="error-message">
+          <FaInfoCircle /> Restaurant not found
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="restaurant-details-container">
-      {/* Hero Section */}
-      <div className="hero-section">
-        <img src={restaurant.mainImage} alt={restaurant.name} />
-        <div className="hero-overlay"></div>
-        <div className="hero-text">{restaurant.name}</div>
-      </div>
-
-      {/* Back Button */}
+    <div className="restaurant-details-page">
       <button className="back-button" onClick={() => navigate('/restaurants')}>
         <FaArrowLeft /> Back to Restaurants
       </button>
 
-      {/* Restaurant Content */}
-      <div className="restaurant-content">
-        <h1 className="destination-name">{restaurant.name}</h1>
-
-        {/* Cuisine */}
-        <p className="category">
-          <FaUtensils /> Cuisine: {restaurant.cuisine}
-        </p>
-
-        {/* Price Range */}
-        <p className="category">
-          <FaUtensils /> Price Range: {restaurant.priceRange || 'Not available'}
-        </p>
-
-        {/* Total Rating */}
-        <p className="category">
-          <FaStar /> Total Rating: {restaurant.rating.toFixed(1)}
-        </p>
-      </div>
-
-      {/* Rating & Reviews */}
-      <div className="rating-reviews">
-        <h2>Rating & Reviews</h2>
-        <div className="average-rating">
-          <h2>
-            {restaurant.rating.toFixed(1)} <FaStar />
-          </h2>
+      <div className="restaurant-details-container">
+        <div className="restaurant-header">
+          <h1>{restaurant.name}</h1>
+          <div className="restaurant-meta">
+            <span>
+              <FaMapMarkerAlt /> {restaurant.locationCity}
+            </span>
+            {restaurant.priceRange && (
+              <span>
+                <FaMoneyBillWave /> {restaurant.priceRange}
+              </span>
+            )}
+          </div>
         </div>
-        <div className="rating-breakdown">
-          <h3>Rating Breakdown</h3>
-          <ul>
-            {restaurant.ratingBreakdown &&
-              Object.entries(restaurant.ratingBreakdown).map(([stars, count]) => (
-                <li key={stars}>
-                  {stars} stars: {count} ratings
-                </li>
-              ))}
-          </ul>
-          <a href="#add-review" className="add-review-link">
-            + Add Review
-          </a>
-        </div>
-      </div>
 
-      {/* Related Restaurants */}
-      <div className="related-restaurants">
-        <h2>Related Restaurants</h2>
-        <div className="related-restaurants-grid">
-          {restaurant.relatedRestaurants?.map((related, index) => (
-            <div key={index} className="related-restaurant-card">
-              <img src={related.image} alt={related.name} />
-              <h3>{related.name}</h3>
-              <p>{related.category}</p>
+        <div className="restaurant-content">
+          <div className="content-main">
+            <div className="section-card">
+              <h2><FaImage /> Gallery</h2>
+              <ImageCarousel 
+                images={restaurant.pictureUrls || restaurant.images || []} 
+                altPrefix={restaurant.name}
+              />
             </div>
-          ))}
+
+            <div className="description">
+              <h2><FaInfoCircle /> About</h2>
+              <p>{restaurant.description || 'No description available'}</p>
+            </div>
+
+            <div className="rating-section">
+              <h2><FaStar /> Ratings & Reviews</h2>
+              <Rating itemId={restaurant._id} itemType="restaurant" />
+            </div>
+          </div>
+
+          <div className="content-side">
+            <div className="map-container">
+              <h2><FaMapMarked /> Location</h2>
+              <LocationMap coordinates={restaurant.coordinates?.coordinates} />
+            </div>
+
+            <div className="restaurant-info">
+              <h2><FaInfoCircle /> Details</h2>
+              <div className="info-item">
+                <strong><FaUtensils /> Cuisine:</strong>
+                <span>{restaurant.cuisine}</span>
+              </div>
+              {restaurant.priceRange && (
+                <div className="info-item">
+                  <strong><FaMoneyBillWave /> Price Range:</strong>
+                  <span>{restaurant.priceRange}</span>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>
