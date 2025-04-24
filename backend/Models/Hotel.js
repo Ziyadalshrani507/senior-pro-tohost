@@ -42,7 +42,7 @@ const hotelSchema = new mongoose.Schema({
         "Bisha",
         "Al-Ula",
         "Ar Rass"
-      ]},,
+      ]},
   address: {
     type: String,
     required: [true, 'Address is required'],

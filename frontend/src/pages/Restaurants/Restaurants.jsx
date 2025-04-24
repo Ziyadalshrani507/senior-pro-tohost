@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import Restaurant from '../../components/Restaurant/Restaurant';
+import Card from '../../components/Card/Card';
 import './Restaurants.css';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'react-toastify';
+import LoginPromptModal from '../../components/LoginPromptModal/LoginPromptModal';
 
 import { getApiBaseUrl } from '../../utils/apiBaseUrl';
 const API_BASE_URL = getApiBaseUrl();
@@ -13,7 +14,8 @@ const Restaurants = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
-  const [likesMap, setLikesMap] = useState(new Map());
+  const [likesMap, setLikesMap] = useState({});
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const filterRef = useRef(null);
   const [filters, setFilters] = useState({
     cities: [],
@@ -81,10 +83,14 @@ const Restaurants = () => {
         const { restaurants: restaurantsData } = await restaurantsResponse.json();
         
         // Initialize likes map
-        const newLikesMap = new Map();
+        const newLikesMap = {};
         restaurantsData.forEach(restaurant => {
-          if (restaurant.likes && Array.isArray(restaurant.likes)) {
-            newLikesMap.set(restaurant._id, restaurant.likes);
+          if (restaurant.likes && Array.isArray(restaurant.likes) && user) {
+            // Check if current user has liked this restaurant
+            const isLiked = restaurant.likes.includes(user.id);
+            if (isLiked) {
+              newLikesMap[restaurant._id] = true;
+            }
           }
         });
         setLikesMap(newLikesMap);
@@ -297,10 +303,34 @@ const Restaurants = () => {
               <h2 className="city-title">{city}</h2>
               <div className="restaurants-grid">
                 {cityRestaurants.map((restaurant) => (
-                  <Restaurant 
-                    key={restaurant._id} 
-                    restaurant={restaurant}
-                    onLikeToggle={handleLikeToggle}
+                  <Card 
+                    key={restaurant._id}
+                    item={restaurant}
+                    type="restaurant"
+                    imageKey="images"
+                    likesMap={likesMap}
+                    onLoginRequired={() => setShowLoginPrompt(true)}
+                    onLikeToggle={(restaurantId, isLiked, likeCount) => handleLikeToggle(restaurantId, isLiked, likeCount)}
+                    detailsPath="/restaurants"
+                    renderCustomContent={(restaurant) => (
+                      <>
+                        <h3>{restaurant.name || 'Unnamed Restaurant'}</h3>
+                        {restaurant.cuisine && (
+                          <p className="restaurant-cuisine">{restaurant.cuisine}</p>
+                        )}
+                        <div className="restaurant-details">
+                          <span className="restaurant-price">{restaurant.priceRange || 'Price not available'}</span>
+                          {restaurant.rating && (
+                            <span className="restaurant-rating">
+                              {'★'.repeat(Math.floor(restaurant.rating))}
+                              {'☆'.repeat(5 - Math.floor(restaurant.rating))}
+                              <span className="rating-number">({restaurant.rating})</span>
+                            </span>
+                          )}
+                        </div>
+                        <p className="restaurant-location">{restaurant.locationCity || 'Location not specified'}</p>
+                      </>
+                    )}
                   />
                 ))}
               </div>
@@ -308,6 +338,11 @@ const Restaurants = () => {
           ))
         )}
       </div>
+      
+      <LoginPromptModal
+        isOpen={showLoginPrompt}
+        onClose={() => setShowLoginPrompt(false)}
+      />
     </div>
   );
 };

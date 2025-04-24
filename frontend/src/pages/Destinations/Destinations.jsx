@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom';
 import './Destinations.css';
 import { toast } from 'react-toastify';
-import LikeButton from '../../components/LikeButton/LikeButton';
+import Card from '../../components/Card/Card';
 import LoginPromptModal from '../../components/LoginPromptModal/LoginPromptModal';
 import { getApiBaseUrl } from '../../utils/apiBaseUrl';
 
@@ -307,68 +307,31 @@ const Destinations = () => {
                 <h2 className="city-title">{city}</h2>
                 <div className="destinations-grid">
                   {cityDestinations.map((destination, index) => (
-                  <div
-                    key={destination._id || index}
-                    className="destination-card"
-                    onClick={() => handleDestinationClick(destination._id)}
-                  >
-                    <div className="image-container">
-                      {(destination?.images?.[0] || destination?.pictureUrls?.[0]) ? (
-                        <img
-                          src={destination.images?.[0] || destination.pictureUrls?.[0]}
-                          alt={destination?.name || 'Destination'}
-                          className="destination-image"
-                          loading="lazy"
-                          onError={(e) => {
-                            e.target.parentElement.innerHTML = `
-                              <div class="no-image-placeholder">
-                                <i class="bi bi-image"></i>
-                                <span>No Image Available</span>
-                              </div>
-                            `;
-                          }}
-                        />
-                      ) : (
-                        <div className="no-image-placeholder">
-                          <i className="bi bi-image"></i>
-                          <span>No Image Available</span>
-                        </div>
-                      )}
-                      <LikeButton
-                        placeType="destination"
-                        placeId={destination._id}
-                        initialLikeCount={destination.likeCount || 0}
-                        isInitiallyLiked={likesMap[destination._id] || false}
-                        onLoginRequired={() => setShowLoginPrompt(true)}
-                        onLikeToggle={(isLiked, likeCount) => {
-                          // Update the likes map
-                          setLikesMap(prev => ({
-                            ...prev,
-                            [destination._id]: isLiked
-                          }));
-                          
-                          // Update the destination's like count
-                          setAllDestinations(prev =>
-                            prev.map(d =>
-                              d._id === destination._id
-                                ? { ...d, likeCount }
-                                : d
-                            )
-                          );
-                        }}
-                      />
-                    </div>
-                    <div className="destination-info">
-                      <h3>{destination.name}</h3>
-                      <p className="destination-description">
-                        {destination.description ? 
-                          (destination.description.length > 70 ? 
-                            `${destination.description.substring(0, 70)}...` : 
-                            destination.description) : 
-                          'No description available'}
-                      </p>
-                    </div>
-                  </div>
+                    <Card
+                      key={destination._id || index}
+                      item={destination}
+                      type="destination"
+                      likesMap={likesMap}
+                      onLoginRequired={() => setShowLoginPrompt(true)}
+                      onLikeToggle={(destinationId, isLiked, likeCount) => {
+                        // Update the likes map
+                        setLikesMap(prev => ({
+                          ...prev,
+                          [destinationId]: isLiked
+                        }));
+                        
+                        // Update the destination's like count
+                        setAllDestinations(prev =>
+                          prev.map(d =>
+                            d._id === destinationId
+                              ? { ...d, likeCount }
+                              : d
+                          )
+                        );
+                      }}
+                      onClick={handleDestinationClick}
+                      detailsPath="/destinations"
+                    />
                 ))}
               </div>
               </div>

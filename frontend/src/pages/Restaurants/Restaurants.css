@@ -210,10 +210,58 @@
 }
 
 .restaurants-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: 20px;
-  justify-items: center;
+  justify-content: flex-start;
+}
+
+/* Custom styles for restaurant card content */
+.restaurant-cuisine {
+  color: #666;
+  font-size: 0.85rem;
+  margin: 2px 0 6px;
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.restaurant-details {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+  width: 100%;
+}
+
+.restaurant-price {
+  font-weight: 500;
+  color: #555;
+  font-size: 0.85rem;
+}
+
+.restaurant-rating {
+  color: #ff9800;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.restaurant-rating .rating-number {
+  color: #666;
+  font-size: 0.75rem;
+  margin-left: 3px;
+}
+
+.restaurant-location {
+  color: #777;
+  font-size: 0.8rem;
+  margin-top: 4px;
+  margin-bottom: 0;
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .loading, .no-results {
@@ -269,7 +317,7 @@
   }
 
   .restaurants-grid {
-    grid-template-columns: 1fr;
+    justify-content: center;
   }
 }
 
