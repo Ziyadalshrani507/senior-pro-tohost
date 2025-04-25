@@ -18,6 +18,7 @@ import RestaurantDetails from './pages/RestaurantDetails/RestaurantDetails';
 import Dashboard from './pages/Dashboard/Dashboard';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import ChatWidget from './components/ChatWidget/ChatWidget';
+import SearchAll from './pages/SearchAll/SearchAll';
 
 import Hotels from './pages/Hotels/Hotels';
 import About from './pages/About/About';
@@ -103,6 +104,7 @@ function App() {
               <Route path="/hotels" element={<Hotels />} />
               <Route path="/destinations" element={<Destinations />} />
               <Route path="/destinations/:id" element={<DestinationDetails />} />
+              <Route path="/search" element={<SearchAll />} />
               <Route path="/signup" element={<SignUp />} />
               <Route path="/signin" element={<SignIn />} />
               <Route path="/request-password-reset" element={<RequestPasswordReset />} />
