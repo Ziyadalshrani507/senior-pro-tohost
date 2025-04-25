@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'react-toastify';
-import { FaSearch, FaPlus, FaEdit, FaTrash, FaFilter, FaSort, FaSpinner, FaExclamationTriangle, FaStar, FaMapMarkerAlt, FaUtensils, FaRoute } from 'react-icons/fa';
+import { FaSearch, FaPlus, FaEdit, FaTrash, FaFilter, FaSort, FaSpinner, FaExclamationTriangle, FaStar, FaMapMarkerAlt, FaUtensils } from 'react-icons/fa';
 import ItemModal from './ItemModal';
 import DashboardStats from './DashboardStats';
 import FilterPanel from '../../components/FilterPanel/FilterPanel';
@@ -301,36 +301,42 @@ const Dashboard = () => {
 
   const totalPages = Math.ceil(state.filteredItems.length / ITEMS_PER_PAGE);
 
-  // Add a new tab for tours
-  const tabButtons = [
-    { key: 'destinations', label: 'Destinations', icon: <FaMapMarkerAlt /> },
-    { key: 'restaurants', label: 'Restaurants', icon: <FaUtensils /> },
-    { key: 'tours', label: 'Tours', icon: <FaRoute /> }
-  ];
-
   return (
     <div className="dashboard">
       <div className="dashboard-header">
         <div className="tab-buttons">
-          {tabButtons.map(tab => (
-            <button 
-              key={tab.key}
-              className={state.activeTab === tab.key ? 'active' : ''} 
-              onClick={() => createAction('SET_ACTIVE_TAB', { activeTab: tab.key })}
-            >
-              {tab.icon} {tab.label}
-            </button>
-          ))}
+          <button 
+            className={state.activeTab === 'destinations' ? 'active' : ''} 
+            onClick={() => createAction('SET_ACTIVE_TAB', { activeTab: 'destinations' })}
+          >
+            <FaMapMarkerAlt /> Destinations
+          </button>
+          <button 
+            className={state.activeTab === 'restaurants' ? 'active' : ''} 
+            onClick={() => createAction('SET_ACTIVE_TAB', { activeTab: 'restaurants' })}
+          >
+            <FaUtensils /> Restaurants
+          </button>
         </div>
 
         <div className="dashboard-actions">
           <button
             className="add-btn"
-            onClick={() => createAction('SET_MODAL_OPEN', { isModalOpen: true })}
+            onClick={() => handleEdit(null)}
             title="Add new item"
           >
             <FaPlus /> Add New
           </button>
+          {state.selectedItems.length > 0 && (
+            <button
+              className="delete-btn"
+              onClick={() => handleDelete(state.selectedItems)}
+              disabled={state.isDeleting}
+            >
+              {state.isDeleting ? <FaSpinner className="spinner" /> : <FaTrash />}
+              Delete Selected ({state.selectedItems.length})
+            </button>
+          )}
         </div>
       </div>
 

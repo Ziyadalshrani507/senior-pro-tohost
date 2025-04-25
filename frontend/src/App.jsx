@@ -20,6 +20,8 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import ChatWidget from './components/ChatWidget/ChatWidget';
 
 import Hotels from './pages/Hotels/Hotels';
+import About from './pages/About/About';
+import Tours from './pages/Tours/Tours';
 
 
 // Error Boundary Component
@@ -96,6 +98,8 @@ function App() {
                   <p>Discover amazing destinations and plan your next adventure!</p>
                 </main>
               } />
+              <Route path="/about" element={<About />} />
+              <Route path="/tours" element={<Tours />} />
               <Route path="/hotels" element={<Hotels />} />
               <Route path="/destinations" element={<Destinations />} />
               <Route path="/destinations/:id" element={<DestinationDetails />} />
