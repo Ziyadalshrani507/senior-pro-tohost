@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'react-toastify';
-import { FaSearch, FaPlus, FaEdit, FaTrash, FaFilter, FaSort, FaSpinner, FaExclamationTriangle, FaStar, FaMapMarkerAlt, FaUtensils, FaRoute } from 'react-icons/fa';
+import { FaSearch, FaPlus, FaEdit, FaTrash, FaFilter, FaSort, FaSpinner, FaExclamationTriangle, FaStar, FaMapMarkerAlt, FaUtensils, FaRoute, FaHotel } from 'react-icons/fa';
 import ItemModal from './ItemModal';
 import DashboardStats from './DashboardStats';
 import FilterPanel from '../../components/FilterPanel/FilterPanel';
@@ -21,7 +21,9 @@ const Dashboard = () => {
     error: null,
     stats: {
       destinations: { total: 0, avgRating: 0, activeItems: 0 },
-      restaurants: { total: 0, avgRating: 0, activeItems: 0 }
+      restaurants: { total: 0, avgRating: 0, activeItems: 0 },
+      hotels: { total: 0, avgRating: 0, activeItems: 0 },
+      tours: { total: 0, avgRating: 0, activeItems: 0 }
     },
     filters: {
       search: '',
@@ -32,7 +34,9 @@ const Dashboard = () => {
       popularity: '',
       locationCity: '',
       sortBy: 'name',
-      page: 1
+      page: 1,
+      hotelClass: '',
+      amenities: ''
     },
     selectedItems: [],
     isModalOpen: false,
@@ -41,7 +45,9 @@ const Dashboard = () => {
       cities: [],
       cuisines: [],
       categories: [],
-      types: []
+      types: [],
+      hotelClasses: [],
+      amenities: []
     },
     isDeleting: false
   });
@@ -96,7 +102,26 @@ const Dashboard = () => {
       }
       
       const data = await response.json();
-      const items = Array.isArray(data) ? data : data.items || [];
+      
+      // Handle different response formats based on endpoint type
+      let items = [];
+      if (Array.isArray(data)) {
+        items = data;
+      } else if (data.items) {
+        items = data.items;
+      } else if (data.restaurants && state.activeTab === 'restaurants') {
+        // Special handling for restaurants endpoint which returns {restaurants: [...]} format
+        items = data.restaurants;
+      } else if (data[state.activeTab]) {
+        // Handle {[endpoint]: [...]} format (e.g., {hotels: [...]})
+        items = data[state.activeTab];
+      } else {
+        // Fallback - try to find any array in the response
+        const arrayProps = Object.keys(data).filter(key => Array.isArray(data[key]));
+        if (arrayProps.length > 0) {
+          items = data[arrayProps[0]];
+        }
+      }
       
       // Store all items
       createAction('SET_ALL_ITEMS', { allItems: items });
@@ -104,7 +129,19 @@ const Dashboard = () => {
       // Calculate stats
       const totalItems = items.length;
       const activeItems = items.filter(item => !item.isDeleted).length;
-      const avgRating = items.reduce((acc, item) => acc + (item.rating || 0), 0) / totalItems || 0;
+      
+      // Handle both object and number rating formats
+      const avgRating = items.reduce((acc, item) => {
+        let ratingValue = 0;
+        if (item.rating) {
+          if (typeof item.rating === 'object' && item.rating.average !== undefined) {
+            ratingValue = item.rating.average;
+          } else if (!isNaN(parseFloat(item.rating))) {
+            ratingValue = parseFloat(item.rating);
+          }
+        }
+        return acc + ratingValue;
+      }, 0) / (totalItems || 1);
       
       createAction('SET_STATS', {
         stats: {
@@ -136,7 +173,8 @@ const Dashboard = () => {
       filtered = filtered.filter(item => 
         item.name.toLowerCase().includes(searchLower) ||
         item.locationCity?.toLowerCase().includes(searchLower) ||
-        item.categories?.some(cat => cat.toLowerCase().includes(searchLower))
+        item.categories?.some(cat => cat.toLowerCase().includes(searchLower)) ||
+        item.amenities?.some(amenity => amenity.toLowerCase().includes(searchLower))
       );
     }
 
@@ -156,7 +194,7 @@ const Dashboard = () => {
           }
         });
       }
-    } else {
+    } else if (state.activeTab === 'restaurants') {
       // Restaurant filters
       if (state.filters.cuisine) {
         filtered = filtered.filter(item => item.cuisine === state.filters.cuisine);
@@ -169,6 +207,23 @@ const Dashboard = () => {
       }
       if (state.filters.locationCity) {
         filtered = filtered.filter(item => item.locationCity === state.filters.locationCity);
+      }
+    } else if (state.activeTab === 'hotels') {
+      // Hotel filters
+      if (state.filters.hotelClass) {
+        filtered = filtered.filter(item => item.hotelClass === state.filters.hotelClass);
+      }
+      if (state.filters.priceRange) {
+        filtered = filtered.filter(item => item.priceRange === state.filters.priceRange);
+      }
+      if (state.filters.rating) {
+        filtered = filtered.filter(item => item.rating >= Number(state.filters.rating));
+      }
+      if (state.filters.locationCity) {
+        filtered = filtered.filter(item => item.locationCity === state.filters.locationCity);
+      }
+      if (state.filters.amenities) {
+        filtered = filtered.filter(item => item.amenities?.includes(state.filters.amenities));
       }
     }
 
@@ -190,9 +245,29 @@ const Dashboard = () => {
 
   // Handle editing an item
   const handleEdit = useCallback((item) => {
-    createAction('SET_CURRENT_ITEM', { currentItem: item });
+    // Ensure proper image handling by properly processing image URLs from both fields
+    let processedItem = { ...item };
+
+    if (state.activeTab === 'restaurants') {
+      // For restaurants, ensure we use all available images from any field
+      // This handles backward compatibility with old data format
+      const allImages = [
+        ...(Array.isArray(item.images) ? item.images : []),
+        ...(Array.isArray(item.pictureUrls) ? item.pictureUrls : [])
+      ];
+      
+      // Remove duplicates
+      const uniqueImages = [...new Set(allImages)];
+      
+      // Set only the images field as per the Restaurant schema
+      processedItem.images = uniqueImages;
+      
+      console.log('Edit restaurant with images:', uniqueImages);
+    }
+    
+    createAction('SET_CURRENT_ITEM', { currentItem: processedItem });
     createAction('SET_MODAL_OPEN', { isModalOpen: true });
-  }, []);
+  }, [state.activeTab]);
 
   // Handle saving an item (create or update)
   const handleSave = useCallback(async (formData) => {
@@ -215,13 +290,38 @@ const Dashboard = () => {
         throw new Error(error.message || 'Failed to save item');
       }
 
+      // Parse the response JSON - CRITICAL: This can only be done ONCE per response
+      // After you call response.json() once, you can't call it again on the same response
       const savedItem = await response.json();
+      console.log('Received saved item from server:', savedItem);
+      
+      // Process the saved item to ensure images are properly handled
+      let processedSavedItem = savedItem;
+      
+      if (state.activeTab === 'restaurants') {
+        // Get all images from any field for backward compatibility
+        const allImages = [
+          ...(Array.isArray(savedItem.images) ? savedItem.images : []),
+          ...(Array.isArray(savedItem.pictureUrls) ? savedItem.pictureUrls : [])
+        ];
+        
+        // Remove duplicates
+        const uniqueImages = [...new Set(allImages)];
+        
+        // Create a processed version with the correct field
+        processedSavedItem = {
+          ...savedItem,
+          images: uniqueImages
+        };
+        
+        console.log('Saved restaurant with images:', uniqueImages);
+      }
 
-      // Update local state
+      // Update local state with the processed item
       createAction('SET_ALL_ITEMS', {
         allItems: isEditing 
-          ? state.allItems.map(item => item._id === savedItem._id ? savedItem : item)
-          : [...state.allItems, savedItem]
+          ? state.allItems.map(item => item._id === processedSavedItem._id ? processedSavedItem : item)
+          : [...state.allItems, processedSavedItem]
       });
 
       toast.success(`Item ${isEditing ? 'updated' : 'created'} successfully`);
@@ -301,10 +401,11 @@ const Dashboard = () => {
 
   const totalPages = Math.ceil(state.filteredItems.length / ITEMS_PER_PAGE);
 
-  // Add a new tab for tours
+  // Dashboard tabs
   const tabButtons = [
     { key: 'destinations', label: 'Destinations', icon: <FaMapMarkerAlt /> },
     { key: 'restaurants', label: 'Restaurants', icon: <FaUtensils /> },
+    { key: 'hotels', label: 'Hotels', icon: <FaHotel /> },
     { key: 'tours', label: 'Tours', icon: <FaRoute /> }
   ];
 
@@ -348,7 +449,8 @@ const Dashboard = () => {
         })}
         onResetFilters={() => createAction('SET_FILTERS', { 
           filters: { search: '', city: '', cuisine: '', priceRange: '', rating: '', 
-                    popularity: '', locationCity: '', sortBy: 'name', page: 1 } 
+                    popularity: '', locationCity: '', sortBy: 'name', page: 1, 
+                    hotelClass: '', amenities: '' } 
         })}
       />
 
@@ -376,7 +478,14 @@ const Dashboard = () => {
                   <p>{item.description}</p>
                   <div className="item-meta">
                     <span><FaMapMarkerAlt /> {item.locationCity}</span>
-                    {item.rating && <span><FaStar /> {item.rating.toFixed(1)}</span>}
+                    {item.rating && (
+                      <span>
+                        <FaStar />
+                        {typeof item.rating === 'object' && item.rating.average !== undefined
+                          ? parseFloat(item.rating.average).toFixed(1)
+                          : parseFloat(item.rating || 0).toFixed(1)}
+                      </span>
+                    )}
                     {item.priceRange && <span>{item.priceRange}</span>}
                   </div>
                 </div>

@@ -30,7 +30,7 @@ app.use(cors({
 }));
 app.use(express.json());
 
-app.use('/api/hotels', hotelRoutes);
+// Hotel routes are registered below with other API routes
 
 // Configure multer for profile picture uploads
 const storage = multer.diskStorage({
@@ -72,6 +72,7 @@ app.use('/api/restaurants', restaurantRoutes);
 app.use('/api/ratings', ratingRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/likes', likeRoutes);
+app.use('/api/hotels', hotelRoutes);
 
 // Serve static files from the React app
 app.use(express.static(path.join(__dirname, '../frontend/dist')));

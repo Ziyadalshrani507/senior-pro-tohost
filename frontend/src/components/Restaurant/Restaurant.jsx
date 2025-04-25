@@ -29,11 +29,21 @@ const Restaurant = ({ restaurant, onLikeToggle }) => {
     if (rating === null || rating === undefined) {
       return 'Not rated yet';
     }
+    
+    // Handle both number and object formats of rating
+    const ratingValue = typeof rating === 'object' && rating.average !== undefined
+      ? rating.average
+      : parseFloat(rating);
+    
+    if (isNaN(ratingValue)) {
+      return 'Not rated yet';
+    }
+    
     return (
       <div className="rating">
-        {'★'.repeat(Math.floor(rating))}
-        {'☆'.repeat(5 - Math.floor(rating))}
-        <span className="rating-number">({rating})</span>
+        {'★'.repeat(Math.floor(ratingValue))}
+        {'☆'.repeat(5 - Math.floor(ratingValue))}
+        <span className="rating-number">({ratingValue.toFixed(1)})</span>
       </div>
     );
   };
@@ -52,11 +62,19 @@ const Restaurant = ({ restaurant, onLikeToggle }) => {
 
   return (
     <div className="restaurant-card" onClick={handleClick}>
-      <div className="restaurant-image">
-        {restaurant.images && restaurant.images.length > 0 && (
-          <img src={restaurant.images[0]} alt={restaurant.name} />
-        )}
-      </div>
+      {/* Image section - display first image if available */}
+      {(restaurant.pictureUrls?.length > 0 || restaurant.images?.length > 0) && (
+        <div className="restaurant-image">
+          <img 
+            src={restaurant.pictureUrls?.[0] || restaurant.images?.[0]} 
+            alt={restaurant.name} 
+            onError={(e) => {
+              e.target.onerror = null; 
+              e.target.src = 'https://placehold.co/600x400?text=No+Image';
+            }}
+          />
+        </div>
+      )}
       <div className="restaurant-info">
         <div className="restaurant-header">
           <h3>{restaurant.name || 'Unnamed Restaurant'}</h3>

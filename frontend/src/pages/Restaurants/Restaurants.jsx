@@ -146,10 +146,23 @@ const Restaurants = () => {
 
     // Apply rating range filter
     if (filters.rating.min !== '') {
-      filtered = filtered.filter(rest => rest.rating >= Number(filters.rating.min));
+      filtered = filtered.filter(rest => {
+        // Handle both object and number formats
+        const ratingValue = typeof rest.rating === 'object' && rest.rating.average !== undefined
+          ? rest.rating.average
+          : parseFloat(rest.rating || 0);
+        return ratingValue >= Number(filters.rating.min);
+      });
     }
+
     if (filters.rating.max !== '') {
-      filtered = filtered.filter(rest => rest.rating <= Number(filters.rating.max));
+      filtered = filtered.filter(rest => {
+        // Handle both object and number formats
+        const ratingValue = typeof rest.rating === 'object' && rest.rating.average !== undefined
+          ? rest.rating.average
+          : parseFloat(rest.rating || 0);
+        return ratingValue <= Number(filters.rating.max);
+      });
     }
 
     // Group by city
@@ -322,9 +335,20 @@ const Restaurants = () => {
                           <span className="restaurant-price">{restaurant.priceRange || 'Price not available'}</span>
                           {restaurant.rating && (
                             <span className="restaurant-rating">
-                              {'★'.repeat(Math.floor(restaurant.rating))}
-                              {'☆'.repeat(5 - Math.floor(restaurant.rating))}
-                              <span className="rating-number">({restaurant.rating})</span>
+                              {(() => {
+                                // Handle both object and number formats
+                                const ratingValue = typeof restaurant.rating === 'object' && restaurant.rating.average !== undefined
+                                  ? restaurant.rating.average
+                                  : parseFloat(restaurant.rating || 0);
+                                  
+                                return (
+                                  <>
+                                    {'★'.repeat(Math.floor(ratingValue))}
+                                    {'☆'.repeat(5 - Math.floor(ratingValue))}
+                                    <span className="rating-number">({ratingValue.toFixed(1)})</span>
+                                  </>
+                                );
+                              })()}
                             </span>
                           )}
                         </div>

@@ -48,6 +48,29 @@ exports.signup = async (req, res) => {
   }
 };
 
+// Refresh Token Controller
+exports.refreshToken = async (req, res) => {
+  try {
+    // User will be attached to the request by the protect middleware
+    const user = req.user;
+    
+    if (!user) {
+      return res.status(401).json({ message: 'Authentication failed' });
+    }
+    
+    // Generate a new token
+    const newToken = generateToken(user._id);
+    
+    res.status(200).json({
+      message: 'Token refreshed successfully',
+      token: newToken
+    });
+  } catch (error) {
+    console.error('Error refreshing token:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
 // Sign In Controller
 exports.signin = async (req, res) => {
   try {

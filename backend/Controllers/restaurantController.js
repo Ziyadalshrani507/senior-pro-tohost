@@ -128,10 +128,35 @@ exports.createRestaurant = async (req, res) => {
         }
 
         // Process picture URLs
-        const processedPictureUrls = pictureUrls?.filter(url => url && typeof url === 'string' && url.trim())
-            .map(url => url.trim()) || [];
+        // Get all image URLs from the request (may come from either field in frontend)
+        const rawImageUrls = [
+            ...(Array.isArray(pictureUrls) ? pictureUrls : []),
+            ...(Array.isArray(req.body.images) ? req.body.images : [])
+        ];
+        
+        // Clean up URLs: remove duplicates, empty strings, and whitespace
+        const processedImages = [...new Set(
+            rawImageUrls
+                .filter(url => url && typeof url === 'string' && url.trim())
+                .map(url => url.trim())
+        )];
 
-        console.log('Processed picture URLs:', processedPictureUrls); // Debug log
+        console.log('Processed images:', processedImages); // Debug log
+
+        // Prepare contact object properly
+        const contactObj = {
+            phone: contact.phone // Phone is required
+        };
+        
+        // Only add email if it's not empty
+        if (contact.email && contact.email.trim()) {
+            contactObj.email = contact.email.trim();
+        }
+        
+        // Only add website if it's not empty
+        if (contact.website && contact.website.trim()) {
+            contactObj.website = contact.website.trim();
+        }
 
         // Create new restaurant
         const restaurant = await Restaurant.create({
@@ -141,30 +166,39 @@ exports.createRestaurant = async (req, res) => {
             priceRange,
             address,
             locationCity,
-            contact: {
-                phone: contact.phone,
-                email: (contact.email || '').trim(),
-                website: (contact.website || '').trim()
-            },
+            contact: contactObj,
             categories: categories || [],
-            pictureUrls: processedPictureUrls,
-            rating: rating || 0,
-            openingHours: openingHours || '',
-            reviews: 0
+            images: processedImages,
+            // Set up rating properly based on incoming format
+            rating: {
+                average: typeof rating === 'object' ? (rating.average || 0) : (rating || 0),
+                count: typeof rating === 'object' ? (rating.count || 0) : 0
+            },
+            openingHours: openingHours || ''
         });
 
         console.log('Created new restaurant:', restaurant); // Debug log
         res.status(201).json(restaurant);
     } catch (error) {
         console.error('Error creating restaurant:', error);
+        console.error('Request body:', req.body); // Log the request body
+        
         if (error.name === 'ValidationError') {
+            // Enhanced validation error logging
+            console.error('Validation Error Details:', JSON.stringify(error.errors, null, 2));
+            
             return res.status(400).json({ 
                 message: 'Validation Error', 
                 error: error.message,
-                details: Object.values(error.errors).map(err => err.message)
+                details: Object.values(error.errors).map(err => err.message),
+                validationErrors: error.errors // Send the full validation errors object
             });
         }
-        res.status(500).json({ message: 'Error creating restaurant', error: error.message });
+        res.status(500).json({ 
+            message: 'Error creating restaurant', 
+            error: error.message,
+            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        });
     }
 };
 
@@ -211,10 +245,20 @@ exports.updateRestaurant = async (req, res) => {
         console.log('Updating restaurant with data:', req.body); // Debug log
 
         // Process picture URLs
-        const processedPictureUrls = pictureUrls?.filter(url => url && typeof url === 'string' && url.trim())
-            .map(url => url.trim()) || [];
+        // Get all image URLs from the request (may come from either field in frontend)
+        const rawImageUrls = [
+            ...(Array.isArray(pictureUrls) ? pictureUrls : []),
+            ...(Array.isArray(req.body.images) ? req.body.images : [])
+        ];
+        
+        // Clean up URLs: remove duplicates, empty strings, and whitespace
+        const processedImages = [...new Set(
+            rawImageUrls
+                .filter(url => url && typeof url === 'string' && url.trim())
+                .map(url => url.trim())
+        )];
 
-        console.log('Processed picture URLs:', processedPictureUrls); // Debug log
+        console.log('Processed images:', processedImages); // Debug log
 
         const restaurant = await Restaurant.findByIdAndUpdate(
             req.params.id,
@@ -231,7 +275,7 @@ exports.updateRestaurant = async (req, res) => {
                     website: (contact.website || '').trim()
                 },
                 categories: categories || [],
-                pictureUrls: processedPictureUrls,
+                images: processedImages, // Store in both fields for consistency
                 rating: rating || 0,
                 openingHours: openingHours || ''
             },
