@@ -394,27 +394,7 @@ const Hotels = () => {
                         }}
                         onClick={handleHotelClick}
                         detailsPath="/hotels"
-                        renderCustomContent={(hotel) => (
-                          <>
-                            <h3>{hotel.name || 'Untitled'}</h3>
-                            <p className="card-description">
-                              {hotel.description ? 
-                                (hotel.description.length > 70 ? 
-                                  `${hotel.description.substring(0, 70)}...` : 
-                                  hotel.description) : 
-                                'No description available'}
-                            </p>
-                            {hotel.pricePerNight && (
-                              <p className="hotel-price">{hotel.pricePerNight} SAR / night</p>
-                            )}
-                            {hotel.rating && (
-                              <div className="hotel-rating">
-                                <span className="rating-stars">⭐ {hotel.rating.average ? hotel.rating.average.toFixed(1) : '0.0'}</span>
-                                <span className="review-count">({hotel.rating.count || 0} reviews)</span>
-                              </div>
-                            )}
-                          </>
-                        )}
+
                       />
                     ))}
                   </div>
