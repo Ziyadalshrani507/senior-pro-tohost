@@ -26,9 +26,9 @@ function MapClickHandler({ onPositionChange }) {
   useMapEvents({
     click: (e) => {
       const { lat, lng } = e.latlng;
-      // Round to 4 decimal places
-      const roundedLat = Number(lat.toFixed(4));
-      const roundedLng = Number(lng.toFixed(4));
+      // Use 7 decimal places for high precision (about 1.1cm at the equator)
+      const roundedLat = Number(lat.toFixed(7));
+      const roundedLng = Number(lng.toFixed(7));
       onPositionChange([roundedLng, roundedLat]);
     }
   });
@@ -43,8 +43,8 @@ const MapPicker = ({ position, onPositionChange }) => {
     const number = parseFloat(value);
     if (isNaN(number)) return;
 
-    // Round to 4 decimal places
-    const rounded = Number(number.toFixed(4));
+    // Use 7 decimal places for high precision
+    const rounded = Number(number.toFixed(7));
     
     if (isLatitude && rounded >= -90 && rounded <= 90) {
       onPositionChange([position[0], rounded]);
@@ -79,7 +79,7 @@ const MapPicker = ({ position, onPositionChange }) => {
                 type="number"
                 value={position[1]}
                 onChange={(e) => handleInputChange(e.target.value, true)}
-                step="0.0001"
+                step="0.0000001"
                 min="-90"
                 max="90"
               />
@@ -90,7 +90,7 @@ const MapPicker = ({ position, onPositionChange }) => {
                 type="number"
                 value={position[0]}
                 onChange={(e) => handleInputChange(e.target.value, false)}
-                step="0.0001"
+                step="0.0000001"
                 min="-180"
                 max="180"
               />

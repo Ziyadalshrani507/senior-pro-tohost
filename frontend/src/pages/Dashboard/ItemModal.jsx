@@ -12,7 +12,7 @@ const ItemModal = ({ item, type, onSave, onClose, schemaOptions }) => {
     images: [], // Changed from pictureUrls to match Restaurant model
     coordinates: {
       type: 'Point',
-      coordinates: null // [longitude, latitude]
+      coordinates: [0, 0] // [longitude, latitude]
     },
     // Destination specific fields
     type: '',
@@ -91,7 +91,7 @@ const ItemModal = ({ item, type, onSave, onClose, schemaOptions }) => {
       images: [], // Changed from pictureUrls to match Restaurant model
       coordinates: {
         type: 'Point',
-        coordinates: null
+        coordinates: [0, 0]
       },
       type: '',
       cost: '',
@@ -207,12 +207,53 @@ const ItemModal = ({ item, type, onSave, onClose, schemaOptions }) => {
           if (!isNaN(longitude) && !isNaN(latitude) &&
               longitude >= -180 && longitude <= 180 &&
               latitude >= -90 && latitude <= 90) {
+            // Ensure we preserve 7 decimal places precision for coordinates
             submissionData.coordinates = {
               type: 'Point',
-              coordinates: [longitude, latitude]
+              coordinates: [
+                Number(parseFloat(longitude).toFixed(7)),
+                Number(parseFloat(latitude).toFixed(7))
+              ]
             };
+            
+            console.log('Using coordinates with 7 decimal precision:', submissionData.coordinates.coordinates);
           }
         }
+        
+        // Initialize rating properties according to schema
+        submissionData.rating = {
+          average: 0,
+          count: 0
+        };
+        submissionData.likeCount = 0;
+      } else if (type === 'destinations') {
+        // For destinations we must use pictureUrls not images field
+        // Create a properly formatted object that matches the destination model exactly
+        submissionData = {
+          ...(item?._id && { _id: item._id }),
+          name: formData.name.trim(),
+          description: formData.description.trim(),
+          locationCity: formData.locationCity,
+          type: formData.type,
+          // Ensure cost is a number
+          cost: parseFloat(formData.cost) || 0,
+          categories: formData.categories || [],
+          // IMPORTANT: Use pictureUrls for Destination model (not images field)
+          pictureUrls: formData.images || [],
+          // NOTE: Destination model does not have contact field
+          // so we don't include it
+          
+          // Handle coordinates field correctly
+          coordinates: formData.coordinates?.coordinates && 
+            Array.isArray(formData.coordinates.coordinates) && 
+            formData.coordinates.coordinates.length === 2 ? {
+              type: 'Point',
+              coordinates: [
+                Number(parseFloat(formData.coordinates.coordinates[0]).toFixed(7)),
+                Number(parseFloat(formData.coordinates.coordinates[1]).toFixed(7))
+              ]
+            } : undefined
+        };
         
         // Initialize rating properties according to schema
         submissionData.rating = {
@@ -252,10 +293,16 @@ const ItemModal = ({ item, type, onSave, onClose, schemaOptions }) => {
           if (!isNaN(longitude) && !isNaN(latitude) &&
               longitude >= -180 && longitude <= 180 &&
               latitude >= -90 && latitude <= 90) {
+            // Ensure we preserve 7 decimal places precision for coordinates
             submissionData.coordinates = {
               type: 'Point',
-              coordinates: [longitude, latitude]
+              coordinates: [
+                Number(parseFloat(longitude).toFixed(7)),
+                Number(parseFloat(latitude).toFixed(7))
+              ]
             };
+            
+            console.log('Using coordinates with 7 decimal precision:', submissionData.coordinates.coordinates);
           }
         }
         
@@ -276,7 +323,8 @@ const ItemModal = ({ item, type, onSave, onClose, schemaOptions }) => {
       }
 
       // Debug log the final data being sent to the API
-      console.log(`Submitting ${type} data:`, submissionData);
+      // Log the final data being sent
+      console.log(`Submitting ${type} data:`, JSON.stringify(submissionData, null, 2));
 
       await onSave(submissionData);
       onClose();
@@ -384,11 +432,19 @@ const ItemModal = ({ item, type, onSave, onClose, schemaOptions }) => {
   };
 
   const handleMapPositionChange = (coordinates) => {
+    console.log('Map position changed to:', coordinates);
+    // Ensure coordinates are valid numbers with 7 decimal places precision
+    const formattedCoordinates = [
+      Number(parseFloat(coordinates[0]).toFixed(7)),
+      Number(parseFloat(coordinates[1]).toFixed(7))
+    ];
+    console.log('Formatted coordinates:', formattedCoordinates);
+    
     setFormData(prev => ({
       ...prev,
       coordinates: {
         type: 'Point',
-        coordinates
+        coordinates: formattedCoordinates
       }
     }));
   };
@@ -569,7 +625,7 @@ const ItemModal = ({ item, type, onSave, onClose, schemaOptions }) => {
               <div className="form-group">
                 <label>Categories</label>
                 <div className="categories-grid">
-                  {['Fine Dining', 'Casual Dining', 'Fast Food', 'Cafe', 'Street Food', 'Traditional'].map(category => (
+                  {(schemaOptions?.categories || ['Fine Dining', 'Casual Dining', 'Fast Food', 'Cafe', 'Street Food', 'Traditional']).map(category => (
                     <label key={category} className="category-checkbox">
                       <input
                         type="checkbox"

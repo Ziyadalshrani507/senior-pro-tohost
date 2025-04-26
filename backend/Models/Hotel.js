@@ -134,10 +134,21 @@ const hotelSchema = new mongoose.Schema({
     default: '12:00'
   },
   rating: {
-    type: Number,
-    min: 0,
-    max: 5,
-    default: 0,
+    average: {
+      type: Number,
+      min: 0,
+      max: 5,
+      default: 0
+    },
+    count: {
+      type: Number,
+      min: 0,
+      default: 0
+    }
+  },
+  images: {
+    type: [String],
+    default: []
   },
   pictureUrls: {
     type: [String],

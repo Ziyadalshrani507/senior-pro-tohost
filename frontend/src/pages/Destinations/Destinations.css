@@ -1,22 +1,25 @@
 .destinations-page {
-  padding: 20px;
-  max-width: 1400px;
+  padding: 30px;
+  max-width: 100%;
   margin: 0 auto;
-  background-color: #f8f9fa;
-  background-image: linear-gradient(rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.95)),
-    url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23006C35' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  width: 100%;
+  background-color: #f8fafc;
+  background-image: linear-gradient(rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.98)),
+    url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23B88A44' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  min-height: calc(100vh - 80px);
 }
 
 .destinations-navbar {
-  margin-bottom: 30px;
+  margin-bottom: 40px;
   background-color: white;
-  padding: 15px;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   position: sticky;
   top: 80px;
   z-index: 100;
-  border-bottom: 3px solid #006C35;
+  border-bottom: 3px solid #B88A44;
+  transition: all 0.3s ease;
 }
 
 .search-filter-container {
@@ -37,18 +40,19 @@
 
 .search-input {
   width: 100%;
-  padding: 0.75rem 2.5rem 0.75rem 1rem;
+  padding: 0.9rem 2.5rem 0.9rem 1.2rem;
   border: 2px solid #006C35;
-  border-radius: 8px;
+  border-radius: 50px;
   font-size: 1rem;
-  transition: all 0.2s ease;
-  background-color: rgba(255, 255, 255, 0.9);
+  transition: all 0.3s ease;
+  background-color: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .search-input:focus {
   outline: none;
-  border-color: #006C35;
-  box-shadow: 0 0 0 3px rgba(0, 108, 53, 0.1);
+  border-color: #B88A44;
+  box-shadow: 0 0 0 3px rgba(184, 138, 68, 0.1);
   background-color: white;
 }
 
@@ -68,28 +72,31 @@
 }
 
 .filter-button {
-  padding: 0.75rem 1.25rem;
+  padding: 0.9rem 1.5rem;
   background: white;
   border: 2px solid #006C35;
-  border-radius: 8px;
+  border-radius: 50px;
   font-size: 1rem;
   color: #006C35;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  transition: all 0.2s ease;
+  gap: 0.7rem;
+  transition: all 0.3s ease;
   white-space: nowrap;
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .filter-button:hover {
-  background: #006C35;
-  color: white;
+  background: #f8f9fa;
+  border-color: #D9B778;
 }
 
 .filter-button.active {
-  background: #006C35;
+  background: linear-gradient(135deg, #B88A44, #D9B778);
   color: white;
+  border-color: #B88A44;
 }
 
 .filter-dropdown {
@@ -97,14 +104,15 @@
   top: calc(100% + 0.75rem);
   right: 0;
   background: white;
-  border-radius: 16px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
-  padding: 1.5rem;
+  border-radius: 20px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  padding: 2rem;
   width: min(90vw, 800px);
   max-height: calc(90vh - 160px);
   overflow-y: auto;
-  animation: fadeIn 0.2s ease-out;
+  animation: fadeIn 0.3s ease-out;
   z-index: 1000;
+  border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 @keyframes fadeIn {
@@ -199,7 +207,7 @@
 .destinations-grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 20px;
+  gap: 30px;
   margin-top: 15px;
   width: 100%;
   justify-content: flex-start;
@@ -210,12 +218,29 @@
 .city-section {
   width: 100%;
   margin-bottom: 30px;
+  display: flex;
+  flex-direction: column;
 }
 
 .city-title {
-  margin-bottom: 15px;
-  color: #333;
-  font-weight: 600;
+  margin-bottom: 25px;
+  color: #1a202c;
+  font-weight: 700;
+  font-size: 1.8rem;
+  position: relative;
+  padding-bottom: 12px;
+  letter-spacing: -0.02em;
+}
+
+.city-title::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 60px;
+  height: 4px;
+  background: linear-gradient(135deg, #B88A44, #D9B778);
+  border-radius: 2px;
 }
 
 .destination-city-section {
@@ -269,33 +294,37 @@
 
 .no-results {
   text-align: center;
-  padding: 40px;
+  padding: 60px 40px;
   font-size: 1.2em;
   color: #006C35;
   background: white;
-  border-radius: 16px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  border: 2px solid rgba(0, 108, 53, 0.1);
+  border-radius: 20px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  border: 2px solid rgba(184, 138, 68, 0.1);
+  max-width: 600px;
+  margin: 0 auto;
+  font-weight: 500;
 }
 
 .loading-spinner {
   text-align: center;
-  padding: 40px;
+  padding: 60px;
   font-size: 1.2em;
   color: #006C35;
   position: relative;
+  font-weight: 500;
 }
 
 .loading-spinner::after {
   content: '';
   display: block;
-  width: 40px;
-  height: 40px;
-  margin: 20px auto 0;
-  border: 3px solid #006C35;
-  border-top-color: transparent;
+  width: 50px;
+  height: 50px;
+  margin: 30px auto 0;
+  border: 4px solid rgba(184, 138, 68, 0.2);
+  border-top-color: #B88A44;
   border-radius: 50%;
-  animation: spinner 0.8s linear infinite;
+  animation: spinner 0.8s cubic-bezier(0.65, 0, 0.35, 1) infinite;
 }
 
 .loading-more {
@@ -312,7 +341,7 @@
   width: 30px;
   height: 30px;
   margin: 10px auto 0;
-  border: 2px solid #006C35;
+  border: 2px solid #B88A44;
   border-top-color: transparent;
   border-radius: 50%;
   animation: spinner 0.8s linear infinite;
@@ -380,6 +409,14 @@
   }
 
   /* This was causing a conflict - removing it */
+}
+
+/* Added destinations-content styles */
+.destinations-content {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
 }
 
 /* Mobile styles are now handled with justify-content in the container */

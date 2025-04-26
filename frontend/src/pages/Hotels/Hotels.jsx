@@ -10,9 +10,7 @@ const Hotels = () => {
   const [filteredHotels, setFilteredHotels] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedHotel, setSelectedHotel] = useState(null);
-  const [checkInDate, setCheckInDate] = useState('');
-  const [checkOutDate, setCheckOutDate] = useState('');
+  // No longer using detailed view states
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [likesMap, setLikesMap] = useState({});
@@ -119,13 +117,7 @@ const Hotels = () => {
     fetchData();
   }, [API_BASE_URL]);
 
-  const handleBooking = () => {
-    if (!checkInDate || !checkOutDate) {
-      toast.error('Please select check-in and check-out dates.');
-      return;
-    }
-    toast.success(`Booking confirmed for ${selectedHotel.name} from ${checkInDate} to ${checkOutDate}`);
-  };
+  // Booking functionality has been removed
   
   // Filter hotels based on search term and filters
   useEffect(() => {
@@ -156,7 +148,7 @@ const Hotels = () => {
 
     // Apply rating filter
     if (filters.rating !== '') {
-      filtered = filtered.filter(hotel => hotel.rating >= Number(filters.rating));
+      filtered = filtered.filter(hotel => hotel.rating && hotel.rating.average >= Number(filters.rating));
     }
 
     // Apply amenities filter
@@ -216,10 +208,8 @@ const Hotels = () => {
   };
 
   const handleHotelClick = (hotelId) => {
-    const hotel = allHotels.find(h => h._id === hotelId);
-    if (hotel) {
-      setSelectedHotel(hotel);
-    }
+    // Navigate to the hotel detail page instead of showing detail in-place
+    window.location.href = `/hotels/${hotelId}`;
   };
 
   // Group hotels by city - memoized
@@ -283,60 +273,8 @@ const Hotels = () => {
 
   return (
     <div className="hotels-page">
-      {selectedHotel ? (
-        <div className="hotel-details-container">
-          <button className="back-button" onClick={() => setSelectedHotel(null)}>
-            Back to Hotels
-          </button>
-          <div className="hotel-details">
-            {selectedHotel.images && selectedHotel.images.length > 0 ? (
-              <img src={selectedHotel.images[0]} alt={selectedHotel.name} className="hotel-image" />
-            ) : (
-              <div className="no-image-placeholder">
-                <i className="bi bi-image"></i>
-                <span>No Image Available</span>
-              </div>
-            )}
-            <h1>{selectedHotel.name}</h1>
-            <p>{selectedHotel.description}</p>
-            <p>Price per night: {selectedHotel.pricePerNight || 'N/A'} SAR</p>
-            <p>Rating: {selectedHotel.rating || 'N/A'} ⭐</p>
-            {selectedHotel.amenities && selectedHotel.amenities.length > 0 && (
-              <>
-                <h3>Amenities:</h3>
-                <ul>
-                  {selectedHotel.amenities.map((amenity, index) => (
-                    <li key={index}>{amenity}</li>
-                  ))}
-                </ul>
-              </>
-            )}
-            <div className="date-picker">
-              <label>
-                Check-in Date:
-                <input
-                  type="date"
-                  value={checkInDate}
-                  onChange={(e) => setCheckInDate(e.target.value)}
-                />
-              </label>
-              <label>
-                Check-out Date:
-                <input
-                  type="date"
-                  value={checkOutDate}
-                  onChange={(e) => setCheckOutDate(e.target.value)}
-                />
-              </label>
-            </div>
-            <button className="book-button" onClick={handleBooking}>
-              Book Now
-            </button>
-          </div>
-        </div>
-      ) : (
-        <>
-          <h1>Hotels</h1>
+      <>
+        {/* Title removed */}
           <div className="hotels-navbar">
             <div className="search-filter-container">
               <div className="search-container">
@@ -420,9 +358,9 @@ const Hotels = () => {
           </div>
 
           {loading ? (
-            <div className="loading-spinner">Loading hotels...</div>
+            <div className="loading-spinner">Loading...</div>
           ) : Object.entries(groupedHotels).length === 0 ? (
-            <div className="no-results">No hotels found</div>
+            <div className="no-results">No results found</div>
           ) : (
             <>
               {Object.entries(groupedHotels).map(([city, cityHotels]) => (
@@ -467,10 +405,13 @@ const Hotels = () => {
                                 'No description available'}
                             </p>
                             {hotel.pricePerNight && (
-                              <p className="hotel-price">Price per night: {hotel.pricePerNight} SAR</p>
+                              <p className="hotel-price">{hotel.pricePerNight} SAR / night</p>
                             )}
                             {hotel.rating && (
-                              <p className="hotel-rating">Rating: {hotel.rating} ⭐</p>
+                              <div className="hotel-rating">
+                                <span className="rating-stars">⭐ {hotel.rating.average ? hotel.rating.average.toFixed(1) : '0.0'}</span>
+                                <span className="review-count">({hotel.rating.count || 0} reviews)</span>
+                              </div>
                             )}
                           </>
                         )}
@@ -481,8 +422,7 @@ const Hotels = () => {
               ))}
             </>
           )}
-        </>
-      )}
+      </>
       
       <LoginPromptModal
         isOpen={showLoginPrompt}

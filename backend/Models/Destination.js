@@ -54,7 +54,7 @@ const destinationSchema = new Schema({
     },
     coordinates: {
       type: [Number],
-      required: true,
+      required: false, // Make coordinates optional
       validate: {
         validator: function(v) {
           return v.length === 2 && 
@@ -85,9 +85,17 @@ const destinationSchema = new Schema({
     required: true,
   },
   rating: {
-    type: Number,
-    min: 0,
-    max: 5,
+    // Updated to match the Restaurant model rating structure
+    average: {
+      type: Number,
+      min: 0,
+      max: 5,
+      default: 0
+    },
+    count: {
+      type: Number,
+      default: 0
+    }
   },
   categories: [{
     type: String,

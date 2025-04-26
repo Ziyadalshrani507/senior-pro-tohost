@@ -1,5 +1,88 @@
 const mongoose = require('mongoose');
 
+const CUISINES = [
+  'Italian',
+  'Japanese',
+  'Greek',
+  'Portuguese',
+  'Chinese',
+  'Indonesian',
+  'Mexican',
+  'Turkish',
+  'Spanish',
+  'French',
+  'Polish',
+  'Indian',
+  'American',
+  'Peruvian',
+  'Serbian',
+  'Brazilian',
+  'Croatian',
+  'Colombian',
+  'Vietnamese',
+  'Hungarian',
+  'Algerian',
+  'Korean',
+  'German',
+  'Romanian',
+  'Argentinian',
+  'Lebanese',
+  'Czech',
+  'Thai',
+  'Georgian',
+  'Austrian',
+  'Chilean',
+  'Bulgarian',
+  'Russian',
+  'South African',
+  'Filipino',
+  'Malaysian',
+  'Moroccan',
+  'Lithuanian',
+  'Egyptian',
+  'Iranian',
+  'Syrian',
+  'Canadian',
+  'Ukrainian',
+  'Dutch',
+  'Palestinian',
+  'Macedonian',
+  'English',
+  'Ethiopian',
+  'Cypriot',
+  'Saudi Arabian',
+  'Middle Eastern'
+];
+
+const CATEGORIES = [
+  'Fine Dining',
+  'Casual Dining',
+  'Fast Food',
+  'Cafe',
+  'Buffet',
+  'Food Truck',
+  'Family Style',
+  'Steakhouse',
+  'Seafood',
+  'Vegetarian',
+  'Halal',
+  'Dessert',
+  'Bakery',
+  'Street Food',
+  'Barbecue',
+  'Vegan',
+  'Pub',
+  'Brunch',
+  'Tapas',
+  'Sushi Bar',
+  'Wine Bar',
+  'Rooftop',
+  'Farm to Table',
+  'Organic',
+  'Gluten Free',
+  'Kosher'
+];
+
 const SAUDI_CITIES = [
   "Riyadh",
   "Jeddah",
@@ -43,6 +126,7 @@ const restaurantSchema = new mongoose.Schema({
   },
   cuisine: {
     type: String,
+    enum: CUISINES,
     required: [true, 'Cuisine type is required']
   },
   priceRange: {
@@ -104,7 +188,7 @@ const restaurantSchema = new mongoose.Schema({
   },
   categories: [{
     type: String,
-    enum: ['Fine Dining', 'Casual Dining', 'Fast Food', 'Cafe', 'Street Food', 'Traditional']
+    enum: CATEGORIES
   }],
   images: {
     type: [String],
@@ -164,5 +248,7 @@ const Restaurant = mongoose.model('Restaurant', restaurantSchema);
 
 module.exports = {
     Restaurant,
-    SAUDI_CITIES
+    SAUDI_CITIES,
+    CUISINES,
+    CATEGORIES
 };

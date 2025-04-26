@@ -88,10 +88,43 @@ exports.getDestination = async (req, res) => {
 // Create destination
 exports.createDestination = async (req, res) => {
   try {
+    console.log('Creating destination with data:', JSON.stringify(req.body, null, 2));
+    
+    // Validate required fields first
+    const requiredFields = ['name', 'description', 'locationCity', 'type', 'cost'];
+    const missingFields = requiredFields.filter(field => !req.body[field]);
+    
+    if (missingFields.length > 0) {
+      return res.status(400).json({ 
+        message: 'Missing required fields', 
+        details: `The following fields are required: ${missingFields.join(', ')}`,
+        validationErrors: missingFields
+      });
+    }
+    
     const destination = await Destination.create(req.body);
+    console.log('Destination created successfully:', destination._id);
     res.status(201).json(destination);
   } catch (error) {
-    res.status(500).json({ message: 'Error creating destination', error: error.message });
+    console.error('Error creating destination:', error);
+    
+    if (error.name === 'ValidationError') {
+      // Enhanced validation error logging
+      console.error('Validation Error Details:', JSON.stringify(error.errors, null, 2));
+      
+      return res.status(400).json({ 
+        message: 'Validation Error', 
+        error: error.message,
+        details: Object.values(error.errors).map(err => err.message),
+        validationErrors: error.errors // Send the full validation errors object
+      });
+    }
+    
+    res.status(500).json({ 
+      message: 'Error creating destination', 
+      error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 };
 

@@ -38,7 +38,7 @@ exports.getHotels = async (req, res) => {
     
     if (city) query.locationCity = city;
     if (priceRange) query.priceRange = priceRange;
-    if (rating) query.rating = { $gte: parseFloat(rating) };
+    if (rating) query['rating.average'] = { $gte: parseFloat(rating) };
     if (hotelClass) query.hotelClass = hotelClass;
     if (amenities) query.amenities = { $in: [amenities] };
     

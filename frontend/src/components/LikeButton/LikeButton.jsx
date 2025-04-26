@@ -15,7 +15,8 @@ const LikeButton = ({
   initialLikeCount = 0,
   isInitiallyLiked = false 
 }) => {
-  const { user, token } = useAuth();
+  const { user } = useAuth();
+  const token = localStorage.getItem('token');
   const [isLiked, setIsLiked] = useState(isInitiallyLiked);
   const [likeCount, setLikeCount] = useState(initialLikeCount);
   const [error, setError] = useState(null);
@@ -28,6 +29,7 @@ const LikeButton = ({
         const response = await fetch(`${API_BASE_URL}/likes/${placeType}/${placeId}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
           }
         });
 
@@ -52,7 +54,7 @@ const LikeButton = ({
   const handleLikeClick = async (e) => {
     e.stopPropagation(); // Prevent click from bubbling to parent
 
-    if (!user || !token) {
+    if (!token) {
       onLoginRequired();
       return;
     }
@@ -77,7 +79,8 @@ const LikeButton = ({
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
-        }
+        },
+        body: JSON.stringify({ action: newIsLiked ? 'like' : 'unlike' })
       });
 
       if (!response.ok) {

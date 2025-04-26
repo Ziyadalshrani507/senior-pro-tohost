@@ -1,4 +1,4 @@
-const { Restaurant, SAUDI_CITIES } = require('../Models/Restaurant');
+const { Restaurant, SAUDI_CITIES, CUISINES, CATEGORIES } = require('../Models/Restaurant');
 
 // Get all restaurants
 exports.getRestaurants = async (req, res) => {
@@ -40,33 +40,8 @@ exports.getSchemaOptions = async (req, res) => {
     try {
         const schemaOptions = {
             cities: SAUDI_CITIES,
-            cuisines: [
-                'Saudi',
-                'Lebanese',
-                'Indian',
-                'Italian',
-                'Chinese',
-                'Japanese',
-                'Thai',
-                'Mexican',
-                'Mediterranean',
-                'American',
-                'Turkish',
-                'French'
-            ],
-            categories: [
-                'Fine Dining',
-                'Casual Dining',
-                'Fast Food',
-                'Cafe',
-                'Buffet',
-                'Food Truck',
-                'Family Style',
-                'Steakhouse',
-                'Seafood',
-                'Vegetarian',
-                'Halal'
-            ],
+            cuisines: CUISINES,
+            categories: CATEGORIES,
             priceRanges: ['$', '$$', '$$$', '$$$$']
         };
         console.log('Fetched schema options:', schemaOptions); // Debug log
@@ -107,7 +82,8 @@ exports.createRestaurant = async (req, res) => {
             categories,
             pictureUrls,
             rating,
-            openingHours
+            openingHours,
+            coordinates
         } = req.body;
 
         console.log('Creating new restaurant with data:', req.body); // Debug log
@@ -169,6 +145,8 @@ exports.createRestaurant = async (req, res) => {
             contact: contactObj,
             categories: categories || [],
             images: processedImages,
+            // Include coordinates if they're provided
+            ...(coordinates && { coordinates }),
             // Set up rating properly based on incoming format
             rating: {
                 average: typeof rating === 'object' ? (rating.average || 0) : (rating || 0),
@@ -239,7 +217,8 @@ exports.updateRestaurant = async (req, res) => {
             categories,
             pictureUrls,
             rating,
-            openingHours
+            openingHours,
+            coordinates
         } = req.body;
 
         console.log('Updating restaurant with data:', req.body); // Debug log
@@ -276,6 +255,8 @@ exports.updateRestaurant = async (req, res) => {
                 },
                 categories: categories || [],
                 images: processedImages, // Store in both fields for consistency
+                // Include coordinates if they're provided
+                ...(coordinates && { coordinates }),
                 rating: rating || 0,
                 openingHours: openingHours || ''
             },

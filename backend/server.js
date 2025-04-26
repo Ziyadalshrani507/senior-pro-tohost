@@ -28,7 +28,28 @@ app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:5173', 
   credentials: true
 }));
-app.use(express.json());
+
+// Request body parser with error handling
+app.use(express.json({
+  verify: (req, res, buf, encoding) => {
+    try {
+      JSON.parse(buf);
+    } catch (e) {
+      console.error('Invalid JSON in request body:', e.message);
+      res.status(400).json({ message: 'Invalid JSON in request body', error: e.message });
+      throw new Error('Invalid JSON');
+    }
+  }
+}));
+
+// Request logger
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+  if (req.method === 'POST' || req.method === 'PUT') {
+    console.log('Request body:', JSON.stringify(req.body, null, 2));
+  }
+  next();
+});
 
 // Hotel routes are registered below with other API routes
 

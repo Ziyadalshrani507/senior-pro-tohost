@@ -1,10 +1,10 @@
 .card {
   position: relative;
   background: white;
-  border-radius: 12px;
+  border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   height: 350px; /* Fixed height */
   width: 280px; /* Fixed width */
   flex-grow: 0;
@@ -12,11 +12,14 @@
   cursor: pointer;
   display: flex;
   flex-direction: column;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-sizing: border-box;
 }
 
 .card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+  transform: translateY(-8px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 108, 53, 0.2);
 }
 
 .card:active {
@@ -26,20 +29,25 @@
 
 .card.featured {
   border: 2px solid #006C35;
+  position: relative;
+  overflow: visible;
 }
 
 .card.featured::before {
   content: 'Featured';
   position: absolute;
-  top: 10px;
-  left: 10px;
+  top: -10px;
+  left: 20px;
   background-color: #006C35;
   color: white;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 0.8rem;
-  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 30px;
+  font-size: 0.75rem;
+  font-weight: 700;
   z-index: 10;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
 }
 
 .image-container {
@@ -56,7 +64,7 @@
 }
 
 .card-info {
-  padding: 12px 15px;
+  padding: 12px 16px;
   height: 35%; /* 35% of card height for info */
   overflow: hidden;
   background-color: white;
@@ -64,33 +72,79 @@
   flex-direction: column;
   justify-content: flex-start;
   width: 100%; /* Ensure the width is constrained */
+  position: relative;
+  box-sizing: border-box;
+  /* Force strict content bounds */
+  max-height: 123px; /* Exact pixel height (35% of 350px) */
 }
 
 .card-info h3 {
   margin: 0 0 6px 0;
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #333;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1a202c;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   width: 100%;
   max-width: 100%;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
 }
 
 .card-description {
-  color: #666;
-  margin: 0;
-  font-size: 0.85rem;
-  line-height: 1.3;
+  color: #4a5568;
+  margin: 0 0 4px 0;
+  font-size: 0.8rem;
+  line-height: 1.4;
   overflow: hidden;
   display: -webkit-box;
   -webkit-line-clamp: 2; /* 2 lines */
   line-clamp: 2;
   -webkit-box-orient: vertical;
-  max-height: 2.6em; /* Ensures text doesn't overflow */
+  max-height: 2.4em; /* Ensures text doesn't overflow */
   text-overflow: ellipsis;
   width: 100%;
+  flex-shrink: 0;
+}
+
+/* Hotel specific styles */
+.hotel-price,
+.hotel-rating {
+  font-size: 0.8rem;
+  margin: 0 0 2px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+  line-height: 1.2;
+  display: block;
+  flex-shrink: 0;
+}
+
+.hotel-price {
+  color: #006C35;
+  font-weight: 600;
+  margin-top: auto; /* Push to bottom if space available */
+  padding-top: 2px;
+}
+
+.hotel-rating {
+  color: #f59e0b;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 16px; /* Fixed height */
+}
+
+.rating-stars {
+  color: #f59e0b;
+  margin-right: 4px;
+}
+
+.review-count {
+  color: #6b7280;
+  font-size: 0.75rem;
 }
 
 .no-image-placeholder {
@@ -100,8 +154,10 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background-color: #f5f5f5;
-  color: #999;
+  background-color: #f7fafc;
+  color: #a0aec0;
+  background-image: linear-gradient(135deg, rgba(0, 108, 53, 0.05) 25%, transparent 25%, transparent 50%, rgba(0, 108, 53, 0.05) 50%, rgba(0, 108, 53, 0.05) 75%, transparent 75%, transparent);
+  background-size: 20px 20px;
 }
 
 .no-image-placeholder i {

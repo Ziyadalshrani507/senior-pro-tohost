@@ -89,7 +89,7 @@ const Destinations = () => {
       try {
         setLoading(true);
         const [destinationsResponse, likesResponse] = await Promise.all([
-          fetch(`${API_BASE_URL}/destinations/activities`),
+          fetch(`${API_BASE_URL}/destinations`),
           fetch(`${API_BASE_URL}/likes/user`, {
             headers: {
               'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -99,9 +99,20 @@ const Destinations = () => {
         ]);
 
         if (!destinationsResponse.ok) throw new Error('Failed to fetch destinations');
-        const destinationsData = await destinationsResponse.json();
+        let destinationsData = await destinationsResponse.json();
         
         if (Array.isArray(destinationsData)) {
+          // Process the destinations data to handle the new rating structure
+          destinationsData = destinationsData.map(dest => ({
+            ...dest,
+            // Ensure rating is properly formatted for display
+            rating: dest.rating?.average !== undefined ? dest.rating.average : (typeof dest.rating === 'number' ? dest.rating : 0),
+            // Make sure other essential properties exist to avoid UI errors
+            likeCount: dest.likeCount || 0,
+            pictureUrls: dest.pictureUrls || []
+          }));
+          
+          console.log('Processed destinations data:', destinationsData);
           setAllDestinations(destinationsData);
           setFilteredDestinations(destinationsData);
         }
