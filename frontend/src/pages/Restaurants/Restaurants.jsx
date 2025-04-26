@@ -325,6 +325,36 @@ const Restaurants = () => {
                     onLoginRequired={() => setShowLoginPrompt(true)}
                     onLikeToggle={(restaurantId, isLiked, likeCount) => handleLikeToggle(restaurantId, isLiked, likeCount)}
                     detailsPath="/restaurants"
+                    renderCustomContent={(restaurant) => (
+                      <>
+                        <h3>{restaurant.name || 'Unnamed Restaurant'}</h3>
+                        {restaurant.cuisine && (
+                          <p className="restaurant-cuisine">{restaurant.cuisine}</p>
+                        )}
+                        <div className="restaurant-details">
+                          <span className="restaurant-price">{restaurant.priceRange || 'Price not available'}</span>
+                          {restaurant.rating && (
+                            <span className="restaurant-rating">
+                              {(() => {
+                                // Handle both object and number formats
+                                const ratingValue = typeof restaurant.rating === 'object' && restaurant.rating.average !== undefined
+                                  ? restaurant.rating.average
+                                  : parseFloat(restaurant.rating || 0);
+                                  
+                                return (
+                                  <>
+                                    {'★'.repeat(Math.floor(ratingValue))}
+                                    {'☆'.repeat(5 - Math.floor(ratingValue))}
+                                    <span className="rating-number">({ratingValue.toFixed(1)})</span>
+                                  </>
+                                );
+                              })()}
+                            </span>
+                          )}
+                        </div>
+                        <p className="restaurant-location">{restaurant.locationCity || 'Location not specified'}</p>
+                      </>
+                    )}
                   />
                 ))}
               </div>

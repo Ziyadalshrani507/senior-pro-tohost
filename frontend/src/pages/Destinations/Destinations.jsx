@@ -102,11 +102,12 @@ const Destinations = () => {
         let destinationsData = await destinationsResponse.json();
         
         if (Array.isArray(destinationsData)) {
-          // Make sure other essential properties exist to avoid UI errors
+          // Process the destinations data to handle the new rating structure
           destinationsData = destinationsData.map(dest => ({
             ...dest,
-            // Keep the original rating structure for the Card component
-            // Don't flatten or preprocess rating here
+            // Ensure rating is properly formatted for display
+            rating: dest.rating?.average !== undefined ? dest.rating.average : (typeof dest.rating === 'number' ? dest.rating : 0),
+            // Make sure other essential properties exist to avoid UI errors
             likeCount: dest.likeCount || 0,
             pictureUrls: dest.pictureUrls || []
           }));
@@ -137,56 +138,22 @@ const Destinations = () => {
     fetchData();
   }, []); // Only fetch once on mount
 
-  // Apply all filters (search term and filter options) to destinations
+  // Filter destinations based on search term
   useEffect(() => {
-    // Start with all destinations
-    let filtered = [...allDestinations];
-    
-    // Apply search term filter
-    if (debouncedSearchTerm) {
-      const searchTerm = debouncedSearchTerm.toLowerCase();
-      filtered = filtered.filter(dest => 
-        dest.name?.toLowerCase().includes(searchTerm) ||
-        dest.locationCity?.toLowerCase().includes(searchTerm) ||
-        dest.description?.toLowerCase().includes(searchTerm)
-      );
+    if (!debouncedSearchTerm) {
+      setFilteredDestinations(allDestinations);
+      return;
     }
-    
-    // Apply city filters
-    if (filters.cities.length > 0) {
-      filtered = filtered.filter(dest => 
-        dest.locationCity && filters.cities.includes(dest.locationCity)
-      );
-    }
-    
-    // Apply type filters
-    if (filters.types.length > 0) {
-      filtered = filtered.filter(dest => 
-        dest.type && filters.types.includes(dest.type)
-      );
-    }
-    
-    // Apply category filters
-    if (filters.categories.length > 0) {
-      filtered = filtered.filter(dest => 
-        dest.categories && Array.isArray(dest.categories) && 
-        dest.categories.some(category => filters.categories.includes(category))
-      );
-    }
-    
-    // Apply price range filter
-    if (filters.priceRange.min !== '' || filters.priceRange.max !== '') {
-      filtered = filtered.filter(dest => {
-        const price = dest.price || 0;
-        const min = filters.priceRange.min !== '' ? Number(filters.priceRange.min) : 0;
-        const max = filters.priceRange.max !== '' ? Number(filters.priceRange.max) : Infinity;
-        
-        return price >= min && price <= max;
-      });
-    }
+
+    const searchTerm = debouncedSearchTerm.toLowerCase();
+    const filtered = allDestinations.filter(dest => 
+      dest.name?.toLowerCase().includes(searchTerm) ||
+      dest.locationCity?.toLowerCase().includes(searchTerm) ||
+      dest.description?.toLowerCase().includes(searchTerm)
+    );
     
     setFilteredDestinations(filtered);
-  }, [debouncedSearchTerm, allDestinations, filters]);
+  }, [debouncedSearchTerm, allDestinations]);
 
   // Group destinations by city - memoized
   const groupedDestinations = useMemo(() => {
@@ -205,7 +172,7 @@ const Destinations = () => {
 
   const handleFilterChange = (type, value) => {
     setPage(1);
-    // The filteredDestinations will be updated by the useEffect hook
+    setFilteredDestinations([]);
     setFilters(prev => {
       const newFilters = { ...prev };
       

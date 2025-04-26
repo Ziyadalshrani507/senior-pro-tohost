@@ -77,60 +77,13 @@ const Card = ({
         ) : (
           <>
             <h3>{item?.name || 'Untitled'}</h3>
-            
             <p className="card-description">
               {item?.description ? 
-                (item.description?.length > 60 ? 
-                  `${item.description.substring(0, 60)}...` : 
+                (item.description.length > 70 ? 
+                  `${item.description.substring(0, 70)}...` : 
                   item.description) : 
-                'No description available'
-              }
+                'No description available'}
             </p>
-            
-            {/* Display rating regardless of type */}
-            <div className="card-rating">
-              {(() => {
-                // Handle ALL possible rating formats
-                let ratingValue = 0;
-                
-                // Check for rating as an object with average property
-                if (typeof item?.rating === 'object' && item?.rating?.average !== undefined) {
-                  ratingValue = parseFloat(item.rating.average);
-                }
-                // Check for direct rating as a number
-                else if (typeof item?.rating === 'number') {
-                  ratingValue = parseFloat(item.rating);
-                }
-                // Check for rating as a string that can be parsed to a number
-                else if (typeof item?.rating === 'string' && !isNaN(parseFloat(item.rating))) {
-                  ratingValue = parseFloat(item.rating);
-                }
-                // If no valid rating is found, check for children properties
-                else if (typeof item?.rating === 'object') {
-                  // Some items might have nested rating structures
-                  const possibleValues = Object.values(item.rating).filter(v => !isNaN(parseFloat(v)));
-                  if (possibleValues.length > 0) {
-                    ratingValue = parseFloat(possibleValues[0]);
-                  }
-                }
-                
-                return (
-                  <>
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <span key={star} className={`star ${ratingValue >= star ? 'filled' : 'empty'}`}>
-                        ★
-                      </span>
-                    ))}
-                    <span className="rating-value">{ratingValue.toFixed(1)}</span>
-                  </>
-                );
-              })()}
-            </div>
-
-            {/* Display location/city below rating if available */}
-            {(item?.locationCity || item?.city) && (
-              <p className="location">{item.locationCity || item.city}</p>
-            )}
           </>
         )}
       </div>
