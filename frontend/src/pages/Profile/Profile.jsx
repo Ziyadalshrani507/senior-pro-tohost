@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { toast } from 'react-toastify';
 import { FaPencilAlt, FaUser } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../context/AuthContext';
 import { getApiBaseUrl } from '../../utils/apiBaseUrl';
 import FavoritesSection from '../../components/FavoritesSection/FavoritesSection';
 import './Profile.css';
@@ -21,7 +21,7 @@ const Profile = () => {
   const [isUploading, setIsUploading] = useState(false);
   const navigate = useNavigate();
   const API_BASE_URL = getApiBaseUrl();
-  const { currentUser } = useAuth();
+  const { user: currentUser } = useAuth();
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -96,10 +96,11 @@ const Profile = () => {
 
     setIsUploading(true);
     try {
+      const token = localStorage.getItem('token');
       const response = await fetch(`${API_BASE_URL}/users/${currentUser._id}/profile-picture`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${currentUser.token}`
+          'Authorization': `Bearer ${token}`
         },
         body: formData
       });
@@ -117,328 +118,8 @@ const Profile = () => {
     }
   };
 
-const Profile = () => {
-  const [user, setUser] = useState(null);
-  const [isEditing, setIsEditing] = useState(false);
-  const [selectedTab, setSelectedTab] = useState('My Profile');
-  const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: ''
-  });
-  const fileInputRef = useRef(null);
-  const [isUploading, setIsUploading] = useState(false);
-  const navigate = useNavigate();
-  const API_BASE_URL = getApiBaseUrl();
-  const { currentUser } = useAuth();
-
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const response = await fetch(`${API_BASE_URL}/users/${currentUser._id}`, {
-          headers: {
-            'Authorization': `Bearer ${currentUser.token}`
-          }
-        });
-        if (!response.ok) throw new Error('Failed to fetch user data');
-        const userData = await response.json();
-        setUser(userData);
-        setFormData({
-          firstName: userData.firstName,
-          lastName: userData.lastName,
-          email: userData.email,
-          phone: userData.phone || ''
-        });
-      } catch (error) {
-        console.error('Error fetching user data:', error);
-        toast.error('Failed to load user data');
-      }
-    };
-
-    if (currentUser) {
-      fetchUserData();
-    }
-  }, [currentUser, API_BASE_URL]);
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const response = await fetch(`${API_BASE_URL}/users/${currentUser._id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${currentUser.token}`
-        },
-        body: JSON.stringify(formData)
-      });
-
-      if (!response.ok) throw new Error('Failed to update profile');
-      
-      const updatedUser = await response.json();
-      setUser(updatedUser);
-      setIsEditing(false);
-      toast.success('Profile updated successfully');
-    } catch (error) {
-      console.error('Error updating profile:', error);
-      toast.error('Failed to update profile');
-    }
-  };
-
-  const handlePhotoClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handlePhotoChange = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const formData = new FormData();
-    formData.append('profilePicture', file);
-
-    setIsUploading(true);
-    try {
-      const response = await fetch(`${API_BASE_URL}/users/${currentUser._id}/profile-picture`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${currentUser.token}`
-        },
-        body: formData
-      });
-
-      if (!response.ok) throw new Error('Failed to upload photo');
-      
-      const updatedUser = await response.json();
-      setUser(updatedUser);
-      toast.success('Profile picture updated successfully');
-    } catch (error) {
-      console.error('Error uploading photo:', error);
-      toast.error('Failed to upload profile picture');
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
-  if (!user) {
-    return <div className="profile-container">Loading...</div>;
-  }
-
-  return (
-    <div className="profile-container">
-      <div className="sidebar">
-        <ul className="nav-tabs">
-          {['My Profile', 'Favorites'].map((tab) => (
-            <li
-              key={tab}
-              className={`nav-item ${selectedTab === tab ? 'active' : ''}`}
-              onClick={() => setSelectedTab(tab)}
-            >
-              {tab}
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      <div className="main-content">
-        <div className="profile-header">
-          <div className="profile-photo-section">
-            {user.profilePicture ? (
-              <img
-                src={user.profilePicture}
-                alt="Profile"
-                className="profile-photo"
-              />
-            ) : (
-              <div className="profile-photo">
-                <FaUser size={50} color="#666" />
-              </div>
-            )}
-            <button 
-              className="photo-upload-button" 
-              onClick={handlePhotoClick}
-              disabled={isUploading}
-            >
-              <FaPencilAlt />
-            </button>
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handlePhotoChange}
-              className="hidden"
-              accept="image/*"
-            />
-          </div>
-          <div className="profile-info">
-            <h1 className="profile-name">{`${user.firstName} ${user.lastName}`}</h1>
-            <p className="profile-contact">{user.phone || 'No phone number added'}</p>
-            {!isEditing && (
-              <button className="edit-button" onClick={() => setIsEditing(true)}>
-                Edit Profile
-              </button>
-            )}
-          </div>
-        </div>
-
-        {selectedTab === 'My Profile' && (
-          isEditing ? (
-            <form onSubmit={handleSubmit}>
-              <div className="form-group">
-                <label>First Name</label>
-                <input
-                  type="text"
-                  name="firstName"
-                  value={formData.firstName}
-                  onChange={handleInputChange}
-                  className="form-control"
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label>Last Name</label>
-                <input
-                  type="text"
-                  name="lastName"
-                  value={formData.lastName}
-                  onChange={handleInputChange}
-                  className="form-control"
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label>Email</label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  className="form-control"
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label>Phone</label>
-                <input
-                  type="tel"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleInputChange}
-                  className="form-control"
-                />
-              </div>
-              <div className="form-actions">
-                <button type="submit" className="save-button">Save Changes</button>
-                <button type="button" className="cancel-button" onClick={() => setIsEditing(false)}>Cancel</button>
-              </div>
-            </form>
-          ) : (
-            <div className="profile-details">
-              <p>Email: {user.email}</p>
-              <p>Phone: {user.phone || 'No phone number added'}</p>
-            </div>
-          )
-        )}
-        {selectedTab === 'Favorites' && <FavoritesSection />}
-      </div>
-    </div>
-  );
-};
-
-export default Profile;
-
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const response = await fetch(`${API_BASE_URL}/users/${currentUser._id}`, {
-          headers: {
-            'Authorization': `Bearer ${currentUser.token}`
-          }
-        });
-        if (!response.ok) throw new Error('Failed to fetch user data');
-        const userData = await response.json();
-        setUser(userData);
-        setFormData({
-          firstName: userData.firstName,
-          lastName: userData.lastName,
-          email: userData.email,
-          phone: userData.phone || ''
-        });
-      } catch (error) {
-        console.error('Error fetching user data:', error);
-        toast.error('Failed to load user data');
-      }
-    };
-
-    if (currentUser) {
-      fetchUserData();
-    }
-  }, [currentUser, API_BASE_URL]);
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const response = await fetch(`${API_BASE_URL}/users/${currentUser._id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${currentUser.token}`
-        },
-        body: JSON.stringify(formData)
-      });
-
-      if (!response.ok) throw new Error('Failed to update profile');
-      
-      const updatedUser = await response.json();
-      setUser(updatedUser);
-      setIsEditing(false);
-      toast.success('Profile updated successfully');
-    } catch (error) {
-      console.error('Error updating profile:', error);
-      toast.error('Failed to update profile');
-    }
-  };
-
-  const handlePhotoClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handlePhotoChange = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const formData = new FormData();
-    formData.append('profilePicture', file);
-
-    setIsUploading(true);
-    try {
-      const response = await fetch(`${API_BASE_URL}/users/${currentUser._id}/profile-picture`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${currentUser.token}`
-        },
-        body: formData
-      });
-
-      if (!response.ok) throw new Error('Failed to upload photo');
-      
-      const updatedUser = await response.json();
-  if (!user) {
-    return <div className="profile-container">Loading...</div>;
+  if (!user || !currentUser) {
+    return <div className="loading">Loading profile...</div>;
   }
 
   return (
@@ -471,8 +152,12 @@ export default Profile;
                 <FaUser size={50} color="#666" />
               </div>
             )}
-            <button className="photo-upload-button" onClick={handlePhotoClick}>
-              <FaPencilAlt />
+            <button
+              className="photo-edit-button"
+              onClick={handlePhotoClick}
+              disabled={isUploading}
+            >
+              {isUploading ? 'Uploading...' : <FaPencilAlt />}
             </button>
             <input
               type="file"
@@ -483,7 +168,7 @@ export default Profile;
             />
           </div>
           <div className="profile-info">
-            <h1 className="profile-name">{`${user.firstName} ${user.lastName}`}</h1>
+            <h1 className="profile-name">{`${user.firstName || ''} ${user.lastName || ''}`}</h1>
             <p className="profile-contact">{user.phone || 'No phone number added'}</p>
             {!isEditing && (
               <button className="edit-button" onClick={() => setIsEditing(true)}>
@@ -541,23 +226,9 @@ export default Profile;
               </div>
               <div className="form-actions">
                 <button type="submit" className="save-button">Save Changes</button>
-                <button type="button" className="cancel-button" onClick={() => setIsEditing(false)}>Cancel</button>
-              </div>
-            </form>
-          ) : (
-            <div className="profile-details">
-              <p>Email: {user.email}</p>
-              <p>Phone: {user.phone || 'No phone number added'}</p>
-            </div>
-          )
-        )}
-        {selectedTab === 'Favorites' && <FavoritesSection />}
-        {selectedTab === 'Reviews' && <ReviewsSection userId={currentUser._id} />}
-                </div>
-                <button type="submit" className="save-button">Save Changes</button>
-                <button
-                  type="button"
-                  className="save-button cancel-button"
+                <button 
+                  type="button" 
+                  className="cancel-button" 
                   onClick={() => {
                     setIsEditing(false);
                     setFormData({
@@ -570,22 +241,17 @@ export default Profile;
                 >
                   Cancel
                 </button>
-              </form>
-            ) : (
-              <div className="profile-details">
-                <p>Email: {user.email}</p>
-                <p>Phone: {user.phone || 'No phone number added'}</p>
               </div>
-            )
-          )}
-          {selectedTab === 'Favorites' && <FavoritesSection />}
-          {selectedTab === 'Itineraries' && (
-            <div>Itineraries content will go here</div>
-          )}
-          {selectedTab === 'Reviews' && (
-            <div>Reviews content will go here</div>
-          )}
-        </div>
+            </form>
+          ) : (
+            <div className="profile-details">
+              <p>Email: {user.email}</p>
+              <p>Phone: {user.phone || 'No phone number added'}</p>
+            </div>
+          )
+        )}
+        {selectedTab === 'Favorites' && <FavoritesSection />}
+        {selectedTab === 'Reviews' && <div>Reviews content will go here</div>}
       </div>
     </div>
   );
