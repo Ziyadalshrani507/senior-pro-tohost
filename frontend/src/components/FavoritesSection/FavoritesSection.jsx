@@ -123,18 +123,30 @@ const FavoritesSection = () => {
     }
   };
 
-  const handleNextPage = (type) => {
-    setCurrentPage(prev => ({
-      ...prev,
-      [type]: prev[type] + 1
-    }));
+  const handleNextPage = () => {
+    setCurrentPage(prev => {
+      const maxPage = Math.ceil(favorites[activeSection].length / itemsPerPage) - 1;
+      const nextPage = prev[activeSection] + 1;
+      // If we're at the last page, go back to the first page
+      const newPage = nextPage > maxPage ? 0 : nextPage;
+      return {
+        ...prev,
+        [activeSection]: newPage
+      };
+    });
   };
 
-  const handlePrevPage = (type) => {
-    setCurrentPage(prev => ({
-      ...prev,
-      [type]: Math.max(0, prev[type] - 1)
-    }));
+  const handlePrevPage = () => {
+    setCurrentPage(prev => {
+      const maxPage = Math.ceil(favorites[activeSection].length / itemsPerPage) - 1;
+      const prevPage = prev[activeSection] - 1;
+      // If we're at the first page, go to the last page
+      const newPage = prevPage < 0 ? maxPage : prevPage;
+      return {
+        ...prev,
+        [activeSection]: newPage
+      };
+    });
   };
 
   const renderCards = (type) => {
@@ -146,26 +158,6 @@ const FavoritesSection = () => {
 
     return (
       <div className="cards-section">
-        <div className="navigation-arrows">
-          {showPrev && (
-            <button 
-              className="nav-arrow" 
-              onClick={() => handlePrevPage(type)}
-              aria-label="Previous page"
-            >
-              <FaArrowLeft />
-            </button>
-          )}
-          {hasMore && (
-            <button 
-              className="nav-arrow" 
-              onClick={() => handleNextPage(type)}
-              aria-label="Next page"
-            >
-              <FaArrowRight />
-            </button>
-          )}
-        </div>
         <div className="cards-grid">
           {currentItems.map((item) => (
             <Card
@@ -197,26 +189,46 @@ const FavoritesSection = () => {
     return <div className="loading">Loading favorites...</div>;
   }
 
-  const sections = [
-    { id: 'restaurants', label: 'Restaurants' },
-    { id: 'destinations', label: 'Destinations' },
-    { id: 'hotels', label: 'Hotels' }
-  ];
-
   return (
     <div className="favorites-container">
       <div className="section-selector">
-        {sections.map(section => (
-          <button
-            key={section.id}
-            className={`section-button ${activeSection === section.id ? 'active' : ''}`}
-            onClick={() => setActiveSection(section.id)}
-          >
-            {section.label}
-          </button>
-        ))}
+        <button
+          className={`section-button ${activeSection === 'restaurants' ? 'active' : ''}`}
+          onClick={() => setActiveSection('restaurants')}
+        >
+          Restaurants
+        </button>
+        <button
+          className={`section-button ${activeSection === 'destinations' ? 'active' : ''}`}
+          onClick={() => setActiveSection('destinations')}
+        >
+          Destinations
+        </button>
+        <button
+          className={`section-button ${activeSection === 'hotels' ? 'active' : ''}`}
+          onClick={() => setActiveSection('hotels')}
+        >
+          Hotels
+        </button>
       </div>
-
+      {favorites[activeSection].length > itemsPerPage && (
+        <div className="navigation-arrows">
+          <button
+            className="navigation-arrow"
+            onClick={handlePrevPage}
+            aria-label="Previous page"
+          >
+            <FaArrowLeft />
+          </button>
+          <button
+            className="navigation-arrow"
+            onClick={handleNextPage}
+            aria-label="Next page"
+          >
+            <FaArrowRight />
+          </button>
+        </div>
+      )}
       <div className="favorites-section">
         {favorites[activeSection].length > 0 ? 
           renderCards(activeSection) : 

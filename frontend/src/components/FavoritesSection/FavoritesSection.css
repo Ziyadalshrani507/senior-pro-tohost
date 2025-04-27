@@ -10,6 +10,47 @@
   background-color: #fff;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: relative;
+}
+
+.navigation-arrows {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 1rem;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.navigation-arrow {
+  background-color: #b8860b;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  pointer-events: auto;
+}
+
+.navigation-arrow:hover {
+  background-color: #8b6914;
+  transform: scale(1.05);
+}
+
+.navigation-arrow:active {
+  transform: scale(0.95);
+}
+
+.navigation-arrow svg {
+  font-size: 1.2rem;
 }
 
 .favorites-section {

@@ -90,12 +90,18 @@ export const AuthProvider = ({ children }) => {
   }, [handleTokenExpiration]);
 
   const login = (userData, newToken) => {
-    setUser(userData);
+    // Ensure user data has the correct ID field
+    const userWithId = {
+      ...userData,
+      _id: userData.id || userData._id // Support both id and _id formats
+    };
+    
+    setUser(userWithId);
     setToken(newToken);
     const currentTime = Date.now();
     setLastActivity(currentTime);
     localStorage.setItem('token', newToken);
-    localStorage.setItem('user', JSON.stringify(userData));
+    localStorage.setItem('user', JSON.stringify(userWithId));
     localStorage.setItem('lastActivity', currentTime.toString());
   };
 

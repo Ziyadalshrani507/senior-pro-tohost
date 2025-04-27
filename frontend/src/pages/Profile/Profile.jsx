@@ -26,30 +26,60 @@ const Profile = () => {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/users/${currentUser._id}`, {
+        // Get token and user data from localStorage
+        const token = localStorage.getItem('token');
+        const savedUser = localStorage.getItem('user');
+        
+        if (!token || !savedUser) {
+          throw new Error('No authentication data found');
+        }
+
+        const parsedUser = JSON.parse(savedUser);
+        const userId = parsedUser.id || parsedUser._id;
+
+        if (!userId) {
+          throw new Error('User ID not found');
+        }
+
+        const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
           headers: {
-            'Authorization': `Bearer ${currentUser.token}`
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
           }
         });
-        if (!response.ok) throw new Error('Failed to fetch user data');
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            toast.error('Session expired. Please login again');
+            navigate('/login');
+            return;
+          }
+          throw new Error('Failed to fetch user data');
+        }
+
         const userData = await response.json();
+        if (!userData) {
+          throw new Error('Invalid user data received');
+        }
+
         setUser(userData);
         setFormData({
-          firstName: userData.firstName,
-          lastName: userData.lastName,
-          email: userData.email,
+          firstName: userData.firstName || '',
+          lastName: userData.lastName || '',
+          email: userData.email || '',
           phone: userData.phone || ''
         });
       } catch (error) {
         console.error('Error fetching user data:', error);
-        toast.error('Failed to load user data');
+        toast.error(error.message || 'Failed to load user data');
+        if (error.message.includes('authentication') || error.message.includes('User ID')) {
+          navigate('/login');
+        }
       }
     };
 
-    if (currentUser) {
-      fetchUserData();
-    }
-  }, [currentUser, API_BASE_URL]);
+    fetchUserData();
+  }, [API_BASE_URL, navigate]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;

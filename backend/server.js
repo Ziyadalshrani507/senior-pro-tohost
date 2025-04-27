@@ -90,16 +90,27 @@ app.use('/api/destinations', destinationRoutes);
 app.use('/api/password-reset', passwordResetRoutes);
 app.use('/api/user/profile', profileRoutes);
 app.use('/api/restaurants', restaurantRoutes);
+// Mount API routes
+app.use('/api/auth', authRoutes);
+app.use('/api/destinations', destinationRoutes);
+app.use('/api/password-reset', passwordResetRoutes);
+app.use('/api/profile', profileRoutes);
+app.use('/api/restaurants', restaurantRoutes);
 app.use('/api/ratings', ratingRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/likes', likeRoutes);
 app.use('/api/hotels', hotelRoutes);
+app.use('/api/users', require('./Routes/userRoutes'));
 
 // Serve static files from the React app
 app.use(express.static(path.join(__dirname, '../frontend/dist')));
 
-// The "catchall" handler: for any request that doesn't
-// match one above, send back the index.html file.
+// API 404 handler
+app.use('/api/*', (req, res) => {
+  res.status(404).json({ message: 'API endpoint not found' });
+});
+
+// Frontend catchall handler
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../frontend/dist/index.html'));
 });
