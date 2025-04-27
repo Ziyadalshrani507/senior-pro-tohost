@@ -4,8 +4,8 @@ import { getApiBaseUrl } from '../utils/apiBaseUrl';
 const AuthContext = createContext();
 const API_BASE_URL = getApiBaseUrl();
 
-// Token expiration time in milliseconds (2 hours)
-const TOKEN_EXPIRY = 2 * 60 * 60 * 1000;
+// Token expiration time in milliseconds (1 hour to match backend JWT expiration)
+const TOKEN_EXPIRY = 1 * 60 * 60 * 1000;
 
 export const useAuth = () => {
   return useContext(AuthContext);

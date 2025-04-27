@@ -1,6 +1,7 @@
 const Rating = require('../Models/Rating');
 const Destination = require('../Models/Destination');
 const { Restaurant } = require('../Models/Restaurant');
+const Hotel = require('../Models/Hotel');
 
 // Add a new rating
 const addRating = async (req, res) => {
@@ -9,7 +10,16 @@ const addRating = async (req, res) => {
     const userId = req.user._id;
 
     // Check if item exists
-    const Model = itemType === 'destination' ? Destination : Restaurant;
+    let Model;
+    if (itemType === 'destination') {
+      Model = Destination;
+    } else if (itemType === 'hotel') {
+      Model = Hotel;
+    } else {
+      // Default to Restaurant for backward compatibility
+      Model = Restaurant;
+    }
+    
     const item = await Model.findById(itemId);
     if (!item) {
       return res.status(404).json({ message: `${itemType} not found` });
@@ -45,7 +55,15 @@ const addRating = async (req, res) => {
     const allRatings = await Rating.find({ itemId, itemType });
     const avgRating = allRatings.reduce((acc, curr) => acc + curr.rating, 0) / allRatings.length;
     
-    await Model.findByIdAndUpdate(itemId, { rating: avgRating.toFixed(1) });
+    // For Hotel model, update the nested rating object
+    if (itemType === 'hotel') {
+      await Model.findByIdAndUpdate(itemId, { 
+        'rating.average': avgRating.toFixed(1),
+        'rating.count': allRatings.length
+      });
+    } else {
+      await Model.findByIdAndUpdate(itemId, { rating: avgRating.toFixed(1) });
+    }
 
     res.status(201).json(newRating);
   } catch (error) {
@@ -75,8 +93,25 @@ const updateRating = async (req, res) => {
     const allRatings = await Rating.find({ itemId: rating.itemId, itemType: rating.itemType });
     const avgRating = allRatings.reduce((acc, curr) => acc + curr.rating, 0) / allRatings.length;
     
-    const Model = rating.itemType === 'destination' ? Destination : Restaurant;
-    await Model.findByIdAndUpdate(rating.itemId, { rating: avgRating.toFixed(1) });
+    // Get the appropriate model based on item type
+    let Model;
+    if (rating.itemType === 'destination') {
+      Model = Destination;
+    } else if (rating.itemType === 'hotel') {
+      Model = Hotel;
+    } else {
+      Model = Restaurant;
+    }
+    
+    // For Hotel model, update the nested rating object
+    if (rating.itemType === 'hotel') {
+      await Model.findByIdAndUpdate(rating.itemId, { 
+        'rating.average': avgRating.toFixed(1),
+        'rating.count': allRatings.length
+      });
+    } else {
+      await Model.findByIdAndUpdate(rating.itemId, { rating: avgRating.toFixed(1) });
+    }
 
     res.json(rating);
   } catch (error) {
@@ -101,8 +136,25 @@ const deleteRating = async (req, res) => {
       ? allRatings.reduce((acc, curr) => acc + curr.rating, 0) / allRatings.length 
       : 0;
     
-    const Model = rating.itemType === 'destination' ? Destination : Restaurant;
-    await Model.findByIdAndUpdate(rating.itemId, { rating: avgRating.toFixed(1) });
+    // Get the appropriate model based on item type
+    let Model;
+    if (rating.itemType === 'destination') {
+      Model = Destination;
+    } else if (rating.itemType === 'hotel') {
+      Model = Hotel;
+    } else {
+      Model = Restaurant;
+    }
+    
+    // For Hotel model, update the nested rating object
+    if (rating.itemType === 'hotel') {
+      await Model.findByIdAndUpdate(rating.itemId, { 
+        'rating.average': avgRating.toFixed(1),
+        'rating.count': allRatings.length
+      });
+    } else {
+      await Model.findByIdAndUpdate(rating.itemId, { rating: avgRating.toFixed(1) });
+    }
 
     res.json({ message: 'Rating deleted successfully' });
   } catch (error) {
@@ -144,11 +196,20 @@ const getRatingStats = async (req, res) => {
   try {
     const { itemType, itemId } = req.params;
 
+    // Find the appropriate model based on item type
+    let Model;
+    if (itemType === 'destination') {
+      Model = Destination;
+    } else if (itemType === 'hotel') {
+      Model = Hotel;
+    } else {
+      // Default to Restaurant for backward compatibility
+      Model = Restaurant;
+    }
+
     const [ratings, item] = await Promise.all([
       Rating.find({ itemType, itemId }),
-      itemType === 'destination' 
-        ? Destination.findById(itemId) 
-        : Restaurant.findById(itemId)
+      Model.findById(itemId)
     ]);
 
     if (!item) {

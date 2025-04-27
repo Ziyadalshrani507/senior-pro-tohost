@@ -198,6 +198,7 @@ const Destinations = () => {
 
   const handleDestinationClick = (destinationId) => {
     navigate(`/destinations/${destinationId}`);
+    // New route structure works with this path too since we've updated the App.jsx route patterns
   };
 
   if (error) {
@@ -341,7 +342,7 @@ const Destinations = () => {
                         );
                       }}
                       onClick={handleDestinationClick}
-                      detailsPath="/destinations"
+                      detailsPath="destinations"
                     />
                 ))}
               </div>

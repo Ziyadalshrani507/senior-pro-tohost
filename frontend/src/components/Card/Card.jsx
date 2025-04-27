@@ -21,8 +21,13 @@ const Card = ({
   const handleCardClick = () => {
     if (onClick) {
       onClick(item._id);
-    } else if (item._id && detailsPath) {
-      navigate(`${detailsPath}/${item._id}`);
+    } else if (item._id) {
+      // New unified route pattern: /:type/:id
+      // Convert detailsPath to the proper type for the new routing structure
+      // Remove leading slash if present
+      const normalizedPath = detailsPath?.startsWith('/') ? detailsPath.substring(1) : detailsPath || type;
+      
+      navigate(`/${normalizedPath}/${item._id}`);
     }
   };
 

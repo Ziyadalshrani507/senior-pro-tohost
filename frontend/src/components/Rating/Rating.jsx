@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FaStar, FaThumbsUp, FaEdit, FaTrash, FaCalendarAlt, FaUser } from 'react-icons/fa';
 import { useAuth } from '../../context/AuthContext';
+import { getApiBaseUrl } from '../../utils/apiBaseUrl';
 import './Rating.css';
 
 const Rating = ({ itemId, itemType }) => {
@@ -22,6 +23,7 @@ const Rating = ({ itemId, itemType }) => {
   });
   const { user, token } = useAuth();
   const [error, setError] = useState(null);
+  const API_BASE_URL = getApiBaseUrl();
 
   useEffect(() => {
     if (itemId && itemType) {
@@ -32,7 +34,7 @@ const Rating = ({ itemId, itemType }) => {
 
   const fetchStats = async () => {
     try {
-      const response = await fetch(`/api/ratings/stats/${itemType}/${itemId}`);
+      const response = await fetch(`${API_BASE_URL}/ratings/stats/${itemType}/${itemId}`);
       if (!response.ok) throw new Error('Failed to fetch rating stats');
       const data = await response.json();
       setStats(data);
@@ -44,7 +46,7 @@ const Rating = ({ itemId, itemType }) => {
   const fetchRatings = async () => {
     try {
       setError(null);
-      const response = await fetch(`/api/ratings/${itemType}/${itemId}?page=${currentPage}&limit=10`);
+      const response = await fetch(`${API_BASE_URL}/ratings/${itemType}/${itemId}?page=${currentPage}&limit=10`);
       if (!response.ok) throw new Error('Failed to fetch ratings');
       const data = await response.json();
       setAllRatings(data.ratings);
@@ -73,7 +75,7 @@ const Rating = ({ itemId, itemType }) => {
 
     try {
       setError(null);
-      const response = await fetch('/api/ratings', {
+      const response = await fetch(`${API_BASE_URL}/ratings`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -111,7 +113,7 @@ const Rating = ({ itemId, itemType }) => {
 
     try {
       setError(null);
-      const response = await fetch(`/api/ratings/${ratingId}`, {
+      const response = await fetch(`${API_BASE_URL}/ratings/${ratingId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -146,7 +148,7 @@ const Rating = ({ itemId, itemType }) => {
 
     try {
       setError(null);
-      const response = await fetch(`/api/ratings/${ratingId}`, {
+      const response = await fetch(`${API_BASE_URL}/ratings/${ratingId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`

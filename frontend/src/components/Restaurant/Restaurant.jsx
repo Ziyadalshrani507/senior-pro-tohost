@@ -53,6 +53,7 @@ const Restaurant = ({ restaurant, onLikeToggle }) => {
     if (e.target.closest('.like-button-container')) {
       return;
     }
+    // Using the new unified route structure
     navigate(`/restaurants/${restaurant._id}`);
   };
 

@@ -324,7 +324,7 @@ const Restaurants = () => {
                     likesMap={likesMap}
                     onLoginRequired={() => setShowLoginPrompt(true)}
                     onLikeToggle={(restaurantId, isLiked, likeCount) => handleLikeToggle(restaurantId, isLiked, likeCount)}
-                    detailsPath="/restaurants"
+                    detailsPath="restaurants"
                     renderCustomContent={(restaurant) => (
                       <>
                         <h3>{restaurant.name || 'Unnamed Restaurant'}</h3>

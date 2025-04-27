@@ -208,8 +208,8 @@ const Hotels = () => {
   };
 
   const handleHotelClick = (hotelId) => {
-    // Navigate to the hotel detail page instead of showing detail in-place
-    window.location.href = `/hotels/${hotelId}`;
+    navigate(`/hotels/${hotelId}`);
+    // Using navigate instead of window.location for smoother transitions
   };
 
   // Group hotels by city - memoized
@@ -393,7 +393,7 @@ const Hotels = () => {
                           );
                         }}
                         onClick={handleHotelClick}
-                        detailsPath="/hotels"
+                        detailsPath="hotels"
                         renderCustomContent={(hotel) => (
                           <>
                             <h3>{hotel.name || 'Untitled'}</h3>
