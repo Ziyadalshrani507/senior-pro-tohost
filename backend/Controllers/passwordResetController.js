@@ -2,14 +2,25 @@ const User = require('../Models/User');
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
 
-// Configure Nodemailer
-const transporter = nodemailer.createTransport({
-  service: 'Gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
+// Configure Nodemailer with more detailed options and error handling
+const setupTransporter = () => {
+  // Check if email credentials are available
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    console.error('Warning: EMAIL_USER or EMAIL_PASS environment variables are not set');
+  }
+  
+  return nodemailer.createTransport({
+    service: 'Gmail',
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+    debug: true, // Enable debug logs
+    logger: true // Log information about the email sending process
+  });
+};
+
+const transporter = setupTransporter();
 
 // Request Password Reset
 exports.requestPasswordReset = async (req, res) => {
@@ -23,7 +34,7 @@ exports.requestPasswordReset = async (req, res) => {
     }
 
     // Generate reset token
-    const resetToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const resetToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET || 'fallback_secret_key_for_dev', { expiresIn: '1h' });
 
     // Send email with reset token
     const mailOptions = {
@@ -31,13 +42,37 @@ exports.requestPasswordReset = async (req, res) => {
       to: email,
       subject: 'Password Reset Request',
       text: `Your password reset code is: ${resetToken}`,
+      html: `
+        <h2>Password Reset Request</h2>
+        <p>You requested a password reset. Please use the following token to reset your password:</p>
+        <p style="background-color: #f4f4f4; padding: 10px; font-family: monospace; word-break: break-all;">${resetToken}</p>
+        <p>This token will expire in 1 hour.</p>
+        <p>If you didn't request a password reset, please ignore this email.</p>
+      `
     };
 
-    await transporter.sendMail(mailOptions);
-
-    res.json({ message: 'Password reset code sent to email' });
+    console.log('Attempting to send password reset email to:', email);
+    
+    try {
+      const info = await transporter.sendMail(mailOptions);
+      console.log('Password reset email sent:', info.response);
+      res.json({ message: 'Password reset code sent to email' });
+    } catch (emailError) {
+      console.error('Failed to send email:', emailError);
+      
+      // For development purposes, still return success but with token in response
+      // In production, you should remove this and properly configure email
+      if (process.env.NODE_ENV !== 'production') {
+        res.json({ 
+          message: 'Email sending failed, but for development, here is your token',
+          resetToken: resetToken // Only include this for development!
+        });
+      } else {
+        throw emailError; // Re-throw for production environments
+      }
+    }
   } catch (error) {
-    console.error('Error requesting password reset:', error); // Log the error
+    console.error('Error requesting password reset:', error);
     res.status(500).json({ message: 'Error requesting password reset', error: error.message });
   }
 };
@@ -46,9 +81,13 @@ exports.requestPasswordReset = async (req, res) => {
 exports.resetPassword = async (req, res) => {
   try {
     const { resetToken, newPassword } = req.body;
+    
+    if (!resetToken || !newPassword) {
+      return res.status(400).json({ message: 'Reset token and new password are required' });
+    }
 
     // Verify reset token
-    const decoded = jwt.verify(resetToken, process.env.JWT_SECRET);
+    const decoded = jwt.verify(resetToken, process.env.JWT_SECRET || 'fallback_secret_key_for_dev');
 
     // Find user by ID
     const user = await User.findById(decoded.id);
@@ -62,6 +101,10 @@ exports.resetPassword = async (req, res) => {
 
     res.json({ message: 'Password reset successfully' });
   } catch (error) {
+    console.error('Error resetting password:', error);
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(400).json({ message: 'Invalid or expired token' });
+    }
     res.status(500).json({ message: 'Error resetting password', error: error.message });
   }
 };

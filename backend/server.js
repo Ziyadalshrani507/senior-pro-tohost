@@ -88,12 +88,6 @@ mongoose.connect(process.env.MONGODB_URI || process.env.MONGO_URI)
 app.use('/api/auth', authRoutes);
 app.use('/api/destinations', destinationRoutes);
 app.use('/api/password-reset', passwordResetRoutes);
-app.use('/api/user/profile', profileRoutes);
-app.use('/api/restaurants', restaurantRoutes);
-// Mount API routes
-app.use('/api/auth', authRoutes);
-app.use('/api/destinations', destinationRoutes);
-app.use('/api/password-reset', passwordResetRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/restaurants', restaurantRoutes);
 app.use('/api/ratings', ratingRoutes);
