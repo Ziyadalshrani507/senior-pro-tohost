@@ -11,19 +11,18 @@ import RequestPasswordReset from './pages/RequestPasswordReset/RequestPasswordRe
 import VerifyResetToken from './pages/VerifyResetToken/VerifyResetToken';
 import ResetPassword from './pages/ResetPassword/ResetPassword';
 import Destinations from './pages/Destinations/Destinations';
-import DestinationDetails from './pages/DestinationDetails/DestinationDetails';
+// Using unified ItemDetails component instead of separate components
 import Profile from './pages/Profile/Profile';
 import Restaurants from './pages/Restaurants/Restaurants';
-import RestaurantDetails from './pages/RestaurantDetails/RestaurantDetails';
+
 import Dashboard from './pages/Dashboard/Dashboard';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import ChatWidget from './components/ChatWidget/ChatWidget';
 import SearchAll from './pages/SearchAll/SearchAll';
-
 import Hotels from './pages/Hotels/Hotels';
 import About from './pages/About/About';
 import Tours from './pages/Tours/Tours';
-
+import ItemDetails from './pages/ItemDetails/ItemDetails';
 
 // Error Boundary Component
 class ErrorBoundary extends React.Component {
@@ -93,17 +92,17 @@ function App() {
           <div className="app">
             <Header />
             <Routes>
-              <Route path="/" element={
-                <main className="main-content">
-                  <h1>Welcome to Tourism Platform</h1>
-                  <p>Discover amazing destinations and plan your next adventure!</p>
-                </main>
-              } />
+              {/* Redirecting root to tours page temporarily since Home doesn't exist yet */}
+              <Route path="/" element={<Navigate to="/tours" />} />
               <Route path="/about" element={<About />} />
               <Route path="/tours" element={<Tours />} />
               <Route path="/hotels" element={<Hotels />} />
+              <Route path="/:type/:id" element={<ItemDetails />} />
               <Route path="/destinations" element={<Destinations />} />
-              <Route path="/destinations/:id" element={<DestinationDetails />} />
+           
+               
+              
+              {/* Detailed view routes handled by individual components */}
               <Route path="/search" element={<SearchAll />} />
               <Route path="/signup" element={<SignUp />} />
               <Route path="/signin" element={<SignIn />} />
@@ -111,7 +110,6 @@ function App() {
               <Route path="/verify-reset-token" element={<VerifyResetToken />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/restaurants" element={<Restaurants />} />
-              <Route path="/restaurants/:id" element={<RestaurantDetails />} />
               <Route path="/profile" element={
                 <ProtectedRoute>
                   <Profile />

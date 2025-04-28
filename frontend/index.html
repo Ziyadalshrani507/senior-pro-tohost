@@ -9,5 +9,72 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+    <script>
+      (function(){
+        if(!window.chatbase||window.chatbase("getState")!=="initialized"){
+          window.chatbase=(...arguments)=>{
+            if(!window.chatbase.q){window.chatbase.q=[]}
+            window.chatbase.q.push(arguments)
+          };
+          window.chatbase=new Proxy(window.chatbase,{
+            get(target,prop){
+              if(prop==="q"){return target.q}
+              return(...args)=>target(prop,...args)
+            }
+          })
+        }
+
+        // Configure Chatbase appearance
+        window.chatbase('config', {
+          chatbotId: "XYO6VZr3RH1CTgejmNVYM",
+          domain: "www.chatbase.co",
+          theme: {
+            primaryColor: "#4f46e5",  // Main color for buttons and highlights
+            chatWindow: {
+              welcomeMessage: "Hello! How can I assist you with your travel plans today?",
+              backgroundColor: "#ffffff",
+              height: 500,
+              width: 380,
+              fontSize: 16,
+              poweredByTextColor: "#999999",
+              botMessageBackgroundColor: "#f2f7ff",
+              botMessageTextColor: "#333333",
+              userMessageBackgroundColor: "#4f46e5",
+              userMessageTextColor: "#ffffff",
+              borderRadius: 12
+            },
+            chatButton: {
+              iconColor: "#ffffff",
+              backgroundColor: "#4f46e5",
+              size: "large",
+              position: "right", // "left" or "right"
+              marginLeft: 20,    // Distance from left
+              marginRight: 20,   // Distance from right 
+              marginBottom: 20,  // Distance from bottom
+              iconStyle: "chat"  // "chat", "help", etc.
+            },
+            header: {
+              backgroundColor: "#4f46e5",
+              textColor: "#ffffff",
+              title: "Travel Assistant"
+            }
+          }
+        });
+
+        const onLoad=function(){
+          const script=document.createElement("script");
+          script.src="https://www.chatbase.co/embed.min.js";
+          script.id="XYO6VZr3RH1CTgejmNVYM";
+          script.domain="www.chatbase.co";
+          document.body.appendChild(script)
+        };
+        
+        if(document.readyState==="complete"){
+          onLoad()
+        } else {
+          window.addEventListener("load",onLoad)
+        }
+      })();
+    </script>
   </body>
 </html>
