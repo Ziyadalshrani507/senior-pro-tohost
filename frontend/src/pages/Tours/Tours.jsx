@@ -1,13 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import './Tours.css';
 import captionImage from './caption.jpg';
+import DestinationRecommendation from '../../components/DestinationRecommendation/DestinationRecommendation';
+import { getLastDestination } from '../../utils/cookieUtils';
 
 const Tours = () => {
   const [tours, setTours] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [hasLastDestination, setHasLastDestination] = useState(false);
 
   useEffect(() => {
+    // Check if there's a last searched destination
+    const lastDestination = getLastDestination();
+    setHasLastDestination(!!lastDestination);
+    
     const fetchTours = async () => {
       try {
         const response = await fetch('/api/tours');
@@ -34,6 +41,9 @@ const Tours = () => {
         <p>Handpicked routes and adventures across our regions</p>
         <img src={captionImage} alt="Tours Hero" className="hero-image" />
       </div>
+
+      {/* Display destination recommendation if user has a previous search */}
+      <DestinationRecommendation />
 
       {loading && <p>Loading tours...</p>}
       {error && <p className="error-message">{error}</p>}

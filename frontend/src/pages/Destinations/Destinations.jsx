@@ -5,6 +5,7 @@ import { toast } from 'react-toastify';
 import Card from '../../components/Card/Card';
 import LoginPromptModal from '../../components/LoginPromptModal/LoginPromptModal';
 import { getApiBaseUrl } from '../../utils/apiBaseUrl';
+import { setLastDestinationCookie, setLastSearchedCityCookie } from '../../utils/cookieUtils';
 
 const ITEMS_PER_PAGE = 12;
 
@@ -146,6 +147,32 @@ const Destinations = () => {
     }
 
     const searchTerm = debouncedSearchTerm.toLowerCase();
+    
+    // Save the search term to cookie if it's a meaningful search
+    if (searchTerm.length > 2) {
+      setLastDestinationCookie(debouncedSearchTerm);
+      
+      // Try to identify if search term is a city
+      // First check exact match with cities from schema options
+      const exactCityMatch = schemaOptions.cities.find(
+        city => city.toLowerCase() === searchTerm
+      );
+      
+      if (exactCityMatch) {
+        // If we have an exact city match, save it as the last searched city
+        setLastSearchedCityCookie(exactCityMatch);
+      } else {
+        // Check if any destination's city contains the search term
+        const cityDestination = allDestinations.find(
+          dest => dest.locationCity && dest.locationCity.toLowerCase().includes(searchTerm)
+        );
+        
+        if (cityDestination) {
+          setLastSearchedCityCookie(cityDestination.locationCity);
+        }
+      }
+    }
+
     const filtered = allDestinations.filter(dest => 
       dest.name?.toLowerCase().includes(searchTerm) ||
       dest.locationCity?.toLowerCase().includes(searchTerm) ||
@@ -153,7 +180,7 @@ const Destinations = () => {
     );
     
     setFilteredDestinations(filtered);
-  }, [debouncedSearchTerm, allDestinations]);
+  }, [debouncedSearchTerm, allDestinations, schemaOptions.cities]);
 
   // Group destinations by city - memoized
   const groupedDestinations = useMemo(() => {

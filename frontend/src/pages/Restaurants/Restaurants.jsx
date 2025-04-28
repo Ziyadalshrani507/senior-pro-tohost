@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import Card from '../../components/Card/Card';
 import './Restaurants.css';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'react-toastify';
 import LoginPromptModal from '../../components/LoginPromptModal/LoginPromptModal';
-
+import { getLikedCities } from '../../utils/cookieUtils';
 import { getApiBaseUrl } from '../../utils/apiBaseUrl';
 const API_BASE_URL = getApiBaseUrl();
 
@@ -16,6 +16,8 @@ const Restaurants = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [likesMap, setLikesMap] = useState({});
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+  const [likedCities, setLikedCities] = useState([]);
+  const [showPrioritizedContent, setShowPrioritizedContent] = useState(true);
   const filterRef = useRef(null);
   const [filters, setFilters] = useState({
     cities: [],
@@ -31,8 +33,16 @@ const Restaurants = () => {
     priceRanges: ['$', '$$', '$$$', '$$$$'],
     cuisines: []
   });
-  const [groupedRestaurants, setGroupedRestaurants] = useState({});
   const { user } = useAuth();
+
+  // Check for liked cities on component mount
+  useEffect(() => {
+    const cities = getLikedCities();
+    if (cities && cities.length > 0) {
+      setLikedCities(cities);
+      setShowPrioritizedContent(true);
+    }
+  }, []);
 
   // Close filters when clicking outside
   useEffect(() => {
@@ -62,6 +72,17 @@ const Restaurants = () => {
           : restaurant
       )
     );
+
+    // Update liked cities - this will happen automatically via the LikeButton component
+    // which now calls addLikedCity when a user likes content
+    
+    // Refresh liked cities from cookie after a delay to ensure the cookie is updated
+    setTimeout(() => {
+      const updatedLikedCities = getLikedCities();
+      if (updatedLikedCities && updatedLikedCities.length > 0) {
+        setLikedCities(updatedLikedCities);
+      }
+    }, 500);
   };
 
   // Fetch cities and restaurants
@@ -165,17 +186,50 @@ const Restaurants = () => {
       });
     }
 
-    // Group by city
-    const grouped = filtered.reduce((acc, rest) => {
-      const city = rest.locationCity;
-      if (!acc[city]) acc[city] = [];
-      acc[city].push(rest);
-      return acc;
-    }, {});
-
-    setGroupedRestaurants(grouped);
     setFilteredRestaurants(filtered);
   }, [restaurants, searchTerm, filters]);
+
+  // Compute prioritized restaurants by city
+  const groupedAndPrioritizedRestaurants = useMemo(() => {
+    if (!filteredRestaurants || filteredRestaurants.length === 0) {
+      return {};
+    }
+
+    // If we don't have liked cities or user has disabled prioritized content,
+    // just return the normal grouping
+    if (!likedCities || likedCities.length === 0 || !showPrioritizedContent) {
+      return filteredRestaurants.reduce((acc, rest) => {
+        const city = rest.locationCity;
+        if (!acc[city]) acc[city] = [];
+        acc[city].push(rest);
+        return acc;
+      }, {});
+    }
+
+    // Otherwise, create two groups: prioritized cities and other cities
+    const priorityGroups = {};
+    const otherGroups = {};
+
+    filteredRestaurants.forEach(rest => {
+      const city = rest.locationCity;
+      
+      // Check if this restaurant's city is in the liked cities list
+      const isPriority = likedCities.some(
+        likedCity => likedCity.toLowerCase() === city.toLowerCase()
+      );
+      
+      if (isPriority) {
+        if (!priorityGroups[city]) priorityGroups[city] = [];
+        priorityGroups[city].push(rest);
+      } else {
+        if (!otherGroups[city]) otherGroups[city] = [];
+        otherGroups[city].push(rest);
+      }
+    });
+
+    // Combine the groups with priority cities first
+    return { ...priorityGroups, ...otherGroups };
+  }, [filteredRestaurants, likedCities, showPrioritizedContent]);
 
   const handleFilterChange = (type, value) => {
     setFilters(prev => {
@@ -305,15 +359,32 @@ const Restaurants = () => {
         </div>
       </div>
 
+      {likedCities && likedCities.length > 0 && showPrioritizedContent && (
+        <div className="priority-info-banner">
+          <span>Showing restaurants in cities you've liked first</span>
+          <button onClick={() => setShowPrioritizedContent(false)}>
+            <i className="bi bi-x-lg"></i>
+          </button>
+        </div>
+      )}
+
       <div className="restaurants-content">
-        {Object.entries(groupedRestaurants).length === 0 ? (
+        {Object.keys(groupedAndPrioritizedRestaurants).length === 0 ? (
           <div className="no-results">
             No restaurants found matching your criteria
           </div>
         ) : (
-          Object.entries(groupedRestaurants).map(([city, cityRestaurants]) => (
-            <div key={city} className="city-section">
-              <h2 className="city-title">{city}</h2>
+          Object.entries(groupedAndPrioritizedRestaurants).map(([city, cityRestaurants]) => (
+            <div 
+              key={city} 
+              className={`city-section ${likedCities && likedCities.includes(city) && showPrioritizedContent ? 'priority-city' : ''}`}
+            >
+              <h2 className="city-title">
+                {city}
+                {likedCities && likedCities.includes(city) && showPrioritizedContent && (
+                  <span className="priority-label">Liked city</span>
+                )}
+              </h2>
               <div className="restaurants-grid">
                 {cityRestaurants.map((restaurant) => (
                   <Card 

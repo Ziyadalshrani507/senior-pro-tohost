@@ -9,6 +9,10 @@ exports.protect = async (req, res, next) => {
     // Check if token exists in headers
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
       token = req.headers.authorization.split(' ')[1];
+    } 
+    // Check if token exists in cookies
+    else if (req.cookies && req.cookies.auth_token) {
+      token = req.cookies.auth_token;
     }
 
     if (!token) {
@@ -30,9 +34,27 @@ exports.protect = async (req, res, next) => {
       next();
     } catch (error) {
       if (error.name === 'TokenExpiredError') {
+        // Clear the invalid cookie if it exists
+        if (req.cookies && req.cookies.auth_token) {
+          res.clearCookie('auth_token', {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+            path: '/'
+          });
+        }
         return res.status(401).json({ message: 'Token expired, please login again' });
       }
       if (error.name === 'JsonWebTokenError') {
+        // Clear the invalid cookie if it exists
+        if (req.cookies && req.cookies.auth_token) {
+          res.clearCookie('auth_token', {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+            path: '/'
+          });
+        }
         return res.status(401).json({ message: 'Invalid token, please login again' });
       }
       throw error;

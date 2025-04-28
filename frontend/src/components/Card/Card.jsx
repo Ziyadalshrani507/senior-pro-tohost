@@ -18,6 +18,18 @@ const Card = ({
 }) => {
   const navigate = useNavigate();
   
+  // Extract city information from item
+  const getItemCity = () => {
+    if (!item) return null;
+    
+    // Different item types might store city in different properties
+    if (item.locationCity) return item.locationCity;
+    if (item.city) return item.city;
+    if (item.location?.city) return item.location.city;
+    
+    return null;
+  };
+  
   const handleCardClick = () => {
     if (onClick) {
       onClick(item._id);
@@ -69,8 +81,9 @@ const Card = ({
             initialLikeCount={item.likeCount || 0}
             isInitiallyLiked={likesMap[item._id] || false}
             onLoginRequired={onLoginRequired}
+            city={getItemCity()}
             onLikeToggle={onLikeToggle ? 
-              (isLiked, likeCount) => onLikeToggle(item._id, isLiked, likeCount) : 
+              (itemId, isLiked, likeCount) => onLikeToggle(itemId, isLiked, likeCount) : 
               undefined
             }
           />

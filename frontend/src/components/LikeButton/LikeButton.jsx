@@ -3,6 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { FaHeart, FaRegHeart } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import './LikeButton.css';
+import { addLikedCity } from '../../utils/cookieUtils';
 
 import { getApiBaseUrl } from '../../utils/apiBaseUrl';
 const API_BASE_URL = getApiBaseUrl();
@@ -13,7 +14,8 @@ const LikeButton = ({
   onLoginRequired, 
   onLikeToggle,
   initialLikeCount = 0,
-  isInitiallyLiked = false 
+  isInitiallyLiked = false,
+  city = null // New prop to track the city of the liked item
 }) => {
   const { user } = useAuth();
   const token = localStorage.getItem('token');
@@ -71,7 +73,7 @@ const LikeButton = ({
     setLikeCount(newLikeCount);
     
     // Notify parent of optimistic update
-    onLikeToggle?.(newIsLiked, newLikeCount);
+    onLikeToggle?.(placeId, newIsLiked, newLikeCount);
 
     try {
       const response = await fetch(`${API_BASE_URL}/likes/${placeType}/${placeId}`, {
@@ -94,8 +96,13 @@ const LikeButton = ({
       setIsLiked(data.isLiked);
       setLikeCount(data.likeCount);
       
+      // Add city to liked cities cookie if this is a like action and city is provided
+      if (data.isLiked && city) {
+        addLikedCity(city);
+      }
+      
       // Notify parent of server state
-      onLikeToggle?.(data.isLiked, data.likeCount);
+      onLikeToggle?.(placeId, data.isLiked, data.likeCount);
       
       // Show success message
       toast.success(data.message);
@@ -105,7 +112,7 @@ const LikeButton = ({
       setLikeCount(previousCount);
       
       // Notify parent of reversion
-      onLikeToggle?.(previousLiked, previousCount);
+      onLikeToggle?.(placeId, previousLiked, previousCount);
       
       setError(error.message);
       toast.error(error.message || 'Failed to toggle like');

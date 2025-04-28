@@ -1,11 +1,12 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { getApiBaseUrl } from '../utils/apiBaseUrl';
+import { setUsernameCookie, deleteCookie, setUserInfoCookie } from '../utils/cookieUtils';
 
 const AuthContext = createContext();
 const API_BASE_URL = getApiBaseUrl();
 
-// Token expiration time in milliseconds (1 hour to match backend JWT expiration)
-const TOKEN_EXPIRY = 1 * 60 * 60 * 1000;
+// Token expiration time in milliseconds (24 hours to match cookie expiration)
+const TOKEN_EXPIRY = 24 * 60 * 60 * 1000;
 
 export const useAuth = () => {
   return useContext(AuthContext);
@@ -36,21 +37,24 @@ export const AuthProvider = ({ children }) => {
 
   // Refresh token function
   const refreshToken = useCallback(async () => {
-    if (!token) return;
+    if (!user) return;
     
     try {
       const response = await fetch(`${API_BASE_URL}/api/auth/refresh-token`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        }
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include' // This tells fetch to include cookies in the request
       });
       
       if (response.ok) {
         const data = await response.json();
-        setToken(data.token);
-        localStorage.setItem('token', data.token);
+        // Still store token in local storage for backward compatibility
+        if (data.token) {
+          setToken(data.token);
+          localStorage.setItem('token', data.token);
+        }
         updateActivity();
       } else {
         // If refresh fails due to very old token, log out
@@ -59,7 +63,7 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       console.error('Error refreshing token:', error);
     }
-  }, [token, handleTokenExpiration, updateActivity]);
+  }, [user, handleTokenExpiration, updateActivity]);
 
   // Check token expiration on mount
   useEffect(() => {
@@ -73,7 +77,7 @@ export const AuthProvider = ({ children }) => {
         const lastActivityTime = parseInt(savedActivity || '0', 10);
         const currentTime = Date.now();
         
-        // If no activity for 2 hours, log out
+        // If no activity for token expiry time, log out
         if (currentTime - lastActivityTime > TOKEN_EXPIRY) {
           handleTokenExpiration();
         } else {
@@ -97,19 +101,44 @@ export const AuthProvider = ({ children }) => {
     };
     
     setUser(userWithId);
-    setToken(newToken);
+    setToken(newToken); // Still store token for backward compatibility
     const currentTime = Date.now();
     setLastActivity(currentTime);
     localStorage.setItem('token', newToken);
     localStorage.setItem('user', JSON.stringify(userWithId));
     localStorage.setItem('lastActivity', currentTime.toString());
+    
+    // Set username cookie for user recognition (client-side only)
+    const username = userWithId.email || userWithId.firstName || 'user';
+    setUsernameCookie(username);
+    
+    // Set user info cookie with first name and gender
+    if (userWithId.firstName) {
+      setUserInfoCookie(userWithId.firstName, userWithId.gender || 'unknown');
+    }
   };
 
-  const logout = () => {
-    setUser(null);
-    setToken(null);
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+  const logout = async () => {
+    try {
+      // Call the signout endpoint to clear the cookie
+      await fetch(`${API_BASE_URL}/api/auth/signout`, {
+        method: 'POST',
+        credentials: 'include' // Include cookies in the request
+      });
+    } catch (error) {
+      console.error('Error during logout:', error);
+    } finally {
+      // Always clear local state regardless of server response
+      setUser(null);
+      setToken(null);
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      localStorage.removeItem('lastActivity');
+      
+      // Delete client-side cookies
+      deleteCookie('username');
+      deleteCookie('userInfo');
+    }
   };
 
   const updateUser = (userData) => {
@@ -145,8 +174,8 @@ export const AuthProvider = ({ children }) => {
       const lastActivityTime = parseInt(localStorage.getItem('lastActivity') || '0', 10);
       const currentTime = Date.now();
       
-      // If no activity for 2 hours, log out
-      if (token && currentTime - lastActivityTime > TOKEN_EXPIRY) {
+      // If no activity for token expiry time, log out
+      if (user && currentTime - lastActivityTime > TOKEN_EXPIRY) {
         handleTokenExpiration();
       }
     }, 60000); // Check every minute
@@ -158,7 +187,7 @@ export const AuthProvider = ({ children }) => {
       });
       clearInterval(tokenCheckInterval);
     };
-  }, [token, updateActivity, refreshToken, handleTokenExpiration]);
+  }, [user, updateActivity, refreshToken, handleTokenExpiration]);
 
   // Set up interceptor for API calls to handle expired tokens
   useEffect(() => {
@@ -167,14 +196,26 @@ export const AuthProvider = ({ children }) => {
     const originalFetch = window.fetch;
     
     window.fetch = async (...args) => {
+      // Add credentials for cookie-based auth if not specified
+      if (args[1] && !args[1].credentials) {
+        args[1] = {
+          ...args[1],
+          credentials: 'include' // Include cookies in all requests by default
+        };
+      }
+      
       try {
         const response = await originalFetch(...args);
         
         // If response indicates token expired, force logout
         if (response.status === 401) {
-          const responseData = await response.clone().json();
-          if (responseData.message?.includes('expired')) {
-            handleTokenExpiration();
+          try {
+            const responseData = await response.clone().json();
+            if (responseData.message?.includes('expired')) {
+              handleTokenExpiration();
+            }
+          } catch (e) {
+            // If we can't parse the JSON, just continue
           }
         }
         
@@ -192,7 +233,7 @@ export const AuthProvider = ({ children }) => {
 
   const value = {
     user,
-    token,
+    token, // Keep token in context for backward compatibility
     login,
     logout,
     updateUser,

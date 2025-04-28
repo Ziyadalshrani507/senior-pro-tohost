@@ -305,6 +305,62 @@
   margin: 0 auto;
 }
 
+/* Priority city styles */
+.priority-city {
+  background: linear-gradient(135deg, rgba(184, 138, 68, 0.05), rgba(217, 183, 120, 0.1));
+  border-radius: 12px;
+  padding: 15px;
+  margin-bottom: 30px;
+  border: 1px solid rgba(184, 138, 68, 0.15);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+}
+
+.priority-label {
+  background: linear-gradient(135deg, #B88A44, #D9B778);
+  color: white;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  margin-left: 10px;
+  vertical-align: middle;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+.priority-info-banner {
+  background-color: #f0f8ff;
+  border: 1px solid #d6ebff;
+  border-radius: 8px;
+  padding: 10px 15px;
+  margin: 10px 20px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  color: #4a6fa5;
+}
+
+.priority-info-banner button {
+  background: none;
+  border: none;
+  color: #8aa7d0;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 0 5px;
+  display: flex;
+  align-items: center;
+  transition: color 0.3s ease;
+}
+
+.priority-info-banner button:hover {
+  color: #4a6fa5;
+}
+
+.priority-info-banner strong {
+  color: #2c4c7c;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .restaurants-navbar {

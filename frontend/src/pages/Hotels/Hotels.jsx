@@ -1,20 +1,22 @@
-import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { toast } from 'react-toastify';
 import './Hotels.css';
 import Card from '../../components/Card/Card';
 import LoginPromptModal from '../../components/LoginPromptModal/LoginPromptModal';
 import { getApiBaseUrl } from '../../utils/apiBaseUrl';
+import { getLikedCities } from '../../utils/cookieUtils';
 
 const Hotels = () => {
   const [allHotels, setAllHotels] = useState([]);
   const [filteredHotels, setFilteredHotels] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  // No longer using detailed view states
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [likesMap, setLikesMap] = useState({});
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+  const [likedCities, setLikedCities] = useState([]);
+  const [showPrioritizedContent, setShowPrioritizedContent] = useState(true);
   const API_BASE_URL = getApiBaseUrl();
   
   const filterRef = useRef(null);
@@ -33,6 +35,15 @@ const Hotels = () => {
     amenities: []
   });
 
+  // Check for liked cities on component mount
+  useEffect(() => {
+    const cities = getLikedCities();
+    if (cities && cities.length > 0) {
+      setLikedCities(cities);
+      setShowPrioritizedContent(true);
+    }
+  }, []);
+
   // Close filters when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -47,6 +58,25 @@ const Hotels = () => {
 
   // Debounce search term
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
+
+  // Handle like toggle
+  const handleLikeToggle = (hotelId, isLiked, newLikeCount) => {
+    setAllHotels(prevHotels =>
+      prevHotels.map(hotel =>
+        hotel._id === hotelId
+          ? { ...hotel, likeCount: newLikeCount, isLiked }
+          : hotel
+      )
+    );
+    
+    // Refresh liked cities from cookie after a delay to ensure the cookie is updated
+    setTimeout(() => {
+      const updatedLikedCities = getLikedCities();
+      if (updatedLikedCities && updatedLikedCities.length > 0) {
+        setLikedCities(updatedLikedCities);
+      }
+    }, 500);
+  };
 
   // Fetch hotels and user likes
   useEffect(() => {
@@ -116,8 +146,6 @@ const Hotels = () => {
     
     fetchData();
   }, [API_BASE_URL]);
-
-  // Booking functionality has been removed
   
   // Filter hotels based on search term and filters
   useEffect(() => {
@@ -212,60 +240,100 @@ const Hotels = () => {
     // Using navigate instead of window.location for smoother transitions
   };
 
-  // Group hotels by city - memoized
-  const groupedHotels = useMemo(() => {
+  // Helper function to extract city information from hotel
+  const extractCityFromHotel = (hotel) => {
+    // Try to extract the city from various possible properties
+    let city = null;
+    
+    // Check if the hotel has a location property with city
+    if (hotel.location && hotel.location.city) {
+      city = hotel.location.city;
+    }
+    // Check if hotel has a locationCity property (like destinations)
+    else if (hotel.locationCity) {
+      city = hotel.locationCity;
+    }
+    // Check if hotel has a city property directly
+    else if (hotel.city) {
+      city = hotel.city;
+    }
+    // Try to extract from the name if it contains a city name
+    else if (hotel.name) {
+      // Common Saudi cities to check for in the hotel name
+      const saudiCities = ['Riyadh', 'Jeddah', 'Mecca', 'Medina', 'Dammam', 'Taif', 'Tabuk', 'Abha'];
+      
+      for (const possibleCity of saudiCities) {
+        if (hotel.name.includes(possibleCity)) {
+          city = possibleCity;
+          break;
+        }
+      }
+    }
+    
+    // If no city was found, check if there's any address information
+    if (!city && hotel.address) {
+      // Common Saudi cities to check for in the address
+      const saudiCities = ['Riyadh', 'Jeddah', 'Mecca', 'Medina', 'Dammam', 'Taif', 'Tabuk', 'Abha'];
+      
+      for (const possibleCity of saudiCities) {
+        if (hotel.address.includes(possibleCity)) {
+          city = possibleCity;
+          break;
+        }
+      }
+    }
+    
+    // If we still don't have a city, use "Other Locations"
+    if (!city) {
+      city = "Other Locations";
+    }
+    
+    return city;
+  };
+
+  // Group hotels by city with prioritization based on liked cities - memoized
+  const groupedAndPrioritizedHotels = useMemo(() => {
     if (!filteredHotels || filteredHotels.length === 0) {
       return {};
     }
     
-    return filteredHotels.reduce((acc, hotel) => {
-      // Try to extract the city from various possible properties
-      let city = null;
-      
-      // Check if the hotel has a location property with city
-      if (hotel.location && hotel.location.city) {
-        city = hotel.location.city;
-      }
-      // Check if hotel has a locationCity property (like destinations)
-      else if (hotel.locationCity) {
-        city = hotel.locationCity;
-      }
-      // Try to extract from the name if it contains a city name
-      else if (hotel.name) {
-        // Common Saudi cities to check for in the hotel name
-        const saudiCities = ['Riyadh', 'Jeddah', 'Mecca', 'Medina', 'Dammam', 'Taif', 'Tabuk', 'Abha'];
+    // If we don't have liked cities or user has disabled prioritized content,
+    // just return the normal grouping
+    if (!likedCities || likedCities.length === 0 || !showPrioritizedContent) {
+      return filteredHotels.reduce((acc, hotel) => {
+        // Extract city from hotel data
+        let city = extractCityFromHotel(hotel);
         
-        for (const possibleCity of saudiCities) {
-          if (hotel.name.includes(possibleCity)) {
-            city = possibleCity;
-            break;
-          }
-        }
-      }
+        if (!acc[city]) acc[city] = [];
+        acc[city].push(hotel);
+        return acc;
+      }, {});
+    }
+    
+    // Otherwise, prioritize liked cities
+    const priorityGroups = {};
+    const otherGroups = {};
+    
+    filteredHotels.forEach(hotel => {
+      const city = extractCityFromHotel(hotel);
       
-      // If no city was found, check if there's any address information
-      if (!city && hotel.address) {
-        // Common Saudi cities to check for in the address
-        const saudiCities = ['Riyadh', 'Jeddah', 'Mecca', 'Medina', 'Dammam', 'Taif', 'Tabuk', 'Abha'];
-        
-        for (const possibleCity of saudiCities) {
-          if (hotel.address.includes(possibleCity)) {
-            city = possibleCity;
-            break;
-          }
-        }
-      }
+      // Check if this hotel's city is in the liked cities list
+      const isPriority = likedCities.some(
+        likedCity => likedCity.toLowerCase() === city.toLowerCase()
+      );
       
-      // If we still don't have a city, use "Other Locations"
-      if (!city) {
-        city = "Other Locations";
+      if (isPriority) {
+        if (!priorityGroups[city]) priorityGroups[city] = [];
+        priorityGroups[city].push(hotel);
+      } else {
+        if (!otherGroups[city]) otherGroups[city] = [];
+        otherGroups[city].push(hotel);
       }
-      
-      if (!acc[city]) acc[city] = [];
-      acc[city].push(hotel);
-      return acc;
-    }, {});
-  }, [filteredHotels]);
+    });
+    
+    // Combine groups with priority cities first
+    return { ...priorityGroups, ...otherGroups };
+  }, [filteredHotels, likedCities, showPrioritizedContent]);
   
   if (error) {
     return <div className="error-message">{error}</div>;
@@ -274,154 +342,155 @@ const Hotels = () => {
   return (
     <div className="hotels-page">
       <>
-        {/* Title removed */}
-          <div className="hotels-navbar">
-            <div className="search-filter-container">
-              <div className="search-container">
-                <input
-                  type="text"
-                  placeholder="Search by name, city, or description..."
-                  value={searchTerm}
-                  onChange={handleSearchChange}
-                  className="search-input"
-                />
-                {debouncedSearchTerm && (
-                  <div className="search-stats">
-                    Found {filteredHotels.length} results
-                  </div>
-                )}
-              </div>
-              <div className="filter-container" ref={filterRef}>
-                <button 
-                  className={`filter-button ${showFilters ? 'active' : ''}`}
-                  onClick={() => setShowFilters(!showFilters)}
-                >
-                  <i className="bi bi-funnel"></i>
-                  Filters
-                </button>
-                {showFilters && (
-                  <div className="filter-dropdown">
-                    <div className="filter-row">
-                      <div className="filter-group">
-                        <h3>Price Range</h3>
-                        <div className="price-inputs">
-                          <input
-                            type="number"
-                            placeholder="Min"
-                            value={filters.priceRange.min}
-                            onChange={(e) => handleFilterChange('priceRange', { min: e.target.value })}
-                          />
-                          <input
-                            type="number"
-                            placeholder="Max"
-                            value={filters.priceRange.max}
-                            onChange={(e) => handleFilterChange('priceRange', { max: e.target.value })}
-                          />
-                        </div>
-                      </div>
-                      <div className="filter-group">
-                        <h3>Rating</h3>
-                        <select
-                          value={filters.rating}
-                          onChange={(e) => handleFilterChange('rating', e.target.value)}
-                        >
-                          <option value="">Any rating</option>
-                          <option value="3">3+ stars</option>
-                          <option value="4">4+ stars</option>
-                          <option value="4.5">4.5+ stars</option>
-                        </select>
+        <div className="hotels-navbar">
+          <div className="search-filter-container">
+            <div className="search-container">
+              <input
+                type="text"
+                placeholder="Search by name, city, or description..."
+                value={searchTerm}
+                onChange={handleSearchChange}
+                className="search-input"
+              />
+              {debouncedSearchTerm && (
+                <div className="search-stats">
+                  Found {filteredHotels.length} results
+                </div>
+              )}
+            </div>
+            <div className="filter-container" ref={filterRef}>
+              <button 
+                className={`filter-button ${showFilters ? 'active' : ''}`}
+                onClick={() => setShowFilters(!showFilters)}
+              >
+                <i className="bi bi-funnel"></i>
+                Filters
+              </button>
+              {showFilters && (
+                <div className="filter-dropdown">
+                  <div className="filter-row">
+                    <div className="filter-group">
+                      <h3>Price Range</h3>
+                      <div className="price-inputs">
+                        <input
+                          type="number"
+                          placeholder="Min"
+                          value={filters.priceRange.min}
+                          onChange={(e) => handleFilterChange('priceRange', { min: e.target.value })}
+                        />
+                        <input
+                          type="number"
+                          placeholder="Max"
+                          value={filters.priceRange.max}
+                          onChange={(e) => handleFilterChange('priceRange', { max: e.target.value })}
+                        />
                       </div>
                     </div>
-                    {schemaOptions.amenities.length > 0 && (
-                      <div className="filter-row">
-                        <div className="filter-group">
-                          <h3>Amenities</h3>
-                          <div className="checkbox-group scrollable">
-                            {schemaOptions.amenities.map(amenity => (
-                              <label key={amenity} className="checkbox-label">
-                                <input
-                                  type="checkbox"
-                                  checked={filters.amenities.includes(amenity)}
-                                  onChange={() => handleFilterChange('amenity', amenity)}
-                                />
-                                {amenity}
-                              </label>
-                            ))}
-                          </div>
+                    <div className="filter-group">
+                      <h3>Rating</h3>
+                      <select
+                        value={filters.rating}
+                        onChange={(e) => handleFilterChange('rating', e.target.value)}
+                      >
+                        <option value="">Any rating</option>
+                        <option value="3">3+ stars</option>
+                        <option value="4">4+ stars</option>
+                        <option value="4.5">4.5+ stars</option>
+                      </select>
+                    </div>
+                  </div>
+                  {schemaOptions.amenities.length > 0 && (
+                    <div className="filter-row">
+                      <div className="filter-group">
+                        <h3>Amenities</h3>
+                        <div className="checkbox-group scrollable">
+                          {schemaOptions.amenities.map(amenity => (
+                            <label key={amenity} className="checkbox-label">
+                              <input
+                                type="checkbox"
+                                checked={filters.amenities.includes(amenity)}
+                                onChange={() => handleFilterChange('amenity', amenity)}
+                              />
+                              {amenity}
+                            </label>
+                          ))}
                         </div>
                       </div>
-                    )}
-                  </div>
-                )}
-              </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
+        </div>
 
-          {loading ? (
-            <div className="loading-spinner">Loading...</div>
-          ) : Object.entries(groupedHotels).length === 0 ? (
-            <div className="no-results">No results found</div>
-          ) : (
-            <>
-              {Object.entries(groupedHotels).map(([city, cityHotels]) => (
-                <div key={city} className="city-section">
-                  <h2 className="city-title">{city}</h2>
-                  <div className="hotels-grid">
-                    {cityHotels.map((hotel) => (
-                      <Card
-                        key={hotel._id}
-                        item={hotel}
-                        type="hotel"
-                        imageKey="images"
-                        fallbackImageKey="pictureUrls"
-                        likesMap={likesMap}
-                        onLoginRequired={() => setShowLoginPrompt(true)}
-                        onLikeToggle={(hotelId, isLiked, likeCount) => {
-                          // Update the likes map
-                          setLikesMap(prev => ({
-                            ...prev,
-                            [hotelId]: isLiked
-                          }));
-                          
-                          // Update the hotel's like count
-                          setAllHotels(prev =>
-                            prev.map(h =>
-                              h._id === hotelId
-                                ? { ...h, likeCount }
-                                : h
-                            )
-                          );
-                        }}
-                        onClick={handleHotelClick}
-                        detailsPath="hotels"
-                        renderCustomContent={(hotel) => (
-                          <>
-                            <h3>{hotel.name || 'Untitled'}</h3>
-                            <p className="card-description">
-                              {hotel.description ? 
-                                (hotel.description.length > 70 ? 
-                                  `${hotel.description.substring(0, 70)}...` : 
-                                  hotel.description) : 
-                                'No description available'}
-                            </p>
-                            {hotel.pricePerNight && (
-                              <p className="hotel-price">{hotel.pricePerNight} SAR / night</p>
-                            )}
-                            {hotel.rating && (
-                              <div className="hotel-rating">
-                                <span className="rating-stars">⭐ {hotel.rating.average ? hotel.rating.average.toFixed(1) : '0.0'}</span>
-                                <span className="review-count">({hotel.rating.count || 0} reviews)</span>
-                              </div>
-                            )}
-                          </>
-                        )}
-                      />
-                    ))}
-                  </div>
+        {likedCities && likedCities.length > 0 && showPrioritizedContent && (
+          <div className="priority-info-banner">
+            <span>Showing hotels in cities you've liked first</span>
+            <button onClick={() => setShowPrioritizedContent(false)}>
+              <i className="bi bi-x-lg"></i>
+            </button>
+          </div>
+        )}
+
+        {loading ? (
+          <div className="loading-spinner">Loading...</div>
+        ) : Object.entries(groupedAndPrioritizedHotels).length === 0 ? (
+          <div className="no-results">No results found</div>
+        ) : (
+          <>
+            {Object.entries(groupedAndPrioritizedHotels).map(([city, cityHotels]) => (
+              <div 
+                key={city} 
+                className={`city-section ${likedCities && likedCities.includes(city) && showPrioritizedContent ? 'priority-city' : ''}`}
+              >
+                <h2 className="city-title">
+                  {city}
+                  {likedCities && likedCities.includes(city) && showPrioritizedContent && (
+                    <span className="priority-label">Liked city</span>
+                  )}
+                </h2>
+                <div className="hotels-grid">
+                  {cityHotels.map((hotel) => (
+                    <Card
+                      key={hotel._id}
+                      item={hotel}
+                      type="hotel"
+                      imageKey="images"
+                      fallbackImageKey="pictureUrls"
+                      likesMap={likesMap}
+                      onLoginRequired={() => setShowLoginPrompt(true)}
+                      onLikeToggle={(hotelId, isLiked, likeCount) => handleLikeToggle(hotelId, isLiked, likeCount)}
+                      onClick={handleHotelClick}
+                      detailsPath="hotels"
+                      renderCustomContent={(hotel) => (
+                        <>
+                          <h3>{hotel.name || 'Untitled'}</h3>
+                          <p className="card-description">
+                            {hotel.description ? 
+                              (hotel.description.length > 70 ? 
+                                `${hotel.description.substring(0, 70)}...` : 
+                                hotel.description) : 
+                              'No description available'}
+                          </p>
+                          {hotel.pricePerNight && (
+                            <p className="hotel-price">{hotel.pricePerNight} SAR / night</p>
+                          )}
+                          {hotel.rating && (
+                            <div className="hotel-rating">
+                              <span className="rating-stars">⭐ {hotel.rating.average ? hotel.rating.average.toFixed(1) : '0.0'}</span>
+                              <span className="review-count">({hotel.rating.count || 0} reviews)</span>
+                            </div>
+                          )}
+                        </>
+                      )}
+                    />
+                  ))}
                 </div>
-              ))}
-            </>
-          )}
+              </div>
+            ))}
+          </>
+        )}
       </>
       
       <LoginPromptModal

@@ -26,24 +26,20 @@ const Profile = () => {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        // Get token and user data from localStorage
-        const token = localStorage.getItem('token');
-        const savedUser = localStorage.getItem('user');
-        
-        if (!token || !savedUser) {
+        // Check if user exists in auth context
+        if (!currentUser) {
           throw new Error('No authentication data found');
         }
 
-        const parsedUser = JSON.parse(savedUser);
-        const userId = parsedUser.id || parsedUser._id;
+        const userId = currentUser.id || currentUser._id;
 
         if (!userId) {
           throw new Error('User ID not found');
         }
 
         const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
+          credentials: 'include', // Include cookies in the request
           headers: {
-            'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
           }
         });
@@ -79,7 +75,7 @@ const Profile = () => {
     };
 
     fetchUserData();
-  }, [API_BASE_URL, navigate]);
+  }, [API_BASE_URL, navigate, currentUser]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -95,9 +91,9 @@ const Profile = () => {
       const response = await fetch(`${API_BASE_URL}/users/${currentUser._id}`, {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${currentUser.token}`
+          'Content-Type': 'application/json'
         },
+        credentials: 'include', // Include cookies in the request
         body: JSON.stringify(formData)
       });
 
@@ -126,12 +122,9 @@ const Profile = () => {
 
     setIsUploading(true);
     try {
-      const token = localStorage.getItem('token');
       const response = await fetch(`${API_BASE_URL}/users/${currentUser._id}/profile-picture`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
+        credentials: 'include', // Include cookies in the request
         body: formData
       });
 

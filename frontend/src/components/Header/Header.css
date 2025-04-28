@@ -283,3 +283,41 @@
     padding-right: 0;
   }
 }
+
+/* Welcome banner */
+.welcome-banner {
+  background: linear-gradient(135deg, #4e54c8, #8f94fb);
+  color: white;
+  text-align: center;
+  padding: 10px 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1031;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  font-weight: 500;
+  font-size: 16px;
+}
+
+.close-welcome {
+  background: none;
+  border: none;
+  color: white;
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0 8px;
+}
+
+.close-welcome:hover {
+  opacity: 0.8;
+}
+
+/* Adjust navbar position when banner is showing */
+.navbar.with-banner {
+  top: 40px;
+}

@@ -5,6 +5,7 @@ require('dotenv').config();
 const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
+const cookieParser = require('cookie-parser');
 
 const authRoutes = require('./Routes/authRoutes');
 const destinationRoutes = require('./Routes/destinationRoutes');
@@ -28,6 +29,7 @@ app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:5173', 
   credentials: true
 }));
+app.use(cookieParser());
 
 // Request body parser with error handling
 app.use(express.json({
