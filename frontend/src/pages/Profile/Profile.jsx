@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { getApiBaseUrl } from '../../utils/apiBaseUrl';
 import FavoritesSection from '../../components/FavoritesSection/FavoritesSection';
+import ReviewsSection from '../../components/ReviewsSection/ReviewsSection';
 import './Profile.css';
 
 const Profile = () => {
@@ -274,7 +275,7 @@ const Profile = () => {
           )
         )}
         {selectedTab === 'Favorites' && <FavoritesSection />}
-        {selectedTab === 'Reviews' && <div>Reviews content will go here</div>}
+        {selectedTab === 'Reviews' && <ReviewsSection userId={currentUser._id} />}
       </div>
     </div>
   );

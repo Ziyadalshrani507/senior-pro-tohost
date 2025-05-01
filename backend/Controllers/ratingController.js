@@ -249,29 +249,65 @@ const getUserRatings = async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
 
-    const ratings = await Rating.find({ userId })
-      .populate([
-        {
-          path: 'itemId',
-          select: 'name images location',
-          model: function(doc) {
-            return doc.itemType === 'destination' ? 'Destination' : 'Restaurant';
-          }
-        }
-      ])
-      .sort('-createdAt')
-      .limit(limit)
-      .skip((page - 1) * limit);
+    // First, get all ratings
+    const ratings = await Rating.find({ userId }).sort('-createdAt');
+
+    // Group ratings by itemType
+    const destinationRatings = ratings.filter(r => r.itemType === 'destination');
+    const hotelRatings = ratings.filter(r => r.itemType === 'hotel');
+    const restaurantRatings = ratings.filter(r => r.itemType === 'restaurant');
+
+    // Populate each type separately
+    const [populatedDestinations, populatedHotels, populatedRestaurants] = await Promise.all([
+      Rating.populate(destinationRatings, {
+        path: 'itemId',
+        model: Destination,
+        select: 'name images location description'
+      }),
+      Rating.populate(hotelRatings, {
+        path: 'itemId',
+        model: Hotel,
+        select: 'name images location description'
+      }),
+      Rating.populate(restaurantRatings, {
+        path: 'itemId',
+        model: Restaurant,
+        select: 'name images location description'
+      })
+    ]);
+
+    // Combine and sort all populated ratings
+    const allPopulatedRatings = [...populatedDestinations, ...populatedHotels, ...populatedRestaurants]
+      .sort((a, b) => b.createdAt - a.createdAt)
+      .slice((page - 1) * limit, page * limit);
+
+    // Format the ratings
+    const formattedRatings = allPopulatedRatings.map(rating => ({
+      _id: rating._id,
+      rating: rating.rating,
+      comment: rating.comment,
+      visitDate: rating.visitDate,
+      createdAt: rating.createdAt,
+      itemType: rating.itemType,
+      itemId: {
+        _id: rating.itemId?._id,
+        name: rating.itemId?.name || rating.itemId?.title,
+      },
+      destinationName: rating.itemId?.name || rating.itemId?.title,
+      description: rating.itemId?.description,
+      images: rating.itemId?.images
+    }));
 
     const total = await Rating.countDocuments({ userId });
 
     res.json({
-      ratings,
+      ratings: formattedRatings,
       totalPages: Math.ceil(total / limit),
       currentPage: page,
       totalRatings: total
     });
   } catch (error) {
+    console.error('Error in getUserRatings:', error);
     res.status(500).json({ message: error.message });
   }
 };
