@@ -500,7 +500,6 @@ const Hotels = () => {
                           likesMap={likesMap}
                           onLoginRequired={() => setShowLoginPrompt(true)}
                           onLikeToggle={(hotelId, isLiked, likeCount) => handleLikeToggle(hotelId, isLiked, likeCount)}
-                          onClick={handleHotelClick}
                           detailsPath="hotels"
                           renderCustomContent={(hotel) => (
                             <>
