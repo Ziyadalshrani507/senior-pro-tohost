@@ -15,16 +15,16 @@ const {
   getRatingStats
 } = require('../Controllers/ratingController');
 
-// Public routes
-router.get('/:itemType/:itemId', getItemRatings);
-router.get('/stats/:itemType/:itemId', getRatingStats);
-
 // Protected routes
 router.post('/', protect, validateRating, addRating);
 router.put('/:id', protect, validateRatingUpdate, updateRating);
 router.delete('/:id', protect, deleteRating);
-router.get('/user/ratings', protect, getUserRatings);
+router.get('/user/ratings', protect, getUserRatings); // More specific route first
 router.post('/:id/like', protect, toggleLike);
+
+// Public routes
+router.get('/stats/:itemType/:itemId', getRatingStats);
+router.get('/:itemType/:itemId', getItemRatings); // Generic route last
 
 // Admin routes
 router.get('/moderation/queue', protect, admin, async (req, res) => {
