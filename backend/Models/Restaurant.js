@@ -237,6 +237,8 @@ const restaurantSchema = new mongoose.Schema({
 // Create indexes for geospatial queries and likes
 restaurantSchema.index({ coordinates: '2dsphere' });
 restaurantSchema.index({ likes: 1 }); // Index for faster likes lookup
+// Create a compound index on name and locationCity to ensure unique names per city
+restaurantSchema.index({ name: 1, locationCity: 1 }, { unique: true });
 
 // Update the updatedAt timestamp before saving
 restaurantSchema.pre('save', function(next) {

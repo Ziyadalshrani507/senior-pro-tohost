@@ -98,6 +98,10 @@ app.use('/api/likes', likeRoutes);
 app.use('/api/hotels', hotelRoutes);
 app.use('/api/users', require('./Routes/userRoutes'));
 
+// Itinerary routes
+const itineraryRoutes = require('./Routes/itineraryRoutes');
+app.use('/api/itinerary', itineraryRoutes);
+
 // Serve static files from the React app
 app.use(express.static(path.join(__dirname, '../frontend/dist')));
 

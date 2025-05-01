@@ -1,0 +1,109 @@
+.itinerary-day {
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  padding: 2rem;
+}
+
+.itinerary-day h2 {
+  font-size: 1.8rem;
+  color: #333;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.day-notes {
+  background-color: #fff8e1;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 2rem;
+}
+
+.timeline {
+  position: relative;
+  padding-left: 2rem;
+}
+
+.timeline:before {
+  content: '';
+  position: absolute;
+  left: 10px;
+  top: 0;
+  height: 100%;
+  width: 2px;
+  background-color: #e0e0e0;
+}
+
+.timeline-item {
+  position: relative;
+  margin-bottom: 2.5rem;
+}
+
+.timeline-icon {
+  position: absolute;
+  left: -2rem;
+  top: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: white;
+  border: 2px solid;
+  font-size: 1.2rem;
+  z-index: 2;
+}
+
+.timeline-icon.morning { border-color: #ffb74d; }
+.timeline-icon.lunch { border-color: #ff8a65; }
+.timeline-icon.afternoon { border-color: #4fc3f7; }
+.timeline-icon.dinner { border-color: #7986cb; }
+.timeline-icon.hotel { border-color: #4db6ac; }
+
+.timeline-content {
+  padding-left: 1rem;
+}
+
+.timeline-content h3 {
+  font-size: 1.4rem;
+  margin-bottom: 0.5rem;
+  color: #333;
+}
+
+.activity-card, .restaurant-card, .hotel-card {
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.activity-card h4, .restaurant-card h4, .hotel-card h4 {
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+  color: #333;
+}
+
+.activity-card p, .restaurant-card p, .hotel-card p {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 0.75rem;
+}
+
+@media print {
+  .itinerary-day {
+    box-shadow: none;
+    page-break-inside: avoid;
+  }
+  
+  .timeline:before {
+    background-color: #777;
+  }
+  
+  .activity-card, .restaurant-card, .hotel-card {
+    border: 1px solid #ddd;
+  }
+  
+  .day-notes {
+    border: 1px solid #ffecb3;
+  }
+}

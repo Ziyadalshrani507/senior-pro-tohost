@@ -18,7 +18,7 @@ exports.getSchemaOptions = async (req, res) => {
 // Get all destinations
 exports.getDestinations = async (req, res) => {
   try {
-    const { lat, lng, radius } = req.query;
+    const { lat, lng, radius, limit, featured, country } = req.query;
     let query = {};
 
     // If coordinates and radius are provided, find destinations within the radius
@@ -27,7 +27,7 @@ exports.getDestinations = async (req, res) => {
         coordinates: {
           $near: {
             $geometry: {
-              type: 'Point',
+              type: "Point",
               coordinates: [parseFloat(lng), parseFloat(lat)]
             },
             $maxDistance: parseFloat(radius) * 1000 // Convert km to meters
@@ -36,10 +36,28 @@ exports.getDestinations = async (req, res) => {
       };
     }
 
-    const destinations = await Destination.find(query);
+    // Add featured filter if requested
+    if (featured === "true") {
+      query.featured = true;
+    }
+
+    // Add country filter if provided
+    if (country) {
+      query.country = country;
+    }
+
+    // Create the database query
+    let destinationQuery = Destination.find(query);
+    
+    // Apply limit if provided
+    if (limit) {
+      destinationQuery = destinationQuery.limit(parseInt(limit));
+    }
+
+    const destinations = await destinationQuery;
     res.json(destinations);
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching destinations', error: error.message });
+    res.status(500).json({ message: "Error fetching destinations", error: error.message });
   }
 };
 

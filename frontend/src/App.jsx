@@ -17,11 +17,15 @@ import Restaurants from './pages/Restaurants/Restaurants';
 
 import Dashboard from './pages/Dashboard/Dashboard';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ItineraryProvider } from './context/ItineraryContext';
 import ChatWidget from './components/ChatWidget/ChatWidget';
 import SearchAll from './pages/SearchAll/SearchAll';
 import Hotels from './pages/Hotels/Hotels';
 import About from './pages/About/About';
 import Tours from './pages/Tours/Tours';
+import Home from './pages/Home/Home';
+import ItineraryPlannerPage from './pages/ItineraryPlanner/ItineraryPlannerPage';
+import ItineraryDetailsPage from './pages/ItineraryPlanner/ItineraryDetailsPage';
 import ItemDetails from './pages/ItemDetails/ItemDetails';
 
 // Error Boundary Component
@@ -88,19 +92,23 @@ function App() {
   return (
     <ErrorBoundary>
       <AuthProvider>
-        <Router>
-          <div className="app">
-            <Header />
-            <Routes>
-              {/* Redirecting root to tours page temporarily since Home doesn't exist yet */}
-              <Route path="/" element={<Navigate to="/tours" />} />
+        <ItineraryProvider>
+          <Router>
+            <div className="app">
+              <Header />
+              <Routes>
+              <Route path="/" element={<Home />} />
               <Route path="/about" element={<About />} />
               <Route path="/tours" element={<Tours />} />
               <Route path="/hotels" element={<Hotels />} />
               <Route path="/:type/:id" element={<ItemDetails />} />
               <Route path="/destinations" element={<Destinations />} />
-           
-               
+              <Route path="/itinerary-planner" element={<ItineraryPlannerPage />} />
+              <Route path="/itinerary/:id" element={
+                <ProtectedRoute>
+                  <ItineraryDetailsPage />
+                </ProtectedRoute>
+              } />
               
               {/* Detailed view routes handled by individual components */}
               <Route path="/search" element={<SearchAll />} />
@@ -121,12 +129,13 @@ function App() {
                 </AdminRoute>
               } />
               <Route path="*" element={<NotFound />} />
-            </Routes>
-            <ToastContainer />
-            <Footer />
-            <ChatWidget />
-          </div>
-        </Router>
+              </Routes>
+              <ToastContainer />
+              <Footer />
+              <ChatWidget />
+            </div>
+          </Router>
+        </ItineraryProvider>
       </AuthProvider>
     </ErrorBoundary>
   );

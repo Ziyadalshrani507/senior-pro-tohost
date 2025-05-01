@@ -17,6 +17,8 @@ const Hotels = () => {
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [likedCities, setLikedCities] = useState([]);
   const [showPrioritizedContent, setShowPrioritizedContent] = useState(true);
+  const [cityPageMap, setCityPageMap] = useState({});
+  const hotelsPerPage = 5;
   const API_BASE_URL = getApiBaseUrl();
   
   const filterRef = useRef(null);
@@ -439,56 +441,117 @@ const Hotels = () => {
           <div className="no-results">No results found</div>
         ) : (
           <>
-            {Object.entries(groupedAndPrioritizedHotels).map(([city, cityHotels]) => (
-              <div 
-                key={city} 
-                className={`city-section ${likedCities && likedCities.includes(city) && showPrioritizedContent ? 'priority-city' : ''}`}
-              >
-                <h2 className="city-title">
-                  {city}
-                  {likedCities && likedCities.includes(city) && showPrioritizedContent && (
-                    <span className="priority-label">Liked city</span>
+            {Object.entries(groupedAndPrioritizedHotels).map(([city, cityHotels]) => {
+              // Get the current page for this city, default to 0 if not set
+              const currentPage = cityPageMap[city] || 0;
+              
+              // Calculate total pages for this city
+              const totalPages = Math.ceil(cityHotels.length / hotelsPerPage);
+              
+              // Get the hotels for the current page
+              const hotelsToShow = cityHotels.slice(
+                currentPage * hotelsPerPage, 
+                (currentPage + 1) * hotelsPerPage
+              );
+              
+              // Handle page change for this city
+              const handlePageChange = (newPage) => {
+                setCityPageMap(prev => ({
+                  ...prev,
+                  [city]: newPage
+                }));
+              };
+              
+              return (
+                <div 
+                  key={city} 
+                  className={`city-section ${likedCities && likedCities.includes(city) && showPrioritizedContent ? 'priority-city' : ''}`}
+                >
+                  <h2 className="city-title">
+                    {city}
+                    {likedCities && likedCities.includes(city) && showPrioritizedContent && (
+                      <span className="priority-label">Liked city</span>
+                    )}
+                  </h2>
+                  {/* Hotels display with pagination arrows */}
+                  <div className="hotels-section">
+                    {/* Left pagination arrow */}
+                    {cityHotels.length > hotelsPerPage && (
+                      <button 
+                        className="pagination-arrow prev"
+                        onClick={() => handlePageChange(Math.max(0, currentPage - 1))}
+                        disabled={currentPage === 0}
+                        type="button"
+                        aria-label="Previous page"
+                      >
+                        <i className="bi bi-chevron-left"></i>
+                      </button>
+                    )}
+                    
+                    {/* Hotels grid */}
+                    <div className="hotels-grid">
+                      {hotelsToShow.map((hotel) => (
+                        <Card
+                          key={hotel._id}
+                          item={hotel}
+                          type="hotel"
+                          imageKey="images"
+                          fallbackImageKey="pictureUrls"
+                          likesMap={likesMap}
+                          onLoginRequired={() => setShowLoginPrompt(true)}
+                          onLikeToggle={(hotelId, isLiked, likeCount) => handleLikeToggle(hotelId, isLiked, likeCount)}
+                          onClick={handleHotelClick}
+                          detailsPath="hotels"
+                          renderCustomContent={(hotel) => (
+                            <>
+                              <h3>{hotel.name || 'Untitled'}</h3>
+                              <p className="card-description">
+                                {hotel.description ? 
+                                  (hotel.description.length > 70 ? 
+                                    `${hotel.description.substring(0, 70)}...` : 
+                                    hotel.description) : 
+                                  'No description available'}
+                              </p>
+                              {hotel.pricePerNight && (
+                                <p className="hotel-price">{hotel.pricePerNight} SAR / night</p>
+                              )}
+                              {hotel.rating && (
+                                <div className="hotel-rating">
+                                  <span className="rating-stars">⭐ {hotel.rating.average ? hotel.rating.average.toFixed(1) : '0.0'}</span>
+                                  <span className="review-count">({hotel.rating.count || 0} reviews)</span>
+                                </div>
+                              )}
+                            </>
+                          )}
+                        />
+                      ))}
+                    </div>
+                    
+                    {/* Right pagination arrow */}
+                    {cityHotels.length > hotelsPerPage && (
+                      <button 
+                        className="pagination-arrow next"
+                        onClick={() => handlePageChange(Math.min(totalPages - 1, currentPage + 1))}
+                        disabled={currentPage >= totalPages - 1}
+                        type="button"
+                        aria-label="Next page"
+                      >
+                        <i className="bi bi-chevron-right"></i>
+                      </button>
+                    )}
+                  </div>
+                  
+                  {/* Page indicator */}
+                  {cityHotels.length > hotelsPerPage && (
+                    <div className="page-indicator-container">
+                      <span className="page-indicator">
+                        {currentPage + 1} / {totalPages}
+                      </span>
+                    </div>
                   )}
-                </h2>
-                <div className="hotels-grid">
-                  {cityHotels.map((hotel) => (
-                    <Card
-                      key={hotel._id}
-                      item={hotel}
-                      type="hotel"
-                      imageKey="images"
-                      fallbackImageKey="pictureUrls"
-                      likesMap={likesMap}
-                      onLoginRequired={() => setShowLoginPrompt(true)}
-                      onLikeToggle={(hotelId, isLiked, likeCount) => handleLikeToggle(hotelId, isLiked, likeCount)}
-                      onClick={handleHotelClick}
-                      detailsPath="hotels"
-                      renderCustomContent={(hotel) => (
-                        <>
-                          <h3>{hotel.name || 'Untitled'}</h3>
-                          <p className="card-description">
-                            {hotel.description ? 
-                              (hotel.description.length > 70 ? 
-                                `${hotel.description.substring(0, 70)}...` : 
-                                hotel.description) : 
-                              'No description available'}
-                          </p>
-                          {hotel.pricePerNight && (
-                            <p className="hotel-price">{hotel.pricePerNight} SAR / night</p>
-                          )}
-                          {hotel.rating && (
-                            <div className="hotel-rating">
-                              <span className="rating-stars">⭐ {hotel.rating.average ? hotel.rating.average.toFixed(1) : '0.0'}</span>
-                              <span className="review-count">({hotel.rating.count || 0} reviews)</span>
-                            </div>
-                          )}
-                        </>
-                      )}
-                    />
-                  ))}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </>
         )}
       </>

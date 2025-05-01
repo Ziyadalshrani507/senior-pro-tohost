@@ -166,6 +166,14 @@ const hotelSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  featured: {
+    type: Boolean,
+    default: false
+  },
+  country: {
+    type: String,
+    default: "Saudi Arabia"
+  },
   createdAt: {
     type: Date,
     default: Date.now
@@ -177,6 +185,9 @@ const hotelSchema = new mongoose.Schema({
 }, {
   timestamps: true
 });
+
+// Create a compound index on name and locationCity to ensure unique names per city
+hotelSchema.index({ name: 1, locationCity: 1 }, { unique: true });
 
 const Hotel = mongoose.model('Hotel', hotelSchema);
 module.exports = Hotel;

@@ -123,10 +123,21 @@ const destinationSchema = new Schema({
   likeCount: {
     type: Number,
     default: 0
+  },
+  featured: {
+    type: Boolean,
+    default: false
+  },
+  country: {
+    type: String,
+    default: "Saudi Arabia"
   }
 }, { timestamps: true });
 
 // Create a 2dsphere index on coordinates
 destinationSchema.index({ coordinates: '2dsphere' });
+
+// Create a compound index on name and locationCity to ensure unique names per city
+destinationSchema.index({ name: 1, locationCity: 1 }, { unique: true });
 
 module.exports = mongoose.model('Destination', destinationSchema);

@@ -1,0 +1,21 @@
+.itinerary-planner-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.itinerary-planner-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.itinerary-planner-header h1 {
+  font-size: 2.5rem;
+  color: #333;
+  margin-bottom: 0.5rem;
+}
+
+.itinerary-planner-header p {
+  font-size: 1.1rem;
+  color: #666;
+}

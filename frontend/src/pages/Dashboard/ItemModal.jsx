@@ -119,12 +119,66 @@ const ItemModal = ({ item, type, onSave, onClose, schemaOptions }) => {
     setErrors({});
   };
 
-  const validateForm = () => {
+  const checkNameUniquenessForCity = async () => {
+    // Only run this check if we have both a name and city
+    if (!formData.name?.trim() || !formData.locationCity?.trim()) {
+      return true; // Skip uniqueness check if either field is empty
+    }
+
+    try {
+      // Search in the items from the same API endpoint but filter by name and city in memory
+      // Note: We're targeting the existing listing endpoints rather than a dedicated search endpoint
+      // This approach works with existing APIs without requiring backend changes
+      let endpoint;
+      
+      if (type === 'destinations') {
+        endpoint = '/api/destinations';
+      } else if (type === 'restaurants') {
+        endpoint = '/api/restaurants';
+      } else if (type === 'hotels') {
+        endpoint = '/api/hotels';
+      } else {
+        return true; // Skip for other item types
+      }
+
+      // Fetch all items from the endpoint
+      const response = await fetch(endpoint);
+      if (!response.ok) {
+        throw new Error(`API returned ${response.status}`);
+      }
+      
+      const data = await response.json();
+      const items = data.data || [];
+      
+      // Filter for items with the same name in the same city, but exclude the current item if editing
+      const matchingItems = items.filter(i => 
+        i.name.trim().toLowerCase() === formData.name.trim().toLowerCase() &&
+        i.locationCity === formData.locationCity &&
+        (!item || i._id !== item._id)
+      );
+      
+      return matchingItems.length === 0; // Return true if no duplicates found
+    } catch (error) {
+      console.error('Error checking name uniqueness:', error);
+      // Toast notification about the error but don't block submission
+      toast.warning('Could not check for duplicate names due to an error. Your submission will continue, but it may be rejected if a duplicate exists.');
+      return true; // In case of error, allow submission to proceed
+    }
+  };
+
+  const validateForm = async () => {
     const newErrors = {};
 
     if (!formData.name?.trim()) newErrors.name = 'Name is required';
     if (!formData.description?.trim()) newErrors.description = 'Description is required';
     if (!formData.locationCity?.trim()) newErrors.locationCity = 'City is required';
+    
+    // Check for uniqueness of name within the same city
+    const isNameUnique = await checkNameUniquenessForCity();
+    if (!isNameUnique) {
+      newErrors.name = `A ${type.slice(0, -1)} with this name already exists in ${formData.locationCity}. Names must be unique within each city.`;
+      toast.error(`Duplicate name error: ${newErrors.name}`);
+    }
 
     // Validate coordinates if provided for any item type
     if (formData.coordinates?.coordinates) {
@@ -162,7 +216,9 @@ const ItemModal = ({ item, type, onSave, onClose, schemaOptions }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!validateForm()) {
+    // validateForm is now async, so we need to await its result
+    const isValid = await validateForm();
+    if (!isValid) {
       return;
     }
 

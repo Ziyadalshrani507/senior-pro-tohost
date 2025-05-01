@@ -22,6 +22,8 @@ const Destinations = () => {
   const [initialLoading, setInitialLoading] = useState(true);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [likesMap, setLikesMap] = useState({});
+  const [cityPageMap, setCityPageMap] = useState({}); // Track page for each city
+  const destinationsPerPage = 5; // Show 5 destinations per page
   const API_BASE_URL = getApiBaseUrl();
 
   const filterRef = useRef(null);
@@ -341,40 +343,102 @@ const Destinations = () => {
           </div>
         ) : (
           <>
-            {Object.entries(groupedDestinations).map(([city, cityDestinations]) => (
-              <div key={city} className="city-section">
-                <h2 className="city-title">{city}</h2>
-                <div className="destinations-grid">
-                  {cityDestinations.map((destination, index) => (
-                    <Card
-                      key={destination._id || index}
-                      item={destination}
-                      type="destination"
-                      likesMap={likesMap}
-                      onLoginRequired={() => setShowLoginPrompt(true)}
-                      onLikeToggle={(destinationId, isLiked, likeCount) => {
-                        // Update the likes map
-                        setLikesMap(prev => ({
-                          ...prev,
-                          [destinationId]: isLiked
-                        }));
-                        
-                        // Update the destination's like count
-                        setAllDestinations(prev =>
-                          prev.map(d =>
-                            d._id === destinationId
-                              ? { ...d, likeCount }
-                              : d
-                          )
-                        );
-                      }}
-                      onClick={handleDestinationClick}
-                      detailsPath="destinations"
-                    />
-                ))}
-              </div>
-              </div>
-            ))}
+            {Object.entries(groupedDestinations).map(([city, cityDestinations]) => {
+              // Get current page for this city, default to 0 if not set
+              const currentPage = cityPageMap[city] || 0;
+              
+              // Calculate total pages for this city
+              const totalPages = Math.ceil(cityDestinations.length / destinationsPerPage);
+              
+              // Get destinations for the current page
+              const destinationsToShow = cityDestinations.slice(
+                currentPage * destinationsPerPage, 
+                (currentPage + 1) * destinationsPerPage
+              );
+              
+              // Handle page change for this city
+              const handlePageChange = (newPage) => {
+                setCityPageMap(prev => ({
+                  ...prev,
+                  [city]: newPage
+                }));
+              };
+              
+              return (
+                <div key={city} className="city-section">
+                  <h2 className="city-title">{city}</h2>
+                  
+                  {/* Destinations section with pagination arrows */}
+                  <div className="destinations-section">
+                    {/* Left pagination arrow */}
+                    {cityDestinations.length > destinationsPerPage && (
+                      <button 
+                        className="pagination-arrow prev"
+                        onClick={() => handlePageChange(Math.max(0, currentPage - 1))}
+                        disabled={currentPage === 0}
+                        type="button"
+                        aria-label="Previous page"
+                      >
+                        <i className="bi bi-chevron-left"></i>
+                      </button>
+                    )}
+                    
+                    {/* Destinations grid */}
+                    <div className="destinations-grid">
+                      {destinationsToShow.map((destination, index) => (
+                        <Card
+                          key={destination._id || index}
+                          item={destination}
+                          type="destination"
+                          likesMap={likesMap}
+                          onLoginRequired={() => setShowLoginPrompt(true)}
+                          onLikeToggle={(destinationId, isLiked, likeCount) => {
+                            // Update the likes map
+                            setLikesMap(prev => ({
+                              ...prev,
+                              [destinationId]: isLiked
+                            }));
+                            
+                            // Update the destination's like count
+                            setAllDestinations(prev =>
+                              prev.map(d =>
+                                d._id === destinationId
+                                  ? { ...d, likeCount }
+                                  : d
+                              )
+                            );
+                          }}
+                          onClick={handleDestinationClick}
+                          detailsPath="destinations"
+                        />
+                      ))}
+                    </div>
+                    
+                    {/* Right pagination arrow */}
+                    {cityDestinations.length > destinationsPerPage && (
+                      <button 
+                        className="pagination-arrow next"
+                        onClick={() => handlePageChange(Math.min(totalPages - 1, currentPage + 1))}
+                        disabled={currentPage >= totalPages - 1}
+                        type="button"
+                        aria-label="Next page"
+                      >
+                        <i className="bi bi-chevron-right"></i>
+                      </button>
+                    )}
+                  </div>
+                  
+                  {/* Page indicator */}
+                  {cityDestinations.length > destinationsPerPage && (
+                    <div className="page-indicator-container">
+                      <span className="page-indicator">
+                        {currentPage + 1} / {totalPages}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </>
         )}
         {loading && !initialLoading && (

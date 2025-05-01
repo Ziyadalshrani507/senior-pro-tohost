@@ -31,7 +31,7 @@ exports.getSchemaOptions = async (req, res) => {
 // Get all hotels
 exports.getHotels = async (req, res) => {
   try {
-    const { city, priceRange, rating, amenities, hotelClass } = req.query;
+    const { city, priceRange, rating, amenities, hotelClass, limit, featured, country, sort } = req.query;
     
     // Build query based on filters
     const query = { isDeleted: { $ne: true } };
@@ -42,7 +42,30 @@ exports.getHotels = async (req, res) => {
     if (hotelClass) query.hotelClass = hotelClass;
     if (amenities) query.amenities = { $in: [amenities] };
     
-    const hotels = await Hotel.find(query);
+    // Add featured filter if requested
+    if (featured === "true") {
+      query.featured = true;
+    }
+    
+    // Add country filter if provided
+    if (country) {
+      query.country = country;
+    }
+    
+    // Create the database query
+    let hotelQuery = Hotel.find(query);
+    
+    // Apply sorting if specified
+    if (sort === "rating") {
+      hotelQuery = hotelQuery.sort({ "rating.average": -1 }); // Sort by rating, highest first
+    }
+    
+    // Apply limit if provided
+    if (limit) {
+      hotelQuery = hotelQuery.limit(parseInt(limit));
+    }
+    
+    const hotels = await hotelQuery;
     res.json(hotels);
   } catch (error) {
     console.error('Error fetching hotels:', error);
