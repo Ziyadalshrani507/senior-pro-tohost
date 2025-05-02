@@ -2,79 +2,85 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>tourist</title>
+    
+    <!-- Chatbase Widget Script - Direct in head -->
+    <script type="text/javascript">
+      window.chatbaseConfig = {
+        chatbotId: "XYO6VZr3RH1CTgejmNVYM",
+        domain: "www.chatbase.co",
+        forceShow: true,
+        autoOpen: false
+      };
+    </script>
+    <script src="https://www.chatbase.co/embed.min.js" id="XYO6VZr3RH1CTgejmNVYM" defer></script>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+    
+    <!-- Alternative Chatbase initialization if needed -->
     <script>
-      (function(){
-        if(!window.chatbase||window.chatbase("getState")!=="initialized"){
-          window.chatbase=(...arguments)=>{
-            if(!window.chatbase.q){window.chatbase.q=[]}
-            window.chatbase.q.push(arguments)
-          };
-          window.chatbase=new Proxy(window.chatbase,{
-            get(target,prop){
-              if(prop==="q"){return target.q}
-              return(...args)=>target(prop,...args)
-            }
-          })
-        }
-
-        // Configure Chatbase appearance
-        window.chatbase('config', {
-          chatbotId: "XYO6VZr3RH1CTgejmNVYM",
-          domain: "www.chatbase.co",
-          theme: {
-            primaryColor: "#4f46e5",  // Main color for buttons and highlights
-            chatWindow: {
-              welcomeMessage: "Hello! How can I assist you with your travel plans today?",
-              backgroundColor: "#ffffff",
-              height: 500,
-              width: 380,
-              fontSize: 16,
-              poweredByTextColor: "#999999",
-              botMessageBackgroundColor: "#f2f7ff",
-              botMessageTextColor: "#333333",
-              userMessageBackgroundColor: "#4f46e5",
-              userMessageTextColor: "#ffffff",
-              borderRadius: 12
-            },
-            chatButton: {
-              iconColor: "#ffffff",
-              backgroundColor: "#4f46e5",
-              size: "large",
-              position: "right", // "left" or "right"
-              marginLeft: 20,    // Distance from left
-              marginRight: 20,   // Distance from right 
-              marginBottom: 20,  // Distance from bottom
-              iconStyle: "chat"  // "chat", "help", etc.
-            },
-            header: {
-              backgroundColor: "#4f46e5",
-              textColor: "#ffffff",
-              title: "Travel Assistant"
-            }
+      // Check if Chatbase initialized correctly
+      window.addEventListener('load', function() {
+        setTimeout(function() {
+          if (!document.querySelector('.chatbase-bubble')) {
+            console.log("Chatbase widget not detected, attempting fallback initialization");
+            
+            // Fallback initialization
+            (function(){
+              if(!window.chatbase||window.chatbase("getState")!=="initialized"){
+                window.chatbase=(...arguments)=>{
+                  if(!window.chatbase.q){window.chatbase.q=[]}
+                  window.chatbase.q.push(arguments)
+                };
+                window.chatbase=new Proxy(window.chatbase,{
+                  get(target,prop){
+                    if(prop==="q"){return target.q}
+                    return(...args)=>target(prop,...args)
+                  }
+                });
+                
+                const script=document.createElement("script");
+                script.src="https://www.chatbase.co/embed.min.js";
+                script.id="XYO6VZr3RH1CTgejmNVYM";
+                script.domain="www.chatbase.co";
+                document.body.appendChild(script);
+              }
+            })();
           }
-        });
-
-        const onLoad=function(){
-          const script=document.createElement("script");
-          script.src="https://www.chatbase.co/embed.min.js";
-          script.id="XYO6VZr3RH1CTgejmNVYM";
-          script.domain="www.chatbase.co";
-          document.body.appendChild(script)
-        };
-        
-        if(document.readyState==="complete"){
-          onLoad()
-        } else {
-          window.addEventListener("load",onLoad)
+        }, 3000);
+      });
+    </script>
+    
+    <!-- This creates a visible button if Chatbase fails to load -->
+    <style>
+      #fallback-chat-button {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background-color: #4f46e5;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        font-size: 24px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        cursor: pointer;
+        z-index: 9999;
+        display: none;
+      }
+    </style>
+    <button id="fallback-chat-button" onclick="window.open('https://www.chatbase.co/chatbot-iframe/XYO6VZr3RH1CTgejmNVYM', '_blank', 'width=400,height=600')">💬</button>
+    <script>
+      // Show fallback button if Chatbase doesn't load
+      setTimeout(function() {
+        if (!document.querySelector('.chatbase-bubble')) {
+          document.getElementById('fallback-chat-button').style.display = 'block';
         }
-      })();
+      }, 5000);
     </script>
   </body>
 </html>

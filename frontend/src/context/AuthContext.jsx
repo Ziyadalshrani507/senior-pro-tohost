@@ -8,6 +8,65 @@ const API_BASE_URL = getApiBaseUrl();
 // Token expiration time in milliseconds (24 hours to match cookie expiration)
 const TOKEN_EXPIRY = 24 * 60 * 60 * 1000;
 
+// Chatbase secret key for user verification
+const CHATBASE_SECRET = 'lgb8fqwa4ny0hu27qwyk5uygw3scc9u7';
+
+// Function to create HMAC for Chatbase verification
+const createChatbaseHmac = (userId) => {
+  // Using browser's crypto API for client-side HMAC generation
+  return crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(CHATBASE_SECRET),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  ).then(key => {
+    return crypto.subtle.sign(
+      'HMAC',
+      key,
+      new TextEncoder().encode(userId)
+    );
+  }).then(signature => {
+    return Array.from(new Uint8Array(signature))
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
+  });
+};
+
+// Chatbase initialization function
+const initializeChatbaseUser = async (user) => {
+  if (window.chatbase && user && user._id) {
+    try {
+      // Generate HMAC for user verification
+      const hmac = await createChatbaseHmac(user._id);
+      
+      // Set user information for Chatbase
+      window.chatbase('updateUser', {
+        userId: user._id,
+        userHmac: hmac,
+        email: user.email,
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
+        metadata: {
+          role: user.role || 'user'
+        }
+      });
+      
+      console.log('Chatbase user verification initialized');
+    } catch (error) {
+      console.error('Error initializing Chatbase user:', error);
+    }
+  }
+};
+
+// Reset Chatbase user
+const resetChatbaseUser = () => {
+  if (window.chatbase) {
+    window.chatbase('reset');
+    console.log('Chatbase user reset');
+  }
+};
+
 export const useAuth = () => {
   return useContext(AuthContext);
 };
@@ -116,10 +175,16 @@ export const AuthProvider = ({ children }) => {
     if (userWithId.firstName) {
       setUserInfoCookie(userWithId.firstName, userWithId.gender || 'unknown');
     }
+    
+    // Initialize Chatbase with user verification
+    initializeChatbaseUser(userWithId);
   };
 
   const logout = async () => {
     try {
+      // Reset Chatbase user before logout
+      resetChatbaseUser();
+      
       // Call the signout endpoint to clear the cookie
       await fetch(`${API_BASE_URL}/api/auth/signout`, {
         method: 'POST',
@@ -230,6 +295,13 @@ export const AuthProvider = ({ children }) => {
       window.fetch = originalFetch;
     };
   }, [handleTokenExpiration]);
+
+  // Initialize Chatbase after authentication is loaded
+  useEffect(() => {
+    if (!loading && user) {
+      initializeChatbaseUser(user);
+    }
+  }, [loading, user]);
 
   const value = {
     user,
