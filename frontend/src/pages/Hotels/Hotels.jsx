@@ -4,7 +4,7 @@ import './Hotels.css';
 import Card from '../../components/Card/Card';
 import LoginPromptModal from '../../components/LoginPromptModal/LoginPromptModal';
 import { getApiBaseUrl } from '../../utils/apiBaseUrl';
-import { getLikedCities } from '../../utils/cookieUtils';
+import { getLikedCities, getLikedCityNames, removeLikedCity } from '../../utils/cookieUtils';
 
 const Hotels = () => {
   const [allHotels, setAllHotels] = useState([]);
@@ -63,6 +63,10 @@ const Hotels = () => {
 
   // Handle like toggle
   const handleLikeToggle = (hotelId, isLiked, newLikeCount) => {
+    // Find the hotel that was liked/unliked
+    const targetHotel = allHotels.find(hotel => hotel._id === hotelId);
+    
+    // Update hotels state
     setAllHotels(prevHotels =>
       prevHotels.map(hotel =>
         hotel._id === hotelId
@@ -71,12 +75,29 @@ const Hotels = () => {
       )
     );
     
+    // If this is an unlike action and we have the city information
+    if (!isLiked && targetHotel) {
+      const hotelCity = extractCityFromHotel(targetHotel);
+      if (hotelCity) {
+        // Check if there are any other liked hotels in this city
+        const otherLikesInCity = allHotels.some(
+          h => h._id !== hotelId && 
+              extractCityFromHotel(h) === hotelCity && 
+              h.isLiked
+        );
+        
+        // If no other liked hotels in this city, remove the city from liked cities
+        if (!otherLikesInCity) {
+          removeLikedCity(hotelCity);
+        }
+      }
+    }
+    
     // Refresh liked cities from cookie after a delay to ensure the cookie is updated
     setTimeout(() => {
-      const updatedLikedCities = getLikedCities();
-      if (updatedLikedCities && updatedLikedCities.length > 0) {
-        setLikedCities(updatedLikedCities);
-      }
+      const updatedLikedCities = getLikedCities() || [];
+      setLikedCities(updatedLikedCities);
+      setShowPrioritizedContent(updatedLikedCities.length > 0);
     }, 500);
   };
 
@@ -312,29 +333,54 @@ const Hotels = () => {
       }, {});
     }
     
-    // Otherwise, prioritize liked cities
-    const priorityGroups = {};
-    const otherGroups = {};
+    // Otherwise, create ordered groups based on liked city timestamps
+    const cityGroups = {}; // Store all hotels by city
+    const cityOrder = []; // Track the order of cities based on liked status and timestamp
+    const likedCityNames = new Map(); // Map city names to their timestamp info
     
-    filteredHotels.forEach(hotel => {
-      const city = extractCityFromHotel(hotel);
-      
-      // Check if this hotel's city is in the liked cities list
-      const isPriority = likedCities.some(
-        likedCity => likedCity.toLowerCase() === city.toLowerCase()
-      );
-      
-      if (isPriority) {
-        if (!priorityGroups[city]) priorityGroups[city] = [];
-        priorityGroups[city].push(hotel);
-      } else {
-        if (!otherGroups[city]) otherGroups[city] = [];
-        otherGroups[city].push(hotel);
-      }
+    // Create a map of city names to timestamps for faster lookup
+    likedCities.forEach(cityObj => {
+      likedCityNames.set(cityObj.name.toLowerCase(), cityObj.timestamp);
     });
     
-    // Combine groups with priority cities first
-    return { ...priorityGroups, ...otherGroups };
+    // Group hotels by city
+    filteredHotels.forEach(hotel => {
+      const city = extractCityFromHotel(hotel);
+      if (!cityGroups[city]) {
+        cityGroups[city] = [];
+        
+        // Track city in order array
+        // [city name, isLiked, timestamp (or 0 if not liked)]
+        const cityTimestamp = likedCityNames.get(city.toLowerCase()) || 0;
+        const isLiked = cityTimestamp > 0;
+        
+        cityOrder.push([city, isLiked, cityTimestamp]);
+      }
+      cityGroups[city].push(hotel);
+    });
+    
+    // Sort cities: liked cities first (by timestamp, newest first), then other cities
+    cityOrder.sort((a, b) => {
+      // If one is liked and the other isn't, liked comes first
+      if (a[1] && !b[1]) return -1;
+      if (!a[1] && b[1]) return 1;
+      
+      // If both are liked or both are not liked, sort by timestamp (newest first) or alphabetically
+      if (a[1] && b[1]) {
+        return b[2] - a[2]; // Sort by timestamp, newest first
+      }
+      
+      // For non-liked cities, sort alphabetically
+      return a[0].localeCompare(b[0]);
+    });
+    
+    // Build the result object with cities in the correct order
+    const result = {};
+    cityOrder.forEach(([city]) => {
+      result[city] = cityGroups[city];
+    });
+    
+    return result;
   }, [filteredHotels, likedCities, showPrioritizedContent]);
   
   if (error) {
@@ -426,14 +472,7 @@ const Hotels = () => {
           </div>
         </div>
 
-        {likedCities && likedCities.length > 0 && showPrioritizedContent && (
-          <div className="priority-info-banner">
-            <span>Showing hotels in cities you've liked first</span>
-            <button onClick={() => setShowPrioritizedContent(false)}>
-              <i className="bi bi-x-lg"></i>
-            </button>
-          </div>
-        )}
+        {/* Banner removed as requested */}
 
         {loading ? (
           <div className="loading-spinner">Loading...</div>
