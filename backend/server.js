@@ -81,10 +81,14 @@ const upload = multer({
   }
 });
 
-// Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI || process.env.MONGO_URI)
-  .then(() => console.log('MongoDB connected'))
-  .catch(err => console.log('MongoDB connection error:', err));
+// Connect to MongoDB only when not in test environment
+if (process.env.NODE_ENV !== 'test') {
+  mongoose.connect(process.env.MONGODB_URI || process.env.MONGO_URI)
+    .then(() => console.log('MongoDB connected'))
+    .catch(err => console.log('MongoDB connection error:', err));
+} else {
+  console.log('Test environment detected - database connection skipped in server.js');
+}
 
 // API Routes
 app.use('/api/auth', authRoutes);

@@ -9,7 +9,7 @@ const {
     updateRestaurant,
     deleteRestaurant,
     getSchemaOptions
-} = require('../controllers/restaurantController');
+} = require('../Controllers/restaurantController');
 
 // Public routes
 router.get('/', getRestaurants);
