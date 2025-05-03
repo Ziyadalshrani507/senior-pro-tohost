@@ -118,25 +118,44 @@ const Profile = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Only image files are allowed');
+      return;
+    }
+
+    // Validate file size (5MB limit)
+    const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+    if (file.size > maxSize) {
+      toast.error('File size must be less than 5MB');
+      return;
+    }
+
     const formData = new FormData();
     formData.append('profilePicture', file);
 
     setIsUploading(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/users/${currentUser._id}/profile-picture`, {
+      const response = await fetch(`${API_BASE_URL}/profile/picture`, {
         method: 'POST',
-        credentials: 'include', // Include cookies in the request
+        credentials: 'include',
         body: formData
       });
 
-      if (!response.ok) throw new Error('Failed to upload photo');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to upload photo');
+      }
       
-      const updatedUser = await response.json();
-      setUser(updatedUser);
+      const { profilePicture } = await response.json();
+      setUser(prev => ({
+        ...prev,
+        profilePicture
+      }));
       toast.success('Profile picture updated successfully');
     } catch (error) {
       console.error('Error uploading photo:', error);
-      toast.error('Failed to upload profile picture');
+      toast.error(error.message || 'Failed to upload profile picture');
     } finally {
       setIsUploading(false);
     }
@@ -167,7 +186,9 @@ const Profile = () => {
           <div className="profile-photo-section">
             {user.profilePicture ? (
               <img
-                src={user.profilePicture}
+                src={user.profilePicture.data ? 
+                  `data:${user.profilePicture.contentType};base64,${user.profilePicture.data}` : 
+                  user.profilePicture}
                 alt="Profile"
                 className="profile-photo"
               />

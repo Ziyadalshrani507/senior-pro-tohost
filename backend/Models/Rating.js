@@ -13,7 +13,7 @@ const ratingSchema = new Schema({
   },
   itemType: {
     type: String,
-    enum: ['destination', 'restaurant'],
+    enum: ['destination', 'restaurant', 'hotel'],
     required: true
   },
   rating: {
