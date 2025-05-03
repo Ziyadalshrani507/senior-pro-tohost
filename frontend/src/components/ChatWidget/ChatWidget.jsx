@@ -1,67 +1,71 @@
-import React, { useState } from 'react';
-import { queryDeepSeek } from '../../services/deepseekservice'; // Correct import path
+import React, { useEffect } from 'react';
 import './ChatWidget.css';
 
+/**
+ * ChatWidget component that integrates the Chatbase chatbot widget
+ * This replaces the previous DeepSeek implementation with Chatbase
+ */
 const ChatWidget = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState([]);
-  const [input, setInput] = useState('');
+  // On component mount, initialize the Chatbase widget
+  useEffect(() => {
+    // Make sure window and chatbaseConfig exist
+    if (!window.chatbase) {
+      // Configure Chatbase
+      window.chatbaseConfig = {
+        chatbotId: "XYO6VZr3RH1CTgejmNVYM",
+        domain: "www.chatbase.co",
+        forceShow: true,
+        autoOpen: false
+      };
 
-  const toggleChat = () => {
-    setIsOpen(!isOpen);
-  };
+      // Load the script programmatically
+      const script = document.createElement('script');
+      script.src = "https://www.chatbase.co/embed.min.js";
+      script.id = "XYO6VZr3RH1CTgejmNVYM";
+      script.defer = true;
+      script.async = true;
+      
+      // Fix CORS issues by handling the fetch options
+      const originalFetch = window.fetch;
+      window.fetch = function(url, options) {
+        if (url && typeof url === 'string' && url.includes('chatbase.co')) {
+          options = options || {};
+          options.credentials = 'omit';
+          options.mode = 'cors';
+        }
+        return originalFetch.call(this, url, options);
+      };
 
-  const handleSend = async () => {
-    if (input.trim()) {
-      const userMessage = { type: 'user', text: input };
-      setMessages([...messages, userMessage]);
-      setInput('');
-
-      try {
-        console.log('Sending query to DeepSeek:', input); // Debug log
-        const response = await queryDeepSeek(input);
-        console.log('Received response from DeepSeek:', response); // Debug log
-        const botMessage = { type: 'bot', text: response.answer };
-        setMessages((prevMessages) => [...prevMessages, botMessage]);
-      } catch (error) {
-        console.error('Error querying DeepSeek API:', error); // Debug log
-        const errorMessage = { type: 'bot', text: 'Sorry, something went wrong. Please try again later.' };
-        setMessages((prevMessages) => [...prevMessages, errorMessage]);
-      }
+      // Add the script to the document
+      document.body.appendChild(script);
+      
+      // Create styles to ensure visibility
+      const style = document.createElement('style');
+      style.textContent = `
+        .chatbase-bubble, 
+        .chatbase-container {
+          z-index: 9999 !important;
+          display: block !important;
+          visibility: visible !important;
+          opacity: 1 !important;
+        }
+      `;
+      document.head.appendChild(style);
     }
-  };
 
-  return (
-    <div className={`chat-widget ${isOpen ? 'open' : ''}`}>
-      <div className="chat-icon" onClick={toggleChat}>
-        💬
-      </div>
-      {isOpen && (
-        <div className="chat-window">
-          <div className="chat-header">
-            <span>Ask Me Anything</span>
-            <button className="close-btn" onClick={toggleChat}>X</button>
-          </div>
-          <div className="chat-messages">
-            {messages.map((msg, index) => (
-              <div key={index} className={`chat-bubble ${msg.type}`}>
-                {msg.text}
-              </div>
-            ))}
-          </div>
-          <div className="chat-input">
-            <input
-              type="text"
-              placeholder="Ask me anything…"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-            />
-            <button onClick={handleSend}>🚀</button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
+    // Clean up function
+    return () => {
+      // If we need to remove the chatbot when component unmounts
+      const script = document.getElementById("XYO6VZr3RH1CTgejmNVYM");
+      if (script) {
+        script.remove();
+      }
+    };
+  }, []);
+
+  // This component doesn't render anything visible itself,
+  // it just integrates the Chatbase widget
+  return <div id="chatbase-container" className="chatbase-widget-container"></div>;
 };
 
 export default ChatWidget;

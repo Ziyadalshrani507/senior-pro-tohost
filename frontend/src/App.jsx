@@ -134,8 +134,7 @@ function App() {
               </Routes>
               <ToastContainer />
               <Footer />
-              {/* ChatWidget disabled as requested */}
-              {/* <ChatWidget /> */}
+              <ChatWidget />
             </div>
           </Router>
         </ItineraryProvider>
