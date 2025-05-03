@@ -56,7 +56,6 @@ const ItineraryDay = ({ day }) => {
             </div>
           </div>
         </div>
-        
 
       </div>
     </div>

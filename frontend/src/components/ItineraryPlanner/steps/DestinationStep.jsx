@@ -13,6 +13,7 @@ const DestinationStep = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const citiesPerPage = 6;
 
+
   useEffect(() => {
     const fetchCities = async () => {
       try {

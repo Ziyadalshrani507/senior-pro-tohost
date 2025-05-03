@@ -302,6 +302,7 @@
   color: #666;
 }
 
+
 .interest-card.selected, .budget-card.selected, .traveler-card.selected, .preference-card.selected {
   background-color: #e6f4ea;
   border-color: #4CAF50;

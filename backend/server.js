@@ -106,6 +106,10 @@ app.use('/api/users', require('./Routes/userRoutes'));
 const itineraryRoutes = require('./Routes/itineraryRoutes');
 app.use('/api/itinerary', itineraryRoutes);
 
+// Itinerary routes
+const itineraryRoutes = require('./Routes/itineraryRoutes');
+app.use('/api/itinerary', itineraryRoutes);
+
 // Serve static files from the React app
 app.use(express.static(path.join(__dirname, '../frontend/dist')));
 

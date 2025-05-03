@@ -338,6 +338,7 @@ const generateItinerary = async (req, res) => {
           ? availableRestaurants.splice(Math.floor(Math.random() * availableRestaurants.length), 1)[0] 
           : { name: 'Traditional Dining', description: 'Experience traditional Saudi dishes' };
 
+
         // Create the day entry
         days.push({
           day: i,
@@ -357,6 +358,7 @@ const generateItinerary = async (req, res) => {
             restaurant: dinnerPlace.name, 
             description: dinnerPlace.description || 'Enjoy a delicious meal'
           },
+
           notes: `Day ${i} in ${city}: Focus on ${interests.length > 0 ? interests[0] : 'local experiences'}`
         });
       }
