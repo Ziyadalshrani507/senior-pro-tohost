@@ -180,12 +180,6 @@ const restaurantSchema = new mongoose.Schema({
   }],
   images: {
     type: [String],
-    validate: {
-      validator: function(urls) {
-        return urls.every(url => /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/.test(url));
-      },
-      message: props => `One or more image URLs are invalid!`
-    },
     default: []
   },
   rating: {
