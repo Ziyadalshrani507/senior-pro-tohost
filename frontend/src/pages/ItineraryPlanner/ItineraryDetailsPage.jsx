@@ -1,17 +1,48 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useItinerary } from '../../context/ItineraryContext';
 import ItineraryDay from '../../components/ItineraryPlanner/ItineraryDay';
 import './ItineraryDetailsPage.css';
 
 const ItineraryDetailsPage = () => {
   const { id } = useParams();
-  const { fetchItinerary } = useItinerary();
+  const navigate = useNavigate();
+  const { fetchItinerary, saveItinerary } = useItinerary();
   const [itinerary, setItinerary] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeDay, setActiveDay] = useState(1);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [customName, setCustomName] = useState('');
+  const [showCustomNameInput, setShowCustomNameInput] = useState(false);
 
+  // Handle saving the itinerary to user account
+  const handleSaveItinerary = async () => {
+    if (isSaving || !itinerary) return;
+    
+    try {
+      setIsSaving(true);
+      const name = customName || itinerary.name;
+      const savedItinerary = await saveItinerary(itinerary._id, name);
+      
+      if (savedItinerary) {
+        setSaveSuccess(true);
+        // Update the itinerary in state to reflect changes
+        setItinerary(savedItinerary);
+        
+        // Automatically navigate to my itineraries after short delay
+        setTimeout(() => {
+          navigate('/my-itineraries');
+        }, 2000);
+      }
+    } catch (err) {
+      setError('Failed to save itinerary');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+  
   useEffect(() => {
     const getItinerary = async () => {
       try {
@@ -103,7 +134,55 @@ const ItineraryDetailsPage = () => {
         <Link to="/itinerary-planner" className="new-itinerary-btn">
           Create New Itinerary
         </Link>
-        <button className="save-itinerary-btn" onClick={() => window.print()}>
+        
+        {itinerary.isTemporary && (
+          <div className="save-itinerary-container">
+            {showCustomNameInput ? (
+              <div className="custom-name-input">
+                <input
+                  type="text"
+                  value={customName}
+                  onChange={(e) => setCustomName(e.target.value)}
+                  placeholder="Enter custom name (optional)"
+                  maxLength={50}
+                />
+                <button 
+                  className="save-with-name-btn" 
+                  onClick={handleSaveItinerary}
+                  disabled={isSaving}
+                >
+                  {isSaving ? 'Saving...' : 'Save'}
+                </button>
+                <button 
+                  className="cancel-btn" 
+                  onClick={() => setShowCustomNameInput(false)}
+                  disabled={isSaving}
+                >
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <div className="save-options">
+                <button 
+                  className="save-itinerary-btn" 
+                  onClick={() => handleSaveItinerary()}
+                  disabled={isSaving || saveSuccess}
+                >
+                  {isSaving ? 'Saving...' : saveSuccess ? 'Saved! ✓' : 'Save to My Account'}
+                </button>
+                <button 
+                  className="custom-name-btn" 
+                  onClick={() => setShowCustomNameInput(true)}
+                  disabled={isSaving || saveSuccess}
+                >
+                  Save with Custom Name
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+        
+        <button className="print-itinerary-btn" onClick={() => window.print()}>
           Print Itinerary
         </button>
       </div>

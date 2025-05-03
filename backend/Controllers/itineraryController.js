@@ -55,7 +55,7 @@ IMPORTANT: Use the exact names of places listed above. Recommend only ONE hotel 
 }`;
 };
 
-// Generate a new itinerary
+// Generate a new itinerary - temporarily stored until user decides to save it
 const generateItinerary = async (req, res) => {
   try {
     const { city, duration, interests, budget, travelersType } = req.body;
@@ -412,42 +412,59 @@ const generateItinerary = async (req, res) => {
         
         // Use our fallback generator instead
         itineraryData = generateFallbackItinerary();
-        usingFallback = true;
+        console.log('Using fallback itinerary generator');
       }
+      
+      // Format the OpenAI response as needed
+      // Extract data from the generated itinerary
+      const { hotel, days } = itineraryData;
+
+      console.log('Hotel information:', hotel || 'No hotel information provided');
+      
+      // Create the new itinerary document
+      const itineraryDoc = {
+        name: `${duration}-Day Trip to ${city}`,
+        city: city, // Set the required city field
+        destination: city,
+        duration: duration,
+        hotel: hotel,
+        days: days,
+        interests: interests,
+        budget: budget,
+        travelersType: travelersType,
+        isAIGenerated: true,
+        isTemporary: !req.user, // Mark as temporary if no user
+        generatedAt: new Date()
+      };
+      
+      // Add user if authenticated
+      if (req.user && req.user._id) {
+        itineraryDoc.user = req.user._id;
+      }
+      
+      // Add expiration if temporary
+      if (!req.user) {
+        itineraryDoc.expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+      }
+      
+      // Create the itinerary in the database
+      const newItinerary = await Itinerary.create(itineraryDoc);
+      
+      return res.status(201).json({
+        success: true,
+        message: "Itinerary generated successfully",
+        data: newItinerary
+      });
     } catch (error) {
-      console.error("Error generating itinerary:", error);
+      console.error("Error in itinerary generation process:", error);
       return res.status(500).json({
         success: false,
         message: "Failed to generate itinerary",
         error: error.message
       });
     }
-
-    // Create the itinerary in the database
-    const newItinerary = new Itinerary({
-      user: req.user._id,
-      name: `${city} Trip - ${duration} days`,
-      city: city,  // Store city instead of destination ID
-      duration: duration,
-      interests: interests,
-      budget: budget,
-      travelersType: travelersType,
-      days: itineraryData.days,
-      hotel: itineraryData.hotel  // Save the hotel information for the entire stay
-    });
-    
-    // Log hotel information for debugging
-    console.log('Hotel information:', itineraryData.hotel || 'No hotel information provided');
-
-    await newItinerary.save();
-
-    return res.status(201).json({
-      success: true,
-      message: "Itinerary generated successfully",
-      data: newItinerary
-    });
   } catch (error) {
-    console.error("Error generating itinerary:", error);
+    console.error("Error in itinerary generation process:", error);
     return res.status(500).json({
       success: false,
       message: "Failed to generate itinerary",
@@ -634,10 +651,96 @@ const deleteItinerary = async (req, res) => {
   }
 };
 
+// Save itinerary to user account
+const saveItinerary = async (req, res) => {
+  try {
+    const { itineraryId, name } = req.body;
+    
+    if (!itineraryId) {
+      return res.status(400).json({
+        success: false,
+        message: "Itinerary ID is required"
+      });
+    }
+    
+    // Check if user is authenticated
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "Please log in to save this itinerary"
+      });
+    }
+    
+    // Find the temporary itinerary
+    const itinerary = await Itinerary.findById(itineraryId);
+    
+    if (!itinerary) {
+      return res.status(404).json({
+        success: false,
+        message: "Itinerary not found or may have expired"
+      });
+    }
+    
+    // Check if itinerary is already saved
+    if (itinerary.user) {
+      return res.status(400).json({
+        success: false,
+        message: "This itinerary is already saved"
+      });
+    }
+    
+    // Update the itinerary
+    itinerary.user = req.user._id;
+    itinerary.isTemporary = false;
+    itinerary.expiresAt = undefined; // Remove expiration
+    
+    // Update name if provided
+    if (name) {
+      itinerary.name = name;
+    }
+    
+    // Save the changes
+    await itinerary.save();
+    
+    return res.status(200).json({
+      success: true,
+      message: "Itinerary saved successfully",
+      data: itinerary
+    });
+  } catch (error) {
+    console.error("Error saving itinerary:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to save itinerary",
+      error: error.message
+    });
+  }
+};
+
+// Setup automatic cleanup of temporary itineraries
+const setupTemporaryItineraryCleanup = () => {
+  // Run once a day to clean up expired temporary itineraries
+  setInterval(async () => {
+    try {
+      const result = await Itinerary.deleteMany({
+        isTemporary: true,
+        expiresAt: { $lt: new Date() }
+      });
+      console.log(`Cleaned up ${result.deletedCount} expired temporary itineraries`);
+    } catch (error) {
+      console.error('Error cleaning up temporary itineraries:', error);
+    }
+  }, 24 * 60 * 60 * 1000); // Run once every 24 hours
+};
+
+// Start the cleanup process
+setupTemporaryItineraryCleanup();
+
 module.exports = {
   generateItinerary,
   getUserItineraries,
   getItinerary,
   updateItinerary,
-  deleteItinerary
+  deleteItinerary,
+  saveItinerary
 };

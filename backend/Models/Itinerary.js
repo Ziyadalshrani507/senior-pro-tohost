@@ -29,7 +29,10 @@ const itinerarySchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
-    required: true
+    required: function() {
+      // User is only required if this is not a temporary itinerary
+      return !this.isTemporary;
+    }
   },
   name: { type: String, required: true },
   city: {
@@ -53,6 +56,10 @@ const itinerarySchema = new mongoose.Schema({
     place: { type: String },
     description: String
   },
+  isAIGenerated: { type: Boolean, default: true },
+  isTemporary: { type: Boolean, default: false },
+  expiresAt: { type: Date },
+  generatedAt: { type: Date, default: Date.now },
   createdAt: { type: Date, default: Date.now },
   lastUpdated: { type: Date, default: Date.now }
 });

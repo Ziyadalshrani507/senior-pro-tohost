@@ -2,7 +2,12 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import './LoginPromptModal.css';
 
-const LoginPromptModal = ({ isOpen, onClose }) => {
+const LoginPromptModal = ({ 
+  isOpen, 
+  onClose, 
+  title = "Join the Community!", 
+  message = "Please log in to like this place and keep track of what you love."
+}) => {
   const navigate = useNavigate();
 
   if (!isOpen) return null;
@@ -22,8 +27,8 @@ const LoginPromptModal = ({ isOpen, onClose }) => {
       <div className="login-prompt-modal" onClick={e => e.stopPropagation()}>
         <button className="close-button" onClick={onClose}>&times;</button>
         <div className="modal-content">
-          <h2>Join the Community!</h2>
-          <p>Please log in to like this place and keep track of what you love.</p>
+          <h2>{title}</h2>
+          <p>{message}</p>
           <div className="modal-buttons">
             <button className="primary-button" onClick={handleLogin}>
               Log In

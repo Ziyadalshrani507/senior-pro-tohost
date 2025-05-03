@@ -59,6 +59,18 @@ describe('Advanced Restaurant Controller Tests', () => {
       rating: {
         average: 4.2,
         count: 85
+      },
+      openingHours: {
+        open: {
+          hour: 9,
+          minute: 0,
+          period: 'AM'
+        },
+        close: {
+          hour: 10,
+          minute: 0,
+          period: 'PM'
+        }
       }
     });
     
@@ -73,7 +85,7 @@ describe('Advanced Restaurant Controller Tests', () => {
         type: 'Point',
         coordinates: [39.173526, 21.485811]
       },
-      categories: ['Sushi Bar', 'Fine Dining'],
+      categories: ['Seafood', 'Fine Dining'],
       contact: {
         phone: '+966123456782',
         email: 'sushi@example.com',
@@ -82,6 +94,18 @@ describe('Advanced Restaurant Controller Tests', () => {
       rating: {
         average: 4.7,
         count: 120
+      },
+      openingHours: {
+        open: {
+          hour: 10,
+          minute: 30,
+          period: 'AM'
+        },
+        close: {
+          hour: 11,
+          minute: 0,
+          period: 'PM'
+        }
       }
     });
     
@@ -106,7 +130,19 @@ describe('Advanced Restaurant Controller Tests', () => {
         average: 4.9,
         count: 150
       },
-      featured: true
+      featured: true,
+      openingHours: {
+        open: {
+          hour: 11,
+          minute: 0,
+          period: 'AM'
+        },
+        close: {
+          hour: 10,
+          minute: 30,
+          period: 'PM'
+        }
+      }
     });
     
     budgetRestaurant = await Restaurant.create({
@@ -129,6 +165,18 @@ describe('Advanced Restaurant Controller Tests', () => {
       rating: {
         average: 3.8,
         count: 220
+      },
+      openingHours: {
+        open: {
+          hour: 8,
+          minute: 0,
+          period: 'AM'
+        },
+        close: {
+          hour: 9,
+          minute: 30,
+          period: 'PM'
+        }
       }
     });
     
@@ -153,7 +201,19 @@ describe('Advanced Restaurant Controller Tests', () => {
         average: 4.8,
         count: 90
       },
-      featured: true
+      featured: true,
+      openingHours: {
+        open: {
+          hour: 12,
+          minute: 0,
+          period: 'PM'
+        },
+        close: {
+          hour: 11,
+          minute: 0,
+          period: 'PM'
+        }
+      }
     });
   });
   

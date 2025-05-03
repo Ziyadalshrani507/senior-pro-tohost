@@ -5,12 +5,16 @@ const {
   getUserItineraries, 
   getItinerary,
   updateItinerary,
-  deleteItinerary
+  deleteItinerary,
+  saveItinerary
 } = require("../Controllers/itineraryController");
 const { protect } = require("../middleware/authMiddleware");
 
 // Generate a new itinerary
-router.post("/generate", protect, generateItinerary);
+router.post("/generate", generateItinerary);
+
+// Save an itinerary to user account
+router.post("/save", protect, saveItinerary);
 
 // Get all user itineraries
 router.get("/", protect, getUserItineraries);
