@@ -5,6 +5,8 @@ import { getApiBaseUrl } from '../../utils/apiBaseUrl';
 import './Rating.css';
 
 const Rating = ({ itemId, itemType }) => {
+  // Normalize item type to match backend expectations
+  const normalizedItemType = itemType.toLowerCase();
   const [rating, setRating] = useState(0);
   const [hover, setHover] = useState(0);
   const [comment, setComment] = useState('');
@@ -34,7 +36,7 @@ const Rating = ({ itemId, itemType }) => {
 
   const fetchStats = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/ratings/stats/${itemType}/${itemId}`);
+      const response = await fetch(`${API_BASE_URL}/ratings/stats/${normalizedItemType}/${itemId}`);
       if (!response.ok) throw new Error('Failed to fetch rating stats');
       const data = await response.json();
       setStats(data);
@@ -46,7 +48,7 @@ const Rating = ({ itemId, itemType }) => {
   const fetchRatings = async () => {
     try {
       setError(null);
-      const response = await fetch(`${API_BASE_URL}/ratings/${itemType}/${itemId}?page=${currentPage}&limit=10`);
+      const response = await fetch(`${API_BASE_URL}/ratings/${normalizedItemType}/${itemId}?page=${currentPage}&limit=10`);
       if (!response.ok) throw new Error('Failed to fetch ratings');
       const data = await response.json();
       setAllRatings(data.ratings);
@@ -83,7 +85,7 @@ const Rating = ({ itemId, itemType }) => {
         },
         body: JSON.stringify({
           itemId,
-          itemType,
+          itemType: normalizedItemType,
           rating,
           comment,
           visitDate

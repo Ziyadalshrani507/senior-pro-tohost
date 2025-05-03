@@ -178,6 +178,52 @@ textarea {
   cursor: not-allowed;
 }
 
+/* Time selector styles */
+.time-selectors {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.time-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.time-input-group {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.time-input-group select {
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.time-input-group select:first-child {
+  min-width: 60px;
+}
+
+.time-input-group select:nth-child(3) {
+  min-width: 70px;
+}
+
+.time-input-group select:last-child {
+  min-width: 70px;
+}
+
+.time-input-group span {
+  font-weight: bold;
+}
+
+.time-input-group select.error {
+  border-color: #ff4444;
+}
+
 /* Image URL input and preview styles */
 .image-input {
   display: flex;
@@ -332,24 +378,28 @@ textarea {
   position: absolute;
   top: 0.25rem;
   right: 0.25rem;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(239, 68, 68, 0.8);
   color: white;
   border: none;
-  border-radius: 0.25rem;
-  width: 1.5rem;
-  height: 1.5rem;
+  border-radius: 50%;
+  width: 1.75rem;
+  height: 1.75rem;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s;
-  opacity: 0;
+  opacity: 0.85;
+  font-size: 0.875rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.image-preview-item:hover .delete-image-button {
+.image-item:hover .delete-image-button {
   opacity: 1;
+  transform: scale(1.1);
 }
 
 .delete-image-button:hover {
-  background-color: rgba(239, 68, 68, 0.9);
+  background-color: rgb(239, 68, 68);
+  transform: scale(1.1);
 }

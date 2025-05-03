@@ -19,6 +19,7 @@ import Dashboard from './pages/Dashboard/Dashboard';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ItineraryProvider } from './context/ItineraryContext';
 import ChatWidget from './components/ChatWidget/ChatWidget';
+import ChatbasePageTracker from './components/ChatbaseTracker/ChatbasePageTracker';
 import SearchAll from './pages/SearchAll/SearchAll';
 import Hotels from './pages/Hotels/Hotels';
 import About from './pages/About/About';
@@ -96,6 +97,7 @@ function App() {
           <Router>
             <div className="app">
               <Header />
+              <ChatbasePageTracker />
               <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/about" element={<About />} />
@@ -132,7 +134,8 @@ function App() {
               </Routes>
               <ToastContainer />
               <Footer />
-              <ChatWidget />
+              {/* ChatWidget disabled as requested */}
+              {/* <ChatWidget /> */}
             </div>
           </Router>
         </ItineraryProvider>

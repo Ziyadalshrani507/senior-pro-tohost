@@ -5,6 +5,7 @@ const { validateRating, validateRatingUpdate } = require('../middleware/ratingVa
 const Rating = require('../Models/Rating');
 const Destination = require('../Models/Destination');
 const { Restaurant } = require('../Models/Restaurant');
+const Hotel = require('../Models/Hotel');
 const {
   addRating,
   updateRating,
@@ -37,7 +38,11 @@ router.get('/moderation/queue', protect, admin, async (req, res) => {
         path: 'itemId',
         select: 'name title',
         model: function(doc) {
-          return doc.itemType === 'destination' ? 'Destination' : 'Restaurant';
+          switch(doc.itemType) {
+            case 'destination': return 'Destination';
+            case 'hotel': return 'Hotel';
+            default: return 'Restaurant';
+          }
         }
       })
       .sort('-createdAt')

@@ -4,54 +4,23 @@ const CUISINES = [
   'Italian',
   'Japanese',
   'Greek',
-  'Portuguese',
   'Chinese',
   'Indonesian',
   'Mexican',
   'Turkish',
   'Spanish',
   'French',
-  'Polish',
   'Indian',
   'American',
-  'Peruvian',
-  'Serbian',
-  'Brazilian',
-  'Croatian',
-  'Colombian',
-  'Vietnamese',
-  'Hungarian',
   'Algerian',
   'Korean',
-  'German',
-  'Romanian',
-  'Argentinian',
   'Lebanese',
-  'Czech',
-  'Thai',
-  'Georgian',
-  'Austrian',
-  'Chilean',
-  'Bulgarian',
-  'Russian',
-  'South African',
   'Filipino',
-  'Malaysian',
   'Moroccan',
-  'Lithuanian',
   'Egyptian',
   'Iranian',
   'Syrian',
-  'Canadian',
-  'Ukrainian',
-  'Dutch',
-  'Palestinian',
-  'Macedonian',
-  'English',
-  'Ethiopian',
-  'Cypriot',
-  'Saudi Arabian',
-  'Middle Eastern'
+  'khaleeji'
 ];
 
 const CATEGORIES = [
@@ -65,22 +34,9 @@ const CATEGORIES = [
   'Steakhouse',
   'Seafood',
   'Vegetarian',
-  'Halal',
   'Dessert',
   'Bakery',
-  'Street Food',
-  'Barbecue',
-  'Vegan',
-  'Pub',
-  'Brunch',
-  'Tapas',
-  'Sushi Bar',
-  'Wine Bar',
-  'Rooftop',
-  'Farm to Table',
-  'Organic',
-  'Gluten Free',
-  'Kosher'
+  'Barbecue'
 ];
 
 const SAUDI_CITIES = [
@@ -91,29 +47,18 @@ const SAUDI_CITIES = [
   "Dammam",
   "Taif",
   "Tabuk",
-  "Buraydah",
-  "Khamis Mushait",
+  "Asir",
   "Abha",
   "Al Khobar",
-  "Najran",
   "Hail",
   "Al Jubail",
-  "Hofuf",
+  "Al-Ahsa",
   "Yanbu",
-  "Arar",
-  "Sakakah",
-  "Al Qatif",
   "Al Bahah",
   "Jazan",
-  "Unaizah",
-  "Zulfi",
+  "Al Qassim",
   "Dhahran",
-  "Al Majma'ah",
-  "Rafha",
-  "Al Kharj",
-  "Bisha",
   "Al-Ula",
-  "Ar Rass"
 ];
 
 const restaurantSchema = new mongoose.Schema({
@@ -165,24 +110,67 @@ const restaurantSchema = new mongoose.Schema({
   contact: {
     phone: {
       type: String,
-      required: [true, 'Phone number is required']
+      required: true,
+      trim: true
     },
     email: {
       type: String,
+      trim: true,
       validate: {
-        validator: function(v) {
-          return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+        validator(v) {
+          return !v || /^\S+@\S+\.\S+$/.test(v);
         },
         message: props => `${props.value} is not a valid email!`
       }
     },
     website: {
       type: String,
+      trim: true,
       validate: {
-        validator: function(v) {
-          return /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/.test(v);
+        validator(v) {
+          return !v || /^https?:\/\/\S+$/.test(v);
         },
         message: props => `${props.value} is not a valid URL!`
+      }
+    }
+  },
+  openingHours: {
+    open: {
+      hour: {
+        type: Number,
+        required: true,
+        min: 1,
+        max: 12
+      },
+      minute: {
+        type: Number,
+        required: true,
+        min: 0,
+        max: 59
+      },
+      period: {
+        type: String,
+        enum: ['AM', 'PM'],
+        required: true
+      }
+    },
+    close: {
+      hour: {
+        type: Number,
+        required: true,
+        min: 1,
+        max: 12
+      },
+      minute: {
+        type: Number,
+        required: true,
+        min: 0,
+        max: 59
+      },
+      period: {
+        type: String,
+        enum: ['AM', 'PM'],
+        required: true
       }
     }
   },

@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { getUserInfo } from '../../utils/cookieUtils';
 import './Header.css';
+import WelcomeBanner from './WelcomeBanner';
 // Using relative path with URL constructor for the logo
 // This is more reliable than import which depends on bundler configuration
 
@@ -11,7 +12,6 @@ const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [scrolled, setScrolled] = useState(false);
-  const [showWelcomeMessage, setShowWelcomeMessage] = useState(false);
   const [userInfo, setUserInfo] = useState({ firstName: '', gender: 'unknown' });
 
   useEffect(() => {
@@ -26,32 +26,13 @@ const Header = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [scrolled]);
   
-  // Check for userInfo cookie on component mount and show welcome message
+  // Check for userInfo cookie on component mount
   useEffect(() => {
     const storedUserInfo = getUserInfo();
     if (storedUserInfo) {
       setUserInfo(storedUserInfo);
-      setShowWelcomeMessage(true);
-      
-      // Hide welcome message after 5 seconds
-      const timer = setTimeout(() => {
-        setShowWelcomeMessage(false);
-      }, 5000);
-      
-      return () => clearTimeout(timer);
     }
   }, []);
-
-  // Get the appropriate title based on gender
-  const getTitle = () => {
-    if (userInfo.gender === 'male') {
-      return 'Mr.';
-    } else if (userInfo.gender === 'female') {
-      return 'Ms.';
-    } else {
-      return '';
-    }
-  };
 
   const handleLogout = () => {
     logout();
@@ -64,20 +45,9 @@ const Header = () => {
 
   return (
     <>
-      {showWelcomeMessage && (
-        <div className="welcome-banner">
-          <div className="container">
-            Happy to have you again {getTitle()} {userInfo.firstName}!
-            <button 
-              className="close-welcome" 
-              onClick={() => setShowWelcomeMessage(false)}
-            >
-              &times;
-            </button>
-          </div>
-        </div>
-      )}
-      <nav className={`navbar navbar-expand-lg navbar-light fixed-top ${scrolled ? 'scrolled' : ''} ${showWelcomeMessage ? 'with-banner' : ''}`}>
+      {user && <WelcomeBanner username={userInfo.firstName || user.firstName} />}
+      
+      <nav className={`navbar navbar-expand-lg navbar-light fixed-top ${scrolled ? 'scrolled' : ''} ${user ? 'with-banner' : ''}`}>
         <div className="container-fluid px-3">
           {/* Logo on the leftmost edge */}
           <Link className="navbar-brand ms-0 ps-0" to="/">

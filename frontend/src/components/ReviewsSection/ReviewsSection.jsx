@@ -20,10 +20,10 @@ const ReviewsSection = () => {
     }
     
     const itemPath = {
-      destination: '/destination',
-      restaurant: '/restaurant',
-      hotel: '/hotel'
-    }[review.itemType];
+      destination: '/destinations',
+      restaurant: '/restaurants',
+      hotel: '/hotels'
+    }[review.itemType.toLowerCase()];
 
     if (itemPath) {
       const fullPath = `${itemPath}/${review.itemId._id}`;
@@ -96,8 +96,8 @@ const ReviewsSection = () => {
           }}
         >
           <div className="review-header">
-            <h3 className="place-name">{review.destinationName}</h3>
-            <span className="review-type">{review.itemType}</span>
+            <h3 className="place-name">{review.itemId?.name || review.itemId?.title || 'Unknown Place'}</h3>
+            <span className="review-type">{review.itemType?.charAt(0).toUpperCase() + review.itemType?.slice(1).toLowerCase()}</span>
             <div className="review-stars">
               {[...Array(5)].map((_, index) => (
                 <FaStar

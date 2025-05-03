@@ -4,7 +4,7 @@ import './Restaurants.css';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'react-toastify';
 import LoginPromptModal from '../../components/LoginPromptModal/LoginPromptModal';
-import { getLikedCities } from '../../utils/cookieUtils';
+import { getLikedCities, getLikedCityNames, removeLikedCity } from '../../utils/cookieUtils';
 import { getApiBaseUrl } from '../../utils/apiBaseUrl';
 const API_BASE_URL = getApiBaseUrl();
 
@@ -58,6 +58,10 @@ const Restaurants = () => {
 
   // Handle like toggle
   const handleLikeToggle = (restaurantId, isLiked, newLikeCount) => {
+    // Find the restaurant that was liked/unliked
+    const targetRestaurant = restaurants.find(restaurant => restaurant._id === restaurantId);
+    
+    // Update restaurant states
     setRestaurants(prevRestaurants =>
       prevRestaurants.map(restaurant =>
         restaurant._id === restaurantId
@@ -73,15 +77,26 @@ const Restaurants = () => {
       )
     );
 
-    // Update liked cities - this will happen automatically via the LikeButton component
-    // which now calls addLikedCity when a user likes content
+    // If this is an unlike action and we have the city information
+    if (!isLiked && targetRestaurant && targetRestaurant.locationCity) {
+      // Check if there are any other liked restaurants in this city
+      const otherLikesInCity = restaurants.some(
+        r => r._id !== restaurantId && 
+            r.locationCity === targetRestaurant.locationCity && 
+            r.isLiked
+      );
+      
+      // If no other liked restaurants in this city, remove the city from liked cities
+      if (!otherLikesInCity) {
+        removeLikedCity(targetRestaurant.locationCity);
+      }
+    }
     
     // Refresh liked cities from cookie after a delay to ensure the cookie is updated
     setTimeout(() => {
-      const updatedLikedCities = getLikedCities();
-      if (updatedLikedCities && updatedLikedCities.length > 0) {
-        setLikedCities(updatedLikedCities);
-      }
+      const updatedLikedCities = getLikedCities() || [];
+      setLikedCities(updatedLikedCities);
+      setShowPrioritizedContent(updatedLikedCities.length > 0);
     }, 500);
   };
 
@@ -206,29 +221,54 @@ const Restaurants = () => {
       }, {});
     }
 
-    // Otherwise, create two groups: prioritized cities and other cities
-    const priorityGroups = {};
-    const otherGroups = {};
-
+    // Otherwise, create ordered groups based on liked city timestamps
+    const cityGroups = {}; // Store all restaurants by city
+    const cityOrder = []; // Track the order of cities based on liked status and timestamp
+    const likedCityNames = new Map(); // Map city names to their timestamp info
+    
+    // Create a map of city names to timestamps for faster lookup
+    likedCities.forEach(cityObj => {
+      likedCityNames.set(cityObj.name.toLowerCase(), cityObj.timestamp);
+    });
+    
+    // Group restaurants by city
     filteredRestaurants.forEach(rest => {
       const city = rest.locationCity;
-      
-      // Check if this restaurant's city is in the liked cities list
-      const isPriority = likedCities.some(
-        likedCity => likedCity.toLowerCase() === city.toLowerCase()
-      );
-      
-      if (isPriority) {
-        if (!priorityGroups[city]) priorityGroups[city] = [];
-        priorityGroups[city].push(rest);
-      } else {
-        if (!otherGroups[city]) otherGroups[city] = [];
-        otherGroups[city].push(rest);
+      if (!cityGroups[city]) {
+        cityGroups[city] = [];
+        
+        // Track city in order array
+        // [city name, isLiked, timestamp (or 0 if not liked)]
+        const cityTimestamp = likedCityNames.get(city.toLowerCase()) || 0;
+        const isLiked = cityTimestamp > 0;
+        
+        cityOrder.push([city, isLiked, cityTimestamp]);
       }
+      cityGroups[city].push(rest);
     });
-
-    // Combine the groups with priority cities first
-    return { ...priorityGroups, ...otherGroups };
+    
+    // Sort cities: liked cities first (by timestamp, newest first), then other cities
+    cityOrder.sort((a, b) => {
+      // If one is liked and the other isn't, liked comes first
+      if (a[1] && !b[1]) return -1;
+      if (!a[1] && b[1]) return 1;
+      
+      // If both are liked or both are not liked, sort by timestamp (newest first) or alphabetically
+      if (a[1] && b[1]) {
+        return b[2] - a[2]; // Sort by timestamp, newest first
+      }
+      
+      // For non-liked cities, sort alphabetically
+      return a[0].localeCompare(b[0]);
+    });
+    
+    // Build the result object with cities in the correct order
+    const result = {};
+    cityOrder.forEach(([city]) => {
+      result[city] = cityGroups[city];
+    });
+    
+    return result;
   }, [filteredRestaurants, likedCities, showPrioritizedContent]);
 
   const handleFilterChange = (type, value) => {
@@ -359,14 +399,7 @@ const Restaurants = () => {
         </div>
       </div>
 
-      {likedCities && likedCities.length > 0 && showPrioritizedContent && (
-        <div className="priority-info-banner">
-          <span>Showing restaurants in cities you've liked first</span>
-          <button onClick={() => setShowPrioritizedContent(false)}>
-            <i className="bi bi-x-lg"></i>
-          </button>
-        </div>
-      )}
+      {/* Banner removed as requested */}
 
       <div className="restaurants-content">
         {Object.keys(groupedAndPrioritizedRestaurants).length === 0 ? (

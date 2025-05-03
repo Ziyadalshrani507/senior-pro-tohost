@@ -5,7 +5,7 @@ import MapPicker from '../../components/MapPicker/MapPicker';
 import './ItemModal.css';
 
 const ItemModal = ({ item, type, onSave, onClose, schemaOptions }) => {
-  const [formData, setFormData] = useState({
+  const initialFormState = {
     name: '',
     description: '',
     locationCity: '',
@@ -27,7 +27,18 @@ const ItemModal = ({ item, type, onSave, onClose, schemaOptions }) => {
       email: '',
       website: ''
     },
-    openingHours: '',
+    openingHours: {
+      open: {
+        hour: 9,
+        minute: 0,
+        period: 'AM'
+      },
+      close: {
+        hour: 10,
+        minute: 0,
+        period: 'PM'
+      }
+    },
     rating: {
       average: 0,
       count: 0
@@ -38,7 +49,9 @@ const ItemModal = ({ item, type, onSave, onClose, schemaOptions }) => {
     roomTypes: [],
     checkInTime: '',
     checkOutTime: ''
-  });
+  };
+
+  const [formData, setFormData] = useState(initialFormState);
 
   const [imageUrl, setImageUrl] = useState('');
   const [errors, setErrors] = useState({});
@@ -71,7 +84,8 @@ const ItemModal = ({ item, type, onSave, onClose, schemaOptions }) => {
         contact: item.contact || { phone: '', email: '', website: '' },
         coordinates: item.coordinates || { type: 'Point', coordinates: null },
         rating: item.rating || { average: 0, count: 0 },
-        amenities: item.amenities || []
+        amenities: item.amenities || [],
+        openingHours: item.openingHours || initialFormState.openingHours
       });
       
       // Show the images in the UI
@@ -84,37 +98,7 @@ const ItemModal = ({ item, type, onSave, onClose, schemaOptions }) => {
   }, [item]);
 
   const resetForm = () => {
-    setFormData({
-      name: '',
-      description: '',
-      locationCity: '',
-      images: [], // Changed from pictureUrls to match Restaurant model
-      coordinates: {
-        type: 'Point',
-        coordinates: [0, 0]
-      },
-      type: '',
-      cost: '',
-      categories: [],
-      cuisine: '',
-      priceRange: '',
-      address: '',
-      contact: {
-        phone: '',
-        email: '',
-        website: ''
-      },
-      openingHours: '',
-      rating: {
-        average: 0,
-        count: 0
-      },
-      hotelClass: '',
-      amenities: [],
-      roomTypes: [],
-      checkInTime: '',
-      checkOutTime: ''
-    });
+    setFormData(initialFormState);
     setImageUrl('');
     setErrors({});
   };
@@ -197,6 +181,24 @@ const ItemModal = ({ item, type, onSave, onClose, schemaOptions }) => {
       if (!formData.priceRange?.trim()) newErrors.priceRange = 'Price range is required';
       if (!formData.address?.trim()) newErrors.address = 'Address is required';
       if (!formData.contact?.phone?.trim()) newErrors.phone = 'Phone number is required';
+      
+      // Validate opening hours
+      if (!formData.openingHours?.open?.hour || !formData.openingHours?.close?.hour) {
+        newErrors.openHour = 'Opening hours are required';
+      } else {
+        // Convert times to 24-hour format for comparison
+        const openHour = formData.openingHours.open.hour + (formData.openingHours.open.period === 'PM' && formData.openingHours.open.hour !== 12 ? 12 : 0);
+        const closeHour = formData.openingHours.close.hour + (formData.openingHours.close.period === 'PM' && formData.openingHours.close.hour !== 12 ? 12 : 0);
+        const openMinute = formData.openingHours.open.minute;
+        const closeMinute = formData.openingHours.close.minute;
+        
+        const openTime = openHour * 60 + openMinute;
+        const closeTime = closeHour * 60 + closeMinute;
+        
+        if (closeTime <= openTime) {
+          newErrors.openHour = 'Closing time must be after opening time';
+        }
+      }
       // Optional but recommended for restaurants
       // if (!formData.coordinates?.coordinates) newErrors.coordinates = 'Location on map is recommended';
     } else if (type === 'hotels') {
@@ -245,7 +247,8 @@ const ItemModal = ({ item, type, onSave, onClose, schemaOptions }) => {
           },
           categories: formData.categories || [],
           // Use only the images field as per Restaurant schema
-          images: formData.images || []
+          images: formData.images || [],
+          openingHours: formData.openingHours
         };
         
         // Log to confirm images are being sent correctly
@@ -726,12 +729,131 @@ const ItemModal = ({ item, type, onSave, onClose, schemaOptions }) => {
               </div>
 
               <div className="form-group">
-                <label>Opening Hours</label>
-                <textarea
-                  name="openingHours"
-                  value={formData.openingHours}
-                  onChange={handleInputChange}
-                />
+                <label>Opening Hours *</label>
+                <div className="time-selectors">
+                  <div className="time-group">
+                    <label>Opening Time:</label>
+                    <div className="time-input-group">
+                      <select
+                        value={formData.openingHours.open.hour}
+                        onChange={(e) => setFormData(prev => ({
+                          ...prev,
+                          openingHours: {
+                            ...prev.openingHours,
+                            open: {
+                              ...prev.openingHours.open,
+                              hour: parseInt(e.target.value)
+                            }
+                          }
+                        }))}
+                        className={errors.openHour ? 'error' : ''}
+                      >
+                        {Array.from({ length: 12 }, (_, i) => i + 1).map(hour => (
+                          <option key={`open-hour-${hour}`} value={hour}>{hour}</option>
+                        ))}
+                      </select>
+                      <span>:</span>
+                      <select
+                        value={formData.openingHours.open.minute}
+                        onChange={(e) => setFormData(prev => ({
+                          ...prev,
+                          openingHours: {
+                            ...prev.openingHours,
+                            open: {
+                              ...prev.openingHours.open,
+                              minute: parseInt(e.target.value)
+                            }
+                          }
+                        }))}
+                        className={errors.openMinute ? 'error' : ''}
+                      >
+                        {[0, 15, 30, 45].map(minute => (
+                          <option key={`open-minute-${minute}`} value={minute}>{minute.toString().padStart(2, '0')}</option>
+                        ))}
+                      </select>
+                      <select
+                        value={formData.openingHours.open.period}
+                        onChange={(e) => setFormData(prev => ({
+                          ...prev,
+                          openingHours: {
+                            ...prev.openingHours,
+                            open: {
+                              ...prev.openingHours.open,
+                              period: e.target.value
+                            }
+                          }
+                        }))}
+                      >
+                        <option value="AM">AM</option>
+                        <option value="PM">PM</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="time-group">
+                    <label>Closing Time:</label>
+                    <div className="time-input-group">
+                      <select
+                        value={formData.openingHours.close.hour}
+                        onChange={(e) => setFormData(prev => ({
+                          ...prev,
+                          openingHours: {
+                            ...prev.openingHours,
+                            close: {
+                              ...prev.openingHours.close,
+                              hour: parseInt(e.target.value)
+                            }
+                          }
+                        }))}
+                        className={errors.closeHour ? 'error' : ''}
+                      >
+                        {Array.from({ length: 12 }, (_, i) => i + 1).map(hour => (
+                          <option key={`close-hour-${hour}`} value={hour}>{hour}</option>
+                        ))}
+                      </select>
+                      <span>:</span>
+                      <select
+                        value={formData.openingHours.close.minute}
+                        onChange={(e) => setFormData(prev => ({
+                          ...prev,
+                          openingHours: {
+                            ...prev.openingHours,
+                            close: {
+                              ...prev.openingHours.close,
+                              minute: parseInt(e.target.value)
+                            }
+                          }
+                        }))}
+                        className={errors.closeMinute ? 'error' : ''}
+                      >
+                        {[0, 15, 30, 45].map(minute => (
+                          <option key={`close-minute-${minute}`} value={minute}>{minute.toString().padStart(2, '0')}</option>
+                        ))}
+                      </select>
+                      <select
+                        value={formData.openingHours.close.period}
+                        onChange={(e) => setFormData(prev => ({
+                          ...prev,
+                          openingHours: {
+                            ...prev.openingHours,
+                            close: {
+                              ...prev.openingHours.close,
+                              period: e.target.value
+                            }
+                          }
+                        }))}
+                      >
+                        <option value="AM">AM</option>
+                        <option value="PM">PM</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+                {(errors.openHour || errors.openMinute || errors.closeHour || errors.closeMinute) && (
+                  <span className="error-message">
+                    {errors.openHour || errors.openMinute || errors.closeHour || errors.closeMinute}
+                  </span>
+                )}
               </div>
             </>
           )}

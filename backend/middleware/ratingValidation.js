@@ -4,7 +4,7 @@ const validateRating = (req, res, next) => {
   const { itemType, rating, comment } = req.body;
 
   // Validate itemType
-  if (!['destination', 'restaurant'].includes(itemType)) {
+  if (!['destination', 'restaurant', 'hotel'].includes(itemType)) {
     return res.status(400).json({ message: 'Invalid item type' });
   }
 

@@ -46,19 +46,7 @@
   margin: 0;
 }
 
-.item-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1.5rem;
-  font-size: 1rem;
-  color: #6c757d;
-}
 
-.item-meta span {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
 
 .item-content {
   display: grid;

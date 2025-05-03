@@ -359,11 +359,6 @@ const Home = () => {
                       loading="lazy"
                     />
                     <div className="image-overlay"></div>
-                    <div className="hotel-stars">
-                      {Array.from({ length: Math.round(hotel.stars) || 5 }).map((_, i) => (
-                        <i key={i} className="bi bi-star-fill"></i>
-                      ))}
-                    </div>
                   </div>
                   <div className="card-content">
                     <h3>{hotel.name || 'Luxury Saudi Hotel'}</h3>

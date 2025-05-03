@@ -120,29 +120,61 @@ export function getLastSearchedCity() {
 
 /**
  * Set liked cities cookie with array of cities where user has liked content
- * @param {Array<string>} cities - Array of city names where user has liked content
+ * @param {Array<Object>} citiesData - Array of city data objects with name and timestamp
  */
-export function setLikedCitiesCookie(cities) {
-  if (!Array.isArray(cities) || cities.length === 0) return;
-  const uniqueCities = [...new Set(cities)]; // Remove duplicates
+export function setLikedCitiesCookie(citiesData) {
+  if (!Array.isArray(citiesData) || citiesData.length === 0) return;
+  
+  // Ensure we have unique cities only (keep the most recent timestamp if duplicate)
+  const uniqueCitiesMap = new Map();
+  citiesData.forEach(cityObj => {
+    if (cityObj.name) {
+      uniqueCitiesMap.set(cityObj.name, cityObj);
+    }
+  });
+  
+  // Convert map back to array
+  const uniqueCities = Array.from(uniqueCitiesMap.values());
+  
   setCookie('likedCities', JSON.stringify(uniqueCities), 604800); // 1 week in seconds
 }
 
 /**
  * Get array of liked cities from cookie
- * @returns {Array<string>|null} - Array of city names where user has liked content, or null if not found
+ * @returns {Array<Object>|null} - Array of city data objects with name and timestamp, or null if not found
  */
 export function getLikedCities() {
   const likedCitiesStr = getCookie('likedCities');
   if (likedCitiesStr) {
     try {
-      return JSON.parse(likedCitiesStr);
+      const parsedData = JSON.parse(likedCitiesStr);
+      
+      // Handle backward compatibility with old format (string array)
+      if (parsedData.length > 0 && typeof parsedData[0] === 'string') {
+        // Convert old format to new format with current timestamp
+        return parsedData.map(cityName => ({
+          name: cityName,
+          timestamp: Date.now()
+        }));
+      }
+      
+      return parsedData;
     } catch (error) {
       console.error('Error parsing likedCities cookie:', error);
       return null;
     }
   }
   return null;
+}
+
+/**
+ * Get array of just the city names from the liked cities cookie
+ * @returns {Array<string>|null} - Array of city names
+ */
+export function getLikedCityNames() {
+  const citiesData = getLikedCities();
+  if (!citiesData) return null;
+  return citiesData.map(city => city.name);
 }
 
 /**
@@ -153,10 +185,51 @@ export function addLikedCity(city) {
   if (!city) return;
   
   const likedCities = getLikedCities() || [];
+  const timestamp = Date.now();
   
-  // Only add if not already in the list
-  if (!likedCities.includes(city)) {
-    likedCities.push(city);
-    setLikedCitiesCookie(likedCities);
+  // Check if city already exists
+  const existingIndex = likedCities.findIndex(c => c.name === city);
+  
+  if (existingIndex >= 0) {
+    // Update the timestamp to move this city to the top
+    likedCities[existingIndex].timestamp = timestamp;
+  } else {
+    // Add new city with timestamp
+    likedCities.push({
+      name: city,
+      timestamp: timestamp
+    });
   }
+  
+  // Sort by timestamp (newest first)
+  likedCities.sort((a, b) => b.timestamp - a.timestamp);
+  
+  setLikedCitiesCookie(likedCities);
+  return true;
+}
+
+/**
+ * Remove a city from the liked cities cookie
+ * @param {string} city - City name to remove from liked cities
+ * @param {boolean} checkNoLikes - Whether to check if there are no more likes in the city
+ */
+export function removeLikedCity(city, checkNoLikes = false) {
+  if (!city) return;
+  
+  const likedCities = getLikedCities() || [];
+  
+  // Remove the city from the list
+  const updatedCities = likedCities.filter(c => c.name !== city);
+  
+  // If the list has changed, update the cookie
+  if (updatedCities.length !== likedCities.length) {
+    if (updatedCities.length > 0) {
+      setLikedCitiesCookie(updatedCities);
+    } else {
+      // If no cities left, delete the cookie
+      deleteCookie('likedCities');
+    }
+    return true;
+  }
+  return false;
 }

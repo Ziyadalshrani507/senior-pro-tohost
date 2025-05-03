@@ -198,10 +198,12 @@ const ItemDetails = () => {
                 <span>{item.cuisine}</span>
               </div>
             )}
-            {item.openingHours && (
+            {item.openingHours?.open?.hour && item.openingHours?.close?.hour && (
               <div className="info-item">
-                <strong><FaClock /> Hours:</strong>
-                <span>{item.openingHours}</span>
+                <strong><FaClock /> Opening Hours:</strong>
+                <span>
+                  {item.openingHours.open.hour}:{item.openingHours.open.minute.toString().padStart(2, '0')} {item.openingHours.open.period} - {item.openingHours.close.hour}:{item.openingHours.close.minute.toString().padStart(2, '0')} {item.openingHours.close.period}
+                </span>
               </div>
             )}
             {item.categories && item.categories.length > 0 && (
@@ -326,20 +328,7 @@ const ItemDetails = () => {
               <h1>{item.name}</h1>
               <LikeButton itemId={item._id} itemType={type.slice(0, -1)} />
             </div>
-            <div className="item-meta">
-              <span className="location">
-                <FaMapMarkerAlt /> {item.locationCity || 'Location not available'}
-              </span>
-              <span className="price">
-                <FaMoneyBillWave /> {getPriceDisplay()}
-              </span>
-              {item.rating && (
-                <span className="rating">
-                  <FaStar /> {item.rating.average ? item.rating.average.toFixed(1) : '0.0'} 
-                  ({item.rating.count || 0} reviews)
-                </span>
-              )}
-            </div>
+
           </div>
 
           <div className="item-content">
