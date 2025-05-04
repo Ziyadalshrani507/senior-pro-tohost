@@ -13,6 +13,7 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const [email, setEmail] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   
   // Refs for sections with parallax effects
   const heroRef = useRef(null);
@@ -20,6 +21,47 @@ const Home = () => {
   const aiPlannerRef = useRef(null);
   const mapRef = useRef(null);
   
+  // Hero images for carousel
+  const [imagesLoaded, setImagesLoaded] = useState(false);
+  const heroImages = [
+    { url: '/assets/riyadh.jpeg', alt: 'Riyadh Skyline' },
+    { url: '/assets/jeddah.jpeg', alt: 'Jeddah Waterfront' },
+    { url: '/assets/khobar.jpeg', alt: 'Khobar Corniche' }
+  ];
+
+  // Preload images
+  useEffect(() => {
+    Promise.all(
+      heroImages.map((image) => {
+        return new Promise((resolve, reject) => {
+          const img = new Image();
+          img.src = image.url;
+          img.onload = resolve;
+          img.onerror = (e) => {
+            console.error(`Failed to load image: ${image.url}`, e);
+            reject(e);
+          };
+        });
+      })
+    )
+      .then(() => {
+        console.log('All images loaded successfully');
+        setImagesLoaded(true);
+      })
+      .catch((error) => {
+        console.error('Error loading images:', error);
+        setImagesLoaded(true); // Still set to true to show fallback
+      });
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentImageIndex((prevIndex) => (prevIndex + 1) % heroImages.length);
+    }, 6000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   // Parallax scrolling effects using framer-motion
   const { scrollY } = useScroll();
   
@@ -110,13 +152,6 @@ const Home = () => {
     alert(`Thank you for subscribing with ${email}!`);
     setEmail('');
   };
-  
-  const handleSearchSubmit = (e) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      window.location.href = `/search?q=${encodeURIComponent(searchQuery)}`;
-    }
-  };
 
   return (
     <div className="home-page">
@@ -125,75 +160,82 @@ const Home = () => {
         <meta name="description" content="Explore Saudi Arabia's most beautiful destinations, luxury hotels, and authentic restaurants. Plan your perfect trip with our AI travel planner." />
       </Helmet>
 
-      {/* Hero Section with Parallax Effect */}
+      {/* Hero Section with Image Carousel */}
       <motion.section 
         className="hero-section" 
         ref={heroRef}
-        style={{ 
-          backgroundImage: `url('/assets/saudi-landmark.jpg')`,
-          backgroundPositionY: heroBackgroundY 
-        }}
       >
+        <div className="hero-carousel">
+          {heroImages.map((image, index) => (
+            <motion.div
+              key={image.url}
+              className={`carousel-slide ${index === currentImageIndex ? 'active' : ''}`}
+              initial={{ opacity: 0 }}
+              animate={{ 
+                opacity: index === currentImageIndex ? 1 : 0
+              }}
+              transition={{ duration: 1.5, ease: 'easeInOut' }}
+            >
+              <img 
+                src={image.url} 
+                alt={image.alt}
+                className="carousel-image"
+                onError={(e) => {
+                  console.error(`Failed to load image: ${image.url}`);
+                  e.target.style.backgroundColor = '#666';
+                  e.target.style.display = 'block';
+                }}
+                style={{
+                  opacity: imagesLoaded ? 1 : 0,
+                  transition: 'opacity 0.5s ease-in-out'
+                }}
+              />
+            </motion.div>
+          ))}
+        </div>
         <div className="overlay"></div>
         <div className="hero-content">
           <motion.h1 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-          >
-            Discover Saudi Arabia — Your Journey, Your Way
-          </motion.h1>
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
           >
-            Explore authentic Saudi destinations, luxurious hotels, gourmet restaurants, and create your personalized trip with AI.
-          </motion.h2>
-          <motion.div 
+            Discover Saudi Arabia — Your Journey,<br /> Your Way
+          </motion.h1>
+          <motion.div
             className="hero-buttons"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.4 }}
           >
-            <Link to="/itinerary-planner" className="cta-button primary">Start Planning</Link>
-            <Link to="/destinations" className="cta-button secondary">Explore Saudi Destinations</Link>
+            <Link to="/itinerary-planner" className="cta-button primary">
+              Start Planning
+            </Link>
+            <Link to="/destinations" className="cta-button secondary">
+              Explore Saudi Destinations
+            </Link>
           </motion.div>
+          <motion.p
+            className="hero-description"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.6 }}
+          >
+            Explore authentic Saudi destinations, luxurious hotels, gourmet
+            restaurants, and create your personalized trip with AI.
+          </motion.p>
         </div>
       </motion.section>
       
-      {/* Quick Search Section */}
+      {/* Quick Links Section */}
       <motion.section 
-        className="quick-search-section"
+        className="quick-links-section"
         initial={{ opacity: 0 }}
         whileInView={{ opacity: 1 }}
         viewport={{ once: true }}
         transition={{ duration: 0.6 }}
       >
         <div className="container">
-          <form className="search-form" onSubmit={handleSearchSubmit}>
-            <motion.div 
-              className="search-input-container"
-              initial={{ scale: 0.95 }}
-              whileInView={{ scale: 1 }}
-              transition={{ duration: 0.3 }}
-            >
-              <i className="bi bi-geo-alt-fill"></i>
-              <input 
-                type="text" 
-                placeholder="Where do you want to go in Saudi Arabia?" 
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-              <motion.button 
-                type="submit"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <i className="bi bi-search"></i>
-              </motion.button>
-            </motion.div>
-          </form>
           <div className="quick-links">
             <motion.div whileHover={{ y: -5 }} transition={{ duration: 0.2 }}>
               <Link to="/hotels" className="quick-link">
@@ -205,6 +247,12 @@ const Home = () => {
               <Link to="/restaurants" className="quick-link">
                 <i className="bi bi-cup-hot"></i>
                 <span>Discover Restaurants</span>
+              </Link>
+            </motion.div>
+            <motion.div whileHover={{ y: -5 }} transition={{ duration: 0.2 }}>
+              <Link to="/destinations" className="quick-link">
+                <i className="bi bi-geo-alt"></i>
+                <span>Explore Destinations</span>
               </Link>
             </motion.div>
             <motion.div whileHover={{ y: -5 }} transition={{ duration: 0.2 }}>
@@ -444,7 +492,7 @@ const Home = () => {
           
           <div className="restaurants-grid">
             {restaurants.length > 0 ? (
-              restaurants.map((restaurant, index) => (
+              restaurants.slice(0, 5).map((restaurant, index) => (
                 <motion.div 
                   key={restaurant._id} 
                   className="restaurant-card"
@@ -516,14 +564,10 @@ const Home = () => {
         </div>
       </motion.section>
       
-      {/* AI Itinerary Generator with Parallax */}
+      {/* AI Itinerary Generator */}
       <motion.section 
         className="ai-planner-section" 
         ref={aiPlannerRef}
-        style={{ 
-          backgroundImage: `url('/assets/saudi-map-bg.jpg')`,
-          backgroundPositionY: mapBackgroundY
-        }}
       >
         <div className="parallax-overlay"></div>
         <div className="container">
@@ -535,13 +579,14 @@ const Home = () => {
             transition={{ duration: 0.6 }}
           >
             <motion.h2
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5 }}
             >
-              Plan Your Dream Saudi Trip — Instantly with AI
+              Plan Your Trip with AI
             </motion.h2>
+            <p className="section-subtitle">Create your personalized Saudi Arabia itinerary in minutes</p>
             
             <div className="planner-steps">
               <motion.div 
@@ -555,8 +600,8 @@ const Home = () => {
                 <div className="step-icon">
                   <i className="bi bi-clipboard-check"></i>
                 </div>
-                <h3>Answer simple questions</h3>
-                <p>Share your preferences, budget, and which Saudi cities you want to explore.</p>
+                <h3>Tell Us Your Preferences</h3>
+                <p>Quick questions about your travel style and interests</p>
               </motion.div>
               
               <motion.div 
@@ -570,8 +615,8 @@ const Home = () => {
                 <div className="step-icon">
                   <i className="bi bi-magic"></i>
                 </div>
-                <h3>Receive your personalized Saudi travel itinerary</h3>
-                <p>Our AI crafts a custom Saudi journey matching your exact preferences.</p>
+                <h3>Get Your Itinerary</h3>
+                <p>AI creates your custom travel plan in minutes</p>
               </motion.div>
               
               <motion.div 
@@ -585,8 +630,8 @@ const Home = () => {
                 <div className="step-icon">
                   <i className="bi bi-emoji-smile"></i>
                 </div>
-                <h3>Enjoy your journey</h3>
-                <p>Experience the beauty of Saudi Arabia with a perfectly crafted itinerary.</p>
+                <h3>Start Exploring</h3>
+                <p>Begin your journey across Saudi Arabia</p>
               </motion.div>
             </div>
             
@@ -597,255 +642,6 @@ const Home = () => {
               <Link to="/itinerary-planner" className="cta-button primary">Start Planning with AI</Link>
             </motion.div>
           </motion.div>
-        </div>
-      </motion.section>
-      
-      {/* User Testimonials with Saudi Focus */}
-      <motion.section 
-        className="testimonials-section"
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.6 }}
-      >
-        <div className="container">
-          <div className="section-header">
-            <motion.h2 
-              className="section-title"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
-            >
-              What Travelers Say About Saudi Arabia
-            </motion.h2>
-          </div>
-          
-          <div className="testimonials-grid">
-            <motion.div 
-              className="testimonial-card"
-              initial={{ opacity: 0, scale: 0.9 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.4 }}
-              whileHover={{ y: -10, boxShadow: "0 15px 30px rgba(0,0,0,0.1)" }}
-            >
-              <div className="quote-icon"><i className="bi bi-quote"></i></div>
-              <div className="testimonial-content">
-                <p>"The AI planner helped me explore hidden gems in Saudi Arabia I never knew about! From Al-Ula's ancient wonders to Riyadh's modern marvels, every recommendation was spot on."</p>
-              </div>
-              <div className="testimonial-author">
-                <div className="author-image">
-                  <img src="/assets/testimonial-1.jpg" alt="Sarah M." />
-                </div>
-                <div className="author-info">
-                  <h4>Sarah M.</h4>
-                  <p>Tourist from United Kingdom</p>
-                  <div className="stars">
-                    <i className="bi bi-star-fill"></i>
-                    <i className="bi bi-star-fill"></i>
-                    <i className="bi bi-star-fill"></i>
-                    <i className="bi bi-star-fill"></i>
-                    <i className="bi bi-star-fill"></i>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-            
-            <motion.div 
-              className="testimonial-card"
-              initial={{ opacity: 0, scale: 0.9 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.4, delay: 0.2 }}
-              whileHover={{ y: -10, boxShadow: "0 15px 30px rgba(0,0,0,0.1)" }}
-            >
-              <div className="quote-icon"><i className="bi bi-quote"></i></div>
-              <div className="testimonial-content">
-                <p>"The luxury hotels and authentic Saudi restaurants recommended by this platform made my business trip exceptional. I particularly enjoyed the cuisine in Jeddah and the hospitality across the Kingdom."</p>
-              </div>
-              <div className="testimonial-author">
-                <div className="author-image">
-                  <img src="/assets/testimonial-2.jpg" alt="Mohammed A." />
-                </div>
-                <div className="author-info">
-                  <h4>Mohammed A.</h4>
-                  <p>Business Traveler from UAE</p>
-                  <div className="stars">
-                    <i className="bi bi-star-fill"></i>
-                    <i className="bi bi-star-fill"></i>
-                    <i className="bi bi-star-fill"></i>
-                    <i className="bi bi-star-fill"></i>
-                    <i className="bi bi-star-fill"></i>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-            
-            <motion.div 
-              className="testimonial-card"
-              initial={{ opacity: 0, scale: 0.9 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.4, delay: 0.4 }}
-              whileHover={{ y: -10, boxShadow: "0 15px 30px rgba(0,0,0,0.1)" }}
-            >
-              <div className="quote-icon"><i className="bi bi-quote"></i></div>
-              <div className="testimonial-content">
-                <p>"Our family vacationed in Saudi Arabia using the AI planner, and it created a perfect cultural journey through Riyadh and Al-Ula. The kids loved the activities and we all enjoyed the authentic experiences."</p>
-              </div>
-              <div className="testimonial-author">
-                <div className="author-image">
-                  <img src="/assets/testimonial-3.jpg" alt="David L." />
-                </div>
-                <div className="author-info">
-                  <h4>David L.</h4>
-                  <p>Family Traveler from USA</p>
-                  <div className="stars">
-                    <i className="bi bi-star-fill"></i>
-                    <i className="bi bi-star-fill"></i>
-                    <i className="bi bi-star-fill"></i>
-                    <i className="bi bi-star-fill"></i>
-                    <i className="bi bi-star-half"></i>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        </div>
-      </motion.section>
-      
-      {/* Interactive Map of Saudi Arabia */}
-      <motion.section 
-        className="map-section"
-        ref={mapRef}
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.6 }}
-      >
-        <div className="container">
-          <div className="section-header">
-            <motion.h2 
-              className="section-title"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
-            >
-              Explore Saudi Arabia
-            </motion.h2>
-            <motion.p 
-              className="section-subtitle"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-            >
-              Discover our destinations, hotels, and restaurants across the Kingdom
-            </motion.p>
-          </div>
-          
-          <motion.div 
-            className="interactive-map"
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7 }}
-          >
-            <div className="saudi-map-container">
-              <img src="/assets/saudi-arabia-map.svg" alt="Map of Saudi Arabia" className="saudi-map" />
-              
-              <motion.div 
-                className="map-pin riyadh"
-                initial={{ scale: 0, opacity: 0 }}
-                whileInView={{ scale: 1, opacity: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-                whileHover={{ scale: 1.1 }}
-              >
-                <div className="pin-dot"></div>
-                <div className="pin-pulse"></div>
-                <div className="pin-info">
-                  <h3>Riyadh</h3>
-                  <p>The capital of Saudi Arabia offers modern architecture, luxury hotels, and authentic cuisine</p>
-                  <div className="pin-stats">
-                    <span><i className="bi bi-building"></i> 5 Hotels</span>
-                    <span><i className="bi bi-cup-hot"></i> 10 Restaurants</span>
-                    <span><i className="bi bi-geo-alt"></i> 7 Destinations</span>
-                  </div>
-                </div>
-              </motion.div>
-              
-              <motion.div 
-                className="map-pin jeddah"
-                initial={{ scale: 0, opacity: 0 }}
-                whileInView={{ scale: 1, opacity: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: 0.4 }}
-                whileHover={{ scale: 1.1 }}
-              >
-                <div className="pin-dot"></div>
-                <div className="pin-pulse"></div>
-                <div className="pin-info">
-                  <h3>Jeddah</h3>
-                  <p>Saudi Arabia's coastal gem with beautiful beaches, historical sites, and vibrant culture</p>
-                  <div className="pin-stats">
-                    <span><i className="bi bi-building"></i> 7 Hotels</span>
-                    <span><i className="bi bi-cup-hot"></i> 12 Restaurants</span>
-                    <span><i className="bi bi-geo-alt"></i> 8 Destinations</span>
-                  </div>
-                </div>
-              </motion.div>
-              
-              <motion.div 
-                className="map-pin al-ula"
-                initial={{ scale: 0, opacity: 0 }}
-                whileInView={{ scale: 1, opacity: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: 0.6 }}
-                whileHover={{ scale: 1.1 }}
-              >
-                <div className="pin-dot"></div>
-                <div className="pin-pulse"></div>
-                <div className="pin-info">
-                  <h3>Al-Ula</h3>
-                  <p>Home to ancient wonders and breathtaking desert landscapes</p>
-                  <div className="pin-stats">
-                    <span><i className="bi bi-building"></i> 3 Hotels</span>
-                    <span><i className="bi bi-cup-hot"></i> 5 Restaurants</span>
-                    <span><i className="bi bi-geo-alt"></i> 6 Destinations</span>
-                  </div>
-                </div>
-              </motion.div>
-              
-              <motion.div 
-                className="map-pin dammam"
-                initial={{ scale: 0, opacity: 0 }}
-                whileInView={{ scale: 1, opacity: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: 0.8 }}
-                whileHover={{ scale: 1.1 }}
-              >
-                <div className="pin-dot"></div>
-                <div className="pin-pulse"></div>
-                <div className="pin-info">
-                  <h3>Dammam</h3>
-                  <p>Saudi Arabia's eastern gateway with beautiful corniche and cultural attractions</p>
-                  <div className="pin-stats">
-                    <span><i className="bi bi-building"></i> 4 Hotels</span>
-                    <span><i className="bi bi-cup-hot"></i> 8 Restaurants</span>
-                    <span><i className="bi bi-geo-alt"></i> 5 Destinations</span>
-                  </div>
-                </div>
-              </motion.div>
-            </div>
-          </motion.div>
-
-          <div className="map-note">
-            <i className="bi bi-info-circle"></i>
-            <p>Click on pins to explore real destinations, hotels, and restaurants in each region</p>
-          </div>
         </div>
       </motion.section>
       
