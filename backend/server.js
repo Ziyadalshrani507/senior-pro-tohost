@@ -16,6 +16,7 @@ const ratingRoutes = require('./Routes/ratingRoutes');
 const dashboardRoutes = require('./Routes/dashboardRoutes');
 const likeRoutes = require('./Routes/likeRoutes');
 const developerRoutes = require('./Routes/developerRoutes');
+const itineraryRoutes = require('./Routes/itineraryRoutes');
 const User = require('./Models/User');
 const { protect } = require('./middleware/authMiddleware');
 const hotelRoutes = require('./Routes/hotelRoutes');
@@ -124,7 +125,6 @@ app.use('/api/users', require('./Routes/userRoutes'));
 app.use('/api/developers', developerRoutes);
 
 // Itinerary routes
-const itineraryRoutes = require('./Routes/itineraryRoutes');
 app.use('/api/itinerary', itineraryRoutes);
 
 // Serve static files from the React app

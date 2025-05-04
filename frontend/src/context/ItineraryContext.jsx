@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState } from 'react';
 import axios from 'axios';
 import { getApiBaseUrl } from '../utils/apiBaseUrl';
+import { toast } from 'react-toastify';
 
 const ItineraryContext = createContext();
 
@@ -96,15 +97,17 @@ export const ItineraryProvider = ({ children }) => {
     }
   };
 
+
+
   // Fetch user itineraries
   const fetchUserItineraries = async () => {
     // Get authentication token
     const token = localStorage.getItem('token');
     if (!token) {
-      setError('Please log in to view your itineraries');
-      return [];
+      setUserItineraries([]);
+      return;
     }
-    
+
     try {
       const apiBaseUrl = getApiBaseUrl();
       const response = await axios.get(`${apiBaseUrl}/itinerary`, {
@@ -113,12 +116,19 @@ export const ItineraryProvider = ({ children }) => {
           'Content-Type': 'application/json'
         }
       });
-      setUserItineraries(response.data.data);
-      return response.data.data;
+
+      if (response.data.success) {
+        // Filter out any temporary or expired itineraries
+        const savedItineraries = response.data.data.filter(itinerary => 
+          !itinerary.isTemporary && !itinerary.expiresAt
+        );
+        setUserItineraries(savedItineraries);
+      } else {
+        setUserItineraries([]);
+      }
     } catch (error) {
-      console.error('Error fetching itineraries:', error);
-      setError(error.response?.data?.message || 'Failed to fetch itineraries');
-      return [];
+      console.error('Error fetching user itineraries:', error);
+      setUserItineraries([]);
     }
   };
 
@@ -182,17 +192,31 @@ export const ItineraryProvider = ({ children }) => {
     }
     
     try {
+      // Optimistically update UI first
+      setUserItineraries(prevItineraries => 
+        prevItineraries.filter(itinerary => itinerary._id !== id)
+      );
+
       const apiBaseUrl = getApiBaseUrl();
-      await axios.delete(`${apiBaseUrl}/itinerary/${id}`, {
+      const response = await axios.delete(`${apiBaseUrl}/itinerary/${id}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
-      return true;
+
+      if (response.data.success) {
+        return true;
+      } else {
+        // If delete failed, revert the UI
+        await fetchUserItineraries();
+        return false;
+      }
     } catch (error) {
       console.error('Error deleting itinerary:', error);
       setError(error.response?.data?.message || 'Failed to delete itinerary');
+      // If delete failed, revert the UI
+      await fetchUserItineraries();
       return false;
     }
   };

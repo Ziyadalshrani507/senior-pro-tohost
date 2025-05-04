@@ -230,20 +230,12 @@ const ItineraryDetailsPage = () => {
               ) : (
                 <div className="save-options">
                   <button 
-                    className="save-itinerary-btn" 
-                    onClick={() => handleSaveItinerary()}
-                    disabled={isSaving || saveSuccess}
-                  >
-                    <FaSave className="btn-icon" />
-                    {isSaving ? 'Saving...' : saveSuccess ? 'Saved! ✓' : 'Save to My Account'}
-                  </button>
-                  <button 
                     className="custom-name-btn" 
                     onClick={() => setShowCustomNameInput(true)}
                     disabled={isSaving || saveSuccess}
                   >
                     <FaEdit className="btn-icon" />
-                    Save with Custom Name
+                    Save Itinerary
                   </button>
                 </div>
               )}

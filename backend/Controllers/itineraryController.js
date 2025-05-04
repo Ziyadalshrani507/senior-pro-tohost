@@ -536,9 +536,13 @@ const generateItinerary = async (req, res) => {
 // Get all itineraries for a user
 const getUserItineraries = async (req, res) => {
   try {
-    const itineraries = await Itinerary.find({ user: req.user._id })
-      .populate('destination', 'name')
-      .sort({ createdAt: -1 });
+    // Only fetch non-temporary itineraries that belong to the user
+    const itineraries = await Itinerary.find({ 
+      user: req.user._id,
+      isTemporary: false,
+      expiresAt: undefined
+    })
+    .sort({ createdAt: -1 });
     
     return res.status(200).json({
       success: true,
@@ -687,15 +691,15 @@ const deleteItinerary = async (req, res) => {
       });
     }
     
-    // Check if the itinerary belongs to the user or if user is admin
-    if (itinerary.user.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+    // Check if the itinerary belongs to the user
+    if (itinerary.user.toString() !== req.user._id.toString()) {
       return res.status(403).json({
         success: false,
         message: "Not authorized to delete this itinerary"
       });
     }
     
-    await itinerary.remove();
+    await Itinerary.deleteOne({ _id: req.params.id });
     
     return res.status(200).json({
       success: true,
@@ -731,41 +735,41 @@ const saveItinerary = async (req, res) => {
       });
     }
     
-    // Find the temporary itinerary
+    // Find the itinerary
     const itinerary = await Itinerary.findById(itineraryId);
     
     if (!itinerary) {
       return res.status(404).json({
         success: false,
-        message: "Itinerary not found or may have expired"
+        message: "Itinerary not found"
       });
     }
     
-    // Check if itinerary is already saved
-    if (itinerary.user) {
-      return res.status(400).json({
-        success: false,
-        message: "This itinerary is already saved"
-      });
-    }
+    // Create a new itinerary document for the user
+    const savedItinerary = new Itinerary({
+      ...itinerary.toObject(),
+      _id: undefined, // Let MongoDB generate a new ID
+      user: req.user._id,
+      name: name || itinerary.name,
+      isTemporary: false,
+      expiresAt: undefined,
+      createdAt: new Date()
+    });
     
-    // Update the itinerary
-    itinerary.user = req.user._id;
-    itinerary.isTemporary = false;
-    itinerary.expiresAt = undefined; // Remove expiration
+    // Save the new itinerary
+    await savedItinerary.save();
     
-    // Update name if provided
-    if (name) {
-      itinerary.name = name;
-    }
-    
-    // Save the changes
-    await itinerary.save();
+    // Get all saved itineraries for this user
+    const userItineraries = await Itinerary.find({
+      user: req.user._id,
+      isTemporary: false
+    }).sort({ createdAt: -1 });
     
     return res.status(200).json({
       success: true,
       message: "Itinerary saved successfully",
-      data: itinerary
+      data: savedItinerary,
+      userItineraries: userItineraries
     });
   } catch (error) {
     console.error("Error saving itinerary:", error);
