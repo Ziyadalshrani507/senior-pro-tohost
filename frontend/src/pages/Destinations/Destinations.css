@@ -27,14 +27,17 @@
   margin: 0 auto;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  gap: 1.5rem;
+  justify-content: center;
+  gap: 1rem;
+  width: 100%;
+  flex-wrap: wrap;
 }
 
 .search-container {
-  flex: 0 1 300px;
+  flex: 1 1 300px;
+  max-width: 500px;
   min-width: 200px;
-  order: 2;
+  order: 1;
   position: relative;
 }
 
@@ -68,7 +71,8 @@
 
 .filter-container {
   position: relative;
-  order: 3;
+  order: 2;
+  flex: 0 0 auto;
 }
 
 .filter-button {
@@ -106,13 +110,14 @@
   background: white;
   border-radius: 20px;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  padding: 2rem;
+  padding: 1.5rem;
   width: min(90vw, 800px);
   max-height: calc(90vh - 160px);
   overflow-y: auto;
   animation: fadeIn 0.3s ease-out;
   z-index: 1000;
   border: 1px solid rgba(0, 0, 0, 0.05);
+  transform-origin: top right;
 }
 
 @keyframes fadeIn {
@@ -462,41 +467,51 @@
   }
 
   .search-filter-container {
-    flex-direction: column;
-    align-items: stretch;
+    gap: 0.75rem;
+    justify-content: space-between;
   }
 
   .search-container {
-    order: 1;
-    flex: 1;
+    flex: 1 1 100%;
+    max-width: none;
   }
 
   .filter-container {
-    order: 2;
-  }
-
-  .filter-button {
-    width: 100%;
-    justify-content: center;
+    flex: 0 0 auto;
   }
 
   .filter-dropdown {
-    left: 0;
-    width: 100%;
+    position: fixed;
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    width: calc(100% - 2rem);
+    top: 50%;
+    max-height: 80vh;
+    transform-origin: center;
+    animation: zoomIn 0.25s ease-out;
+    border-radius: 16px;
+  }
+
+  @keyframes zoomIn {
+    from {
+      opacity: 0;
+      transform: translate(-50%, -45%) scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
   }
 
   .destinations-grid {
     gap: 15px;
   }
   
-  /* Card responsive styles moved to DestinationCard component */
-
   .filter-row {
     grid-template-columns: 1fr;
     gap: 1rem;
   }
-
-  /* This was causing a conflict - removing it */
 }
 
 /* Added destinations-content styles */
@@ -574,15 +589,32 @@
 @media (max-width: 480px) {
   .destinations-navbar {
     padding: 0.75rem;
+    margin-bottom: 20px;
+  }
+
+  .search-filter-container {
+    gap: 0.5rem;
   }
 
   .search-input {
     font-size: 0.9rem;
+    padding: 0.75rem 2.5rem 0.75rem 1rem;
   }
 
   .filter-button {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
+    padding: 0.75rem 1.25rem;
   }
 
-  /* Card title responsive styles moved to DestinationCard component */
+  .filter-dropdown {
+    padding: 1rem;
+  }
+
+  .filter-group h3 {
+    font-size: 0.95rem;
+  }
+
+  .checkbox-label {
+    font-size: 0.85rem;
+  }
 }

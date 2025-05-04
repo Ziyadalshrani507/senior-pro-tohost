@@ -111,19 +111,112 @@
   transition: all 0.3s ease;
 }
 
+@media (max-width: 768px) {
+  .hotels-navbar {
+    padding: 1rem;
+  }
+
+  .search-filter-container {
+    gap: 0.75rem;
+    justify-content: space-between;
+  }
+
+  .search-container {
+    flex: 1 1 100%;
+    max-width: none;
+  }
+
+  .filter-container {
+    flex: 0 0 auto;
+  }
+
+  .filter-dropdown {
+    position: fixed;
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    width: calc(100% - 2rem);
+    top: 50%;
+    max-height: 80vh;
+    transform-origin: center;
+    animation: zoomIn 0.25s ease-out;
+    border-radius: 16px;
+  }
+
+  @keyframes zoomIn {
+    from {
+      opacity: 0;
+      transform: translate(-50%, -45%) scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+  }
+
+  .filter-row {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .hotels-content {
+    padding: 0 1rem;
+  }
+
+  .hotels-grid {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .hotels-navbar {
+    padding: 0.75rem;
+    margin-bottom: 20px;
+  }
+
+  .search-filter-container {
+    gap: 0.5rem;
+  }
+
+  .search-input {
+    font-size: 0.9rem;
+    padding: 0.75rem 2.5rem 0.75rem 1rem;
+  }
+
+  .filter-button {
+    font-size: 0.85rem;
+    padding: 0.75rem 1.25rem;
+  }
+
+  .filter-dropdown {
+    padding: 1rem;
+  }
+
+  .filter-group h3 {
+    font-size: 0.95rem;
+  }
+
+  .checkbox-label {
+    font-size: 0.85rem;
+  }
+}
+
 .search-filter-container {
   max-width: 100%;
   margin: 0 auto;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  gap: 1.5rem;
+  justify-content: center;
+  gap: 1rem;
+  width: 100%;
+  flex-wrap: wrap;
 }
 
 .search-container {
-  flex: 0 1 300px;
+  flex: 1 1 300px;
+  max-width: 500px;
   min-width: 200px;
-  order: 2;
+  order: 1;
   position: relative;
 }
 
@@ -148,7 +241,8 @@
 
 .filter-container {
   position: relative;
-  order: 3;
+  order: 2;
+  flex: 0 0 auto;
 }
 
 .filter-button {
@@ -193,6 +287,7 @@
   animation: fadeIn 0.3s ease-out;
   z-index: 1000;
   border: 1px solid rgba(184, 138, 68, 0.1);
+  transform-origin: top right;
 }
 
 .filter-row {

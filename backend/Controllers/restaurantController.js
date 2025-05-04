@@ -1,5 +1,38 @@
 const { Restaurant, SAUDI_CITIES, CUISINES, CATEGORIES } = require('../Models/Restaurant');
 
+// Search restaurants by name
+exports.searchRestaurants = async (req, res) => {
+  try {
+    const { name } = req.query;
+    
+    if (!name) {
+      return res.status(400).json({ 
+        success: false,
+        message: 'Name parameter is required for search'
+      });
+    }
+    
+    // Use a case-insensitive regex search to find restaurants by name
+    const restaurants = await Restaurant.find({
+      name: { $regex: name, $options: 'i' }
+    }).limit(10);
+    
+    console.log(`Search results for restaurant name "${name}": ${restaurants.length} results found`);
+    
+    return res.status(200).json({
+      success: true,
+      data: restaurants
+    });
+  } catch (error) {
+    console.error('Error searching restaurants:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Error searching restaurants',
+      error: error.message
+    });
+  }
+};
+
 // Get all restaurants
 exports.getRestaurants = async (req, res) => {
     try {

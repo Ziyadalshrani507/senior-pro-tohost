@@ -1,5 +1,39 @@
 const Hotel = require('../Models/Hotel');
 
+// Search hotels by name
+exports.searchHotels = async (req, res) => {
+  try {
+    const { name } = req.query;
+    
+    if (!name) {
+      return res.status(400).json({ 
+        success: false,
+        message: 'Name parameter is required for search'
+      });
+    }
+    
+    // Use a case-insensitive regex search to find hotels by name
+    const hotels = await Hotel.find({
+      name: { $regex: name, $options: 'i' },
+      isDeleted: { $ne: true }
+    }).limit(10);
+    
+    console.log(`Search results for hotel name "${name}": ${hotels.length} results found`);
+    
+    return res.status(200).json({
+      success: true,
+      data: hotels
+    });
+  } catch (error) {
+    console.error('Error searching hotels:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Error searching hotels',
+      error: error.message
+    });
+  }
+};
+
 // Get schema options (enums)
 exports.getSchemaOptions = async (req, res) => {
   try {

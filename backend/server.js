@@ -18,7 +18,6 @@ const likeRoutes = require('./Routes/likeRoutes');
 const developerRoutes = require('./Routes/developerRoutes');
 const User = require('./Models/User');
 const { protect } = require('./middleware/authMiddleware');
-
 const hotelRoutes = require('./Routes/hotelRoutes');
 
 // Ensure upload directories exist

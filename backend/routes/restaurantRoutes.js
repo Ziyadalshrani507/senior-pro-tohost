@@ -8,13 +8,15 @@ const {
     getRestaurantById,
     updateRestaurant,
     deleteRestaurant,
-    getSchemaOptions
+    getSchemaOptions,
+    searchRestaurants
 } = require('../Controllers/restaurantController');
 
 // Public routes
 router.get('/', getRestaurants);
 router.get('/cities', getCities);
 router.get('/schema-options', getSchemaOptions);
+router.get('/search', searchRestaurants);
 router.get('/:id', getRestaurantById);
 
 // Protected admin routes

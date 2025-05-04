@@ -151,6 +151,53 @@
   color: #555;
   line-height: 1.6;
   font-size: 1.05rem;
+  margin-bottom: 1rem;
+}
+
+/* Add styles for the hotel link */
+.itinerary-hotel-section .hotel-card h3 .item-link {
+  margin-left: 0.5rem;
+  color: #009688;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+  opacity: 0.7;
+  display: inline-flex;
+  align-items: center;
+}
+
+.itinerary-hotel-section .hotel-card h3 .item-link:hover {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.hotel-link-container {
+  display: flex;
+  justify-content: flex-start;
+  border-top: 1px solid #f0f0f0;
+  padding-top: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.view-hotel-details {
+  padding: 0.5rem 1rem;
+  background-color: #E0F2F1;
+  color: #00796B;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+}
+
+.view-hotel-details:hover {
+  background-color: #009688;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 3px 8px rgba(0, 150, 136, 0.3);
 }
 
 

@@ -2,7 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useItinerary } from '../../context/ItineraryContext';
 import ItineraryDay from '../../components/ItineraryPlanner/ItineraryDay';
-import { FaCalendarAlt, FaMoneyBillWave, FaUsers, FaPrint, FaSave, FaEdit, FaPlusCircle, FaHotel } from 'react-icons/fa';
+import { FaCalendarAlt, FaMoneyBillWave, FaUsers, FaPrint, FaSave, FaEdit, FaPlusCircle, FaHotel, FaExternalLinkAlt } from 'react-icons/fa';
+import axios from 'axios';
+import { getApiBaseUrl } from '../../utils/apiBaseUrl';
 import './ItineraryDetailsPage.css';
 
 const ItineraryDetailsPage = () => {
@@ -17,6 +19,7 @@ const ItineraryDetailsPage = () => {
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [customName, setCustomName] = useState('');
   const [showCustomNameInput, setShowCustomNameInput] = useState(false);
+  const [hotelLink, setHotelLink] = useState(null);
 
   // Handle saving the itinerary to user account
   const handleSaveItinerary = async () => {
@@ -51,6 +54,11 @@ const ItineraryDetailsPage = () => {
         const data = await fetchItinerary(id);
         if (data) {
           setItinerary(data);
+          
+          // Fetch hotel link if hotel data exists
+          if (data.hotel && data.hotel.place) {
+            findHotelLink(data.hotel.place);
+          }
         } else {
           setError('Itinerary not found');
         }
@@ -63,6 +71,23 @@ const ItineraryDetailsPage = () => {
 
     getItinerary();
   }, [id, fetchItinerary]);
+  
+  // Helper function to find hotel ID by name
+  const findHotelLink = async (hotelName) => {
+    try {
+      const apiBaseUrl = getApiBaseUrl();
+      const response = await axios.get(`${apiBaseUrl}/hotels/search?name=${encodeURIComponent(hotelName)}`);
+      
+      if (response.data.data && response.data.data.length > 0) {
+        setHotelLink({
+          id: response.data.data[0]._id,
+          type: 'hotels'
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching hotel details:', error);
+    }
+  };
 
   if (loading) {
     return (
@@ -120,8 +145,22 @@ const ItineraryDetailsPage = () => {
             <h2>Your Accommodation</h2>
           </div>
           <div className="hotel-card">
-            <h3>{itinerary.hotel.place}</h3>
+            <h3>
+              {itinerary.hotel.place}
+              {hotelLink && (
+                <Link to={`/${hotelLink.type}/${hotelLink.id}`} className="item-link">
+                  <FaExternalLinkAlt className="link-icon" />
+                </Link>
+              )}
+            </h3>
             <p>{itinerary.hotel.description}</p>
+            {hotelLink && (
+              <div className="hotel-link-container">
+                <Link to={`/${hotelLink.type}/${hotelLink.id}`} className="view-hotel-details">
+                  View Hotel Details
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       )}

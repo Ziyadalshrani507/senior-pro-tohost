@@ -7,7 +7,8 @@ const {
   updateHotel, 
   deleteHotel, 
   hardDeleteHotel,
-  getSchemaOptions 
+  getSchemaOptions,
+  searchHotels 
 } = require('../Controllers/hotelController');
 const { protect: authenticateToken, admin } = require('../middleware/authMiddleware');
 
@@ -16,6 +17,7 @@ router.get('/schema-options', getSchemaOptions);
 
 // Public routes
 router.get('/', getHotels);
+router.get('/search', searchHotels);
 router.get('/:id', getHotelById);
 
 // Admin routes - protected with authentication and admin role

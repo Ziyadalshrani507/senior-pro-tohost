@@ -1,5 +1,39 @@
 const Destination = require('../Models/Destination');
 
+// Search destinations by name
+exports.searchDestinations = async (req, res) => {
+  try {
+    const { name } = req.query;
+    
+    if (!name) {
+      return res.status(400).json({ 
+        success: false,
+        message: 'Name parameter is required for search'
+      });
+    }
+    
+    // Use a case-insensitive regex search to find destinations by name
+    const destinations = await Destination.find({
+      name: { $regex: name, $options: 'i' },
+      isActivity: { $ne: true } // Exclude activities
+    }).limit(10);
+    
+    console.log(`Search results for destination name "${name}": ${destinations.length} results found`);
+    
+    return res.status(200).json({
+      success: true,
+      data: destinations
+    });
+  } catch (error) {
+    console.error('Error searching destinations:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Error searching destinations',
+      error: error.message
+    });
+  }
+};
+
 // Get schema options (enums)
 exports.getSchemaOptions = async (req, res) => {
   try {

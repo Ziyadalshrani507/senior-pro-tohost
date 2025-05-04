@@ -12,7 +12,8 @@ const {
   updateActivity,
   deleteActivity,
   getSchemaOptions,
-  getNearbyDestinations
+  getNearbyDestinations,
+  searchDestinations
 } = require('../Controllers/destinationController');
 const { protect, admin } = require('../middleware/authMiddleware');
 const { validateActivity } = require('../middleware/validationMiddleware');
@@ -22,6 +23,7 @@ router.get('/schema-options', getSchemaOptions);
 router.get('/activities', getActivities);
 router.get('/activities/:id', getActivity);
 router.get('/nearby', getNearbyDestinations);
+router.get('/search', searchDestinations);
 router.get('/', getDestinations);
 router.get('/:id', getDestination);
 
