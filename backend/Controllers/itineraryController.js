@@ -1,12 +1,12 @@
 const Itinerary = require("../Models/Itinerary");
 const Destination = require("../Models/Destination");
 const Hotel = require("../Models/Hotel");
-const { Restaurant } = require("../Models/Restaurant");
+const { Restaurant, CUISINES, CATEGORIES } = require("../Models/Restaurant");
 const openai = require("../config/openai");
 
 // Helper function to construct prompt for OpenAI
 const constructPrompt = (userData, places) => {
-  const { destination, duration, interests, budget, travelersType } = userData;
+  const { destination, duration, interests, budget, travelersType, foodPreferences } = userData;
   const { destinations, hotels, restaurants } = places;
   
   // Format destinations, hotels, and restaurants for the prompt
@@ -18,6 +18,7 @@ const constructPrompt = (userData, places) => {
 Interests: ${interests.join(', ')}.
 Budget: ${budget}.
 Travelers: ${travelersType}.
+Food Preferences: ${foodPreferences && foodPreferences.cuisines ? `Cuisines: ${foodPreferences.cuisines.join(', ')}, Categories: ${foodPreferences.categories.join(', ')}` : 'No specific preferences'}.
 
 Create a day-by-day itinerary with the following structure for each day:
 - Morning: Activity and brief description
@@ -58,7 +59,7 @@ IMPORTANT: Use the exact names of places listed above. Recommend only ONE hotel 
 // Generate a new itinerary - temporarily stored until user decides to save it
 const generateItinerary = async (req, res) => {
   try {
-    const { city, duration, interests, budget, travelersType } = req.body;
+    const { city, duration, interests, budget, travelersType, foodPreferences } = req.body;
     
     if (!city || !duration || !interests || !budget || !travelersType) {
       return res.status(400).json({ 
@@ -146,23 +147,23 @@ const generateItinerary = async (req, res) => {
     
     // Add cuisine preferences if specified
     if (preferredCuisines.length > 0) {
-      // Map the frontend cuisine IDs to actual cuisine names from the database
-      const cuisineMapping = {
-        'saudi_arabian': 'Saudi Arabian',
-        'middle_eastern': 'Middle Eastern',
-        'lebanese': 'Lebanese',
-        'egyptian': 'Egyptian',
-        'turkish': 'Turkish',
-        'moroccan': 'Moroccan',
-        'italian': 'Italian',
-        'indian': 'Indian',
-        'chinese': 'Chinese',
-        'japanese': 'Japanese',
-        'american': 'American',
-        'french': 'French'
-      };
+      // Use cuisines from the Restaurant model
+      console.log('Available cuisines from model:', CUISINES);
       
-      // Convert IDs to actual cuisine names
+      // Map cuisine codes to actual cuisine names
+      const cuisineMapping = {};
+      
+      // Create a mapping of lowercase cuisine names to their properly cased versions
+      CUISINES.forEach(cuisine => {
+        cuisineMapping[cuisine.toLowerCase().replace(/\s+/g, '_')] = cuisine;
+      });
+      
+      // Also add some common alias mappings
+      cuisineMapping['saudi_arabian'] = 'Saudi Arabian';
+      cuisineMapping['middle_eastern'] = 'Middle Eastern';
+      
+      console.log('Using cuisine mapping:', cuisineMapping);
+      
       const mappedCuisines = preferredCuisines
         .map(id => cuisineMapping[id])
         .filter(cuisine => cuisine); // Filter out any undefined values
@@ -174,21 +175,20 @@ const generateItinerary = async (req, res) => {
     
     // Add category preferences if specified
     if (preferredCategories.length > 0) {
-      // Map the frontend category IDs to actual category names from the database
-      const categoryMapping = {
-        'fine_dining': 'Fine Dining',
-        'casual_dining': 'Casual Dining',
-        'fast_food': 'Fast Food',
-        'cafe': 'Cafe',
-        'buffet': 'Buffet',
-        'family_style': 'Family Style',
-        'halal': 'Halal',
-        'vegetarian': 'Vegetarian',
-        'seafood': 'Seafood',
-        'street_food': 'Street Food',
-        'rooftop': 'Rooftop',
-        'organic': 'Organic'
-      };
+      // Use categories from the Restaurant model
+      console.log('Available categories from model:', CATEGORIES);
+      
+      // Map category codes to actual category names
+      const categoryMapping = {};
+      
+      // Create a mapping of lowercase category names to their properly cased versions
+      CATEGORIES.forEach(category => {
+        categoryMapping[category.toLowerCase().replace(/\s+/g, '_')] = category;
+      });
+      
+      // Also add common alias mappings for compatibility
+      categoryMapping['family_friendly'] = 'Family Style';
+      categoryMapping['outdoor_seating'] = 'Outdoor';
       
       // Convert IDs to actual category names
       const mappedCategories = preferredCategories
@@ -307,8 +307,9 @@ const generateItinerary = async (req, res) => {
     }
 
     // Function to generate a simple itinerary when OpenAI is unavailable
-    const generateFallbackItinerary = () => {
+    const generateFallbackItinerary = (city, duration, interests, budget, travelersType, foodPreferences, places) => {
       console.log('Using fallback itinerary generator...');
+      const { destinations: activities, hotels, restaurants } = places;
       const days = [];
 
       // Select a single hotel for the entire stay
@@ -328,8 +329,46 @@ const generateItinerary = async (req, res) => {
           ? availableActivities.splice(Math.floor(Math.random() * availableActivities.length), 1)[0] 
           : { name: 'Cultural visit', description: 'Experience the local culture' };
 
+        // Filter restaurants based on food preferences if available
+        let availableRestaurants = [...restaurants];
+        
+        if (foodPreferences && foodPreferences.cuisines && foodPreferences.cuisines.length > 0) {
+          // Use cuisines from the Restaurant model
+          console.log('Available cuisines from model:', CUISINES);
+          
+          // Map cuisine codes to actual cuisine names
+          const cuisineMapping = {};
+          
+          // Create a mapping of lowercase cuisine names to their properly cased versions
+          CUISINES.forEach(cuisine => {
+            cuisineMapping[cuisine.toLowerCase().replace(/\s+/g, '_')] = cuisine;
+          });
+          
+          // Also add some common alias mappings
+          cuisineMapping['saudi_arabian'] = 'Saudi Arabian';
+          cuisineMapping['middle_eastern'] = 'Lebanese';
+          
+          console.log('Using cuisine mapping:', cuisineMapping);
+          
+          const preferredCuisineNames = foodPreferences.cuisines
+            .map(code => cuisineMapping[code])
+            .filter(name => name); // Remove undefined values
+            
+          console.log('Preferred cuisine names:', preferredCuisineNames);
+            
+          if (preferredCuisineNames.length > 0) {
+            availableRestaurants = availableRestaurants.filter(r => 
+              preferredCuisineNames.includes(r.cuisine)
+            );
+          }
+        }
+        
+        // If no restaurants match preferences, use all available
+        if (availableRestaurants.length === 0) {
+          availableRestaurants = [...restaurants];
+        }
+
         // Pick random restaurants or use placeholders
-        const availableRestaurants = restaurants.length > 0 ? [...restaurants] : [];
         const lunchPlace = availableRestaurants.length > 0 
           ? availableRestaurants.splice(Math.floor(Math.random() * availableRestaurants.length), 1)[0] 
           : { name: 'Local Restaurant', description: 'Try the local cuisine' };
@@ -358,7 +397,6 @@ const generateItinerary = async (req, res) => {
             restaurant: dinnerPlace.name, 
             description: dinnerPlace.description || 'Enjoy a delicious meal'
           },
-
           notes: `Day ${i} in ${city}: Focus on ${interests.length > 0 ? interests[0] : 'local experiences'}`
         });
       }
@@ -372,29 +410,40 @@ const generateItinerary = async (req, res) => {
       };
     };
 
-    // Construct the prompt
-    const prompt = constructPrompt(
-      { destination: city, duration, interests, budget, travelersType },
-      { destinations: activities, hotels, restaurants }
-    );
-
-    let itineraryData;
-    let usingFallback = false;
-
+    // Try to use OpenAI to generate the itinerary
     try {
-      // Try to get a response from OpenAI
+      console.log('Attempting to generate itinerary using OpenAI...');
+      
+      // Construct the prompt with all user preferences including food preferences
+      const prompt = constructPrompt(
+        { 
+          destination: city, 
+          duration: parseInt(duration), 
+          interests, 
+          budget, 
+          travelersType,
+          foodPreferences: foodPreferences || { cuisines: [], categories: [] }
+        },
+        { destinations: activities, hotels, restaurants }
+      );
+      
+      console.log('Using food preferences in OpenAI prompt:', foodPreferences || 'None provided');
+      
+      let itineraryData;
+      let usingFallback = false;
+      
       try {
-        console.log('Attempting to generate itinerary using OpenAI...');
+        // Try to get a response from OpenAI
         const completion = await openai.createChatCompletion({
-          model: "gpt-3.5-turbo",
+          model: "anthropic/claude-3-opus:beta", // Using Claude 3 Opus through OpenRouter
           messages: [
-            { role: "system", content: "You are a travel expert AI for Saudi Arabia tourism." },
+            { role: "system", content: "You are a travel expert specialized in Saudi Arabian tourism, with deep knowledge of local culture, attractions, and dining options." },
             { role: "user", content: prompt }
           ],
+          max_tokens: 2000,
           temperature: 0.7,
-          max_tokens: 1500
         });
-
+        
         // Parse the response
         const content = completion.data.choices[0].message.content;
         
@@ -411,20 +460,29 @@ const generateItinerary = async (req, res) => {
         console.log("Using fallback itinerary generator due to OpenAI error");
         
         // Use our fallback generator instead
-        itineraryData = generateFallbackItinerary();
-        console.log('Using fallback itinerary generator');
+        itineraryData = generateFallbackItinerary(
+          city, 
+          parseInt(duration), 
+          interests, 
+          budget, 
+          travelersType,
+          foodPreferences,
+          {
+            destinations: activities,
+            hotels,
+            restaurants
+          }
+        );
+        usingFallback = true;
       }
       
-      // Format the OpenAI response as needed
       // Extract data from the generated itinerary
       const { hotel, days } = itineraryData;
-
-      console.log('Hotel information:', hotel || 'No hotel information provided');
       
       // Create the new itinerary document
       const itineraryDoc = {
         name: `${duration}-Day Trip to ${city}`,
-        city: city, // Set the required city field
+        city: city,
         destination: city,
         duration: duration,
         hotel: hotel,
@@ -432,8 +490,10 @@ const generateItinerary = async (req, res) => {
         interests: interests,
         budget: budget,
         travelersType: travelersType,
+        foodPreferences: foodPreferences,
         isAIGenerated: true,
         isTemporary: !req.user, // Mark as temporary if no user
+        usingFallbackGenerator: usingFallback,
         generatedAt: new Date()
       };
       
