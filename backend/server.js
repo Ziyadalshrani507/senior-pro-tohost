@@ -15,11 +15,30 @@ const restaurantRoutes = require('./Routes/restaurantRoutes');
 const ratingRoutes = require('./Routes/ratingRoutes');
 const dashboardRoutes = require('./Routes/dashboardRoutes');
 const likeRoutes = require('./Routes/likeRoutes');
+const developerRoutes = require('./Routes/developerRoutes');
 const User = require('./Models/User');
 const { protect } = require('./middleware/authMiddleware');
 
 const hotelRoutes = require('./Routes/hotelRoutes');
 
+// Ensure upload directories exist
+const ensureUploadsDirectories = () => {
+  const dirs = [
+    path.join(__dirname, 'uploads'),
+    path.join(__dirname, 'uploads', 'profiles'),
+    path.join(__dirname, 'uploads', 'developers')
+  ];
+  
+  dirs.forEach(dir => {
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+      console.log(`Created directory: ${dir}`);
+    }
+  });
+};
+
+// Create the directories when the server starts
+ensureUploadsDirectories();
 
 const app = express();
 const PORT = process.env.PORT || 5001;
@@ -48,7 +67,9 @@ app.use(express.json({
 app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
   if (req.method === 'POST' || req.method === 'PUT') {
+
     console.log('Request body:', JSON.stringify(req.body, null, 2));
+    
   }
   next();
 });
@@ -101,6 +122,7 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/likes', likeRoutes);
 app.use('/api/hotels', hotelRoutes);
 app.use('/api/users', require('./Routes/userRoutes'));
+app.use('/api/developers', developerRoutes);
 
 // Itinerary routes
 const itineraryRoutes = require('./Routes/itineraryRoutes');
@@ -108,6 +130,9 @@ app.use('/api/itinerary', itineraryRoutes);
 
 // Serve static files from the React app
 app.use(express.static(path.join(__dirname, '../frontend/dist')));
+
+// Serve uploaded files
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // API 404 handler
 app.use('/api/*', (req, res) => {

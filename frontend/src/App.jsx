@@ -28,6 +28,8 @@ import Home from './pages/Home/Home';
 import ItineraryPlannerPage from './pages/ItineraryPlanner/ItineraryPlannerPage';
 import ItineraryDetailsPage from './pages/ItineraryPlanner/ItineraryDetailsPage';
 import ItemDetails from './pages/ItemDetails/ItemDetails';
+import DevelopersList from './pages/Developer/DevelopersList';
+import DeveloperPage from './pages/Developer/DeveloperPage';
 
 // Error Boundary Component
 class ErrorBoundary extends React.Component {
@@ -120,6 +122,13 @@ function App() {
               <Route path="/verify-reset-token" element={<VerifyResetToken />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/restaurants" element={<Restaurants />} />
+              <Route path="/developers" element={<DevelopersList />} />
+              <Route path="/developers/:id" element={<DeveloperPage />} />
+              <Route path="/developer/profile" element={
+                <AdminRoute>
+                  <DeveloperPage />
+                </AdminRoute>
+              } />
               <Route path="/profile" element={
                 <ProtectedRoute>
                   <Profile />

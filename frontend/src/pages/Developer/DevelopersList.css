@@ -1,0 +1,149 @@
+.developers-list-page {
+  padding: 40px 20px;
+  background-color: #f8f9fa;
+  min-height: calc(100vh - 200px);
+}
+
+.developers-list-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.developers-list-title {
+  text-align: center;
+  margin-bottom: 40px;
+  color: #333;
+  font-size: 2.5rem;
+}
+
+.developers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 30px;
+  margin-bottom: 50px;
+}
+
+.developer-card {
+  background-color: #fff;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s, box-shadow 0.3s;
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+}
+
+.developer-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+}
+
+.developer-card-photo {
+  height: 230px;
+  overflow: hidden;
+}
+
+.developer-card-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s;
+}
+
+.developer-card:hover .developer-card-photo img {
+  transform: scale(1.05);
+}
+
+.developer-card-info {
+  padding: 20px;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.developer-card-name {
+  font-size: 1.5rem;
+  margin: 0 0 10px 0;
+  color: #333;
+}
+
+.developer-card-major {
+  font-size: 1.1rem;
+  color: #6c757d;
+  margin: 0;
+}
+
+.developers-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 30px;
+}
+
+.create-profile-btn {
+  display: inline-block;
+  background-color: #28a745;
+  color: white;
+  padding: 12px 24px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: bold;
+  text-align: center;
+  transition: background-color 0.2s;
+}
+
+.create-profile-btn:hover {
+  background-color: #218838;
+}
+
+.developers-loading,
+.developers-error,
+.no-developers {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: calc(100vh - 250px);
+  text-align: center;
+  padding: 20px;
+}
+
+.developers-loading {
+  font-size: 1.5rem;
+  color: #6c757d;
+}
+
+.developers-error h2 {
+  color: #dc3545;
+  margin-bottom: 15px;
+}
+
+.no-developers h2 {
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.no-developers p {
+  margin-bottom: 25px;
+  font-size: 1.1rem;
+  color: #6c757d;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .developers-list-title {
+    font-size: 2rem;
+  }
+  
+  .developers-grid {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .developers-grid {
+    grid-template-columns: 1fr;
+  }
+}
