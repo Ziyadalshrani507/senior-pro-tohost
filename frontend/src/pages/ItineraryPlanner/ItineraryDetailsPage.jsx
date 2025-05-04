@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useItinerary } from '../../context/ItineraryContext';
 import ItineraryDay from '../../components/ItineraryPlanner/ItineraryDay';
+import { FaCalendarAlt, FaMoneyBillWave, FaUsers, FaPrint, FaSave, FaEdit, FaPlusCircle, FaHotel } from 'react-icons/fa';
 import './ItineraryDetailsPage.css';
 
 const ItineraryDetailsPage = () => {
@@ -68,6 +69,7 @@ const ItineraryDetailsPage = () => {
       <div className="itinerary-loading">
         <div className="spinner"></div>
         <p>Loading your personalized itinerary...</p>
+        <p className="loading-subtitle">Crafting your perfect adventure</p>
       </div>
     );
   }
@@ -75,10 +77,11 @@ const ItineraryDetailsPage = () => {
   if (error || !itinerary) {
     return (
       <div className="itinerary-error">
+        <div className="error-icon">😕</div>
         <h2>Oops! Something went wrong</h2>
         <p>{error || 'Unable to load itinerary'}</p>
         <Link to="/itinerary-planner" className="try-again-btn">
-          Create a New Itinerary
+          <FaPlusCircle /> Create a New Itinerary
         </Link>
       </div>
     );
@@ -87,19 +90,35 @@ const ItineraryDetailsPage = () => {
   return (
     <div className="itinerary-details-page">
       <div className="itinerary-header">
-        <h1>{itinerary.name}</h1>
+        <div className="itinerary-title-wrapper">
+          <h1>{itinerary.name}</h1>
+          <div className="destination-badge">
+            {itinerary.destination || 'Custom Trip'}
+          </div>
+        </div>
+        
         <div className="itinerary-meta">
-          <span>{itinerary.duration} days</span>
-          <span>•</span>
-          <span>{itinerary.budget} budget</span>
-          <span>•</span>
-          <span>{itinerary.travelersType}</span>
+          <div className="meta-item">
+            <FaCalendarAlt />
+            <span>{itinerary.duration} days</span>
+          </div>
+          <div className="meta-item">
+            <FaMoneyBillWave />
+            <span>{itinerary.budget} budget</span>
+          </div>
+          <div className="meta-item">
+            <FaUsers />
+            <span>{itinerary.travelersType}</span>
+          </div>
         </div>
       </div>
       
       {itinerary.hotel && (
         <div className="itinerary-hotel-section">
-          <h2>Your Accommodation</h2>
+          <div className="section-header">
+            <FaHotel className="section-icon" />
+            <h2>Your Accommodation</h2>
+          </div>
           <div className="hotel-card">
             <h3>{itinerary.hotel.place}</h3>
             <p>{itinerary.hotel.description}</p>
@@ -107,16 +126,19 @@ const ItineraryDetailsPage = () => {
         </div>
       )}
       
-      <div className="day-selector">
-        {Array.from({ length: itinerary.duration }, (_, i) => (
-          <button
-            key={i + 1}
-            className={`day-button ${activeDay === i + 1 ? 'active' : ''}`}
-            onClick={() => setActiveDay(i + 1)}
-          >
-            Day {i + 1}
-          </button>
-        ))}
+      <div className="day-navigation">
+        <h2 className="section-title">Daily Schedule</h2>
+        <div className="day-selector">
+          {Array.from({ length: itinerary.duration }, (_, i) => (
+            <button
+              key={i + 1}
+              className={`day-button ${activeDay === i + 1 ? 'active' : ''}`}
+              onClick={() => setActiveDay(i + 1)}
+            >
+              {i + 1}
+            </button>
+          ))}
+        </div>
       </div>
       
       <div className="itinerary-content">
@@ -130,61 +152,70 @@ const ItineraryDetailsPage = () => {
         ))}
       </div>
       
-      <div className="itinerary-actions">
-        <Link to="/itinerary-planner" className="new-itinerary-btn">
-          Create New Itinerary
-        </Link>
-        
-        {itinerary.isTemporary && (
-          <div className="save-itinerary-container">
-            {showCustomNameInput ? (
-              <div className="custom-name-input">
-                <input
-                  type="text"
-                  value={customName}
-                  onChange={(e) => setCustomName(e.target.value)}
-                  placeholder="Enter custom name (optional)"
-                  maxLength={50}
-                />
-                <button 
-                  className="save-with-name-btn" 
-                  onClick={handleSaveItinerary}
-                  disabled={isSaving}
-                >
-                  {isSaving ? 'Saving...' : 'Save'}
-                </button>
-                <button 
-                  className="cancel-btn" 
-                  onClick={() => setShowCustomNameInput(false)}
-                  disabled={isSaving}
-                >
-                  Cancel
-                </button>
-              </div>
-            ) : (
-              <div className="save-options">
-                <button 
-                  className="save-itinerary-btn" 
-                  onClick={() => handleSaveItinerary()}
-                  disabled={isSaving || saveSuccess}
-                >
-                  {isSaving ? 'Saving...' : saveSuccess ? 'Saved! ✓' : 'Save to My Account'}
-                </button>
-                <button 
-                  className="custom-name-btn" 
-                  onClick={() => setShowCustomNameInput(true)}
-                  disabled={isSaving || saveSuccess}
-                >
-                  Save with Custom Name
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-        
-        <button className="print-itinerary-btn" onClick={() => window.print()}>
-          Print Itinerary
-        </button>
+      <div className="itinerary-actions-wrapper">
+        <div className="itinerary-actions">
+          <Link to="/itinerary-planner" className="new-itinerary-btn">
+            <FaPlusCircle className="btn-icon" />
+            <span>Create New Itinerary</span>
+          </Link>
+          
+          {itinerary.isTemporary && (
+            <div className="save-itinerary-container">
+              {showCustomNameInput ? (
+                <div className="custom-name-input">
+                  <input
+                    type="text"
+                    value={customName}
+                    onChange={(e) => setCustomName(e.target.value)}
+                    placeholder="Enter custom name (optional)"
+                    maxLength={50}
+                  />
+                  <div className="input-actions">
+                    <button 
+                      className="save-with-name-btn" 
+                      onClick={handleSaveItinerary}
+                      disabled={isSaving}
+                    >
+                      <FaSave className="btn-icon" />
+                      {isSaving ? 'Saving...' : 'Save'}
+                    </button>
+                    <button 
+                      className="cancel-btn" 
+                      onClick={() => setShowCustomNameInput(false)}
+                      disabled={isSaving}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="save-options">
+                  <button 
+                    className="save-itinerary-btn" 
+                    onClick={() => handleSaveItinerary()}
+                    disabled={isSaving || saveSuccess}
+                  >
+                    <FaSave className="btn-icon" />
+                    {isSaving ? 'Saving...' : saveSuccess ? 'Saved! ✓' : 'Save to My Account'}
+                  </button>
+                  <button 
+                    className="custom-name-btn" 
+                    onClick={() => setShowCustomNameInput(true)}
+                    disabled={isSaving || saveSuccess}
+                  >
+                    <FaEdit className="btn-icon" />
+                    Save with Custom Name
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+          
+          <button className="print-itinerary-btn" onClick={() => window.print()}>
+            <FaPrint className="btn-icon" />
+            <span>Print Itinerary</span>
+          </button>
+        </div>
       </div>
     </div>
   );

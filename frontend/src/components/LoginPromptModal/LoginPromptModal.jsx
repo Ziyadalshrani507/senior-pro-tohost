@@ -14,7 +14,7 @@ const LoginPromptModal = ({
 
   const handleLogin = () => {
     onClose();
-    navigate('/login', { state: { returnUrl: window.location.pathname } });
+    navigate('/signin', { state: { returnUrl: window.location.pathname } });
   };
 
   const handleSignup = () => {
@@ -31,7 +31,7 @@ const LoginPromptModal = ({
           <p>{message}</p>
           <div className="modal-buttons">
             <button className="primary-button" onClick={handleLogin}>
-              Log In
+              Sign In
             </button>
             <button className="secondary-button" onClick={handleSignup}>
               Sign Up

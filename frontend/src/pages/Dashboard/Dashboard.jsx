@@ -22,8 +22,7 @@ const Dashboard = () => {
     stats: {
       destinations: { total: 0, avgRating: 0, activeItems: 0 },
       restaurants: { total: 0, avgRating: 0, activeItems: 0 },
-      hotels: { total: 0, avgRating: 0, activeItems: 0 },
-      tours: { total: 0, avgRating: 0, activeItems: 0 }
+      hotels: { total: 0, avgRating: 0, activeItems: 0 }
     },
     filters: {
       search: '',
@@ -405,8 +404,7 @@ const Dashboard = () => {
   const tabButtons = [
     { key: 'destinations', label: 'Destinations', icon: <FaMapMarkerAlt /> },
     { key: 'restaurants', label: 'Restaurants', icon: <FaUtensils /> },
-    { key: 'hotels', label: 'Hotels', icon: <FaHotel /> },
-    { key: 'tours', label: 'Tours', icon: <FaRoute /> }
+    { key: 'hotels', label: 'Hotels', icon: <FaHotel /> }
   ];
 
   return (

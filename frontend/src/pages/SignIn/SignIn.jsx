@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import './SignIn.css';
 
@@ -20,6 +20,7 @@ const SignIn = () => {
   const [success, setSuccess] = useState('');
   const [isFormValid, setIsFormValid] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuth();
 
   // Email regex pattern for validation
@@ -124,8 +125,11 @@ const SignIn = () => {
       setSuccess('Sign in successful! Redirecting...');
       login(data.user, data.token);
       
+      // Check if we have a returnUrl in the location state
+      const returnUrl = location.state?.returnUrl || '/';
+      
       setTimeout(() => {
-        navigate('/');
+        navigate(returnUrl);
       }, 2000);
     } catch (err) {
       setFormError(err.message);

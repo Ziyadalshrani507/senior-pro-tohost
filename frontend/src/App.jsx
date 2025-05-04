@@ -23,13 +23,14 @@ import ChatbasePageTracker from './components/ChatbaseTracker/ChatbasePageTracke
 import SearchAll from './pages/SearchAll/SearchAll';
 import Hotels from './pages/Hotels/Hotels';
 import About from './pages/About/About';
-import Tours from './pages/Tours/Tours';
+// Tours component removed
 import Home from './pages/Home/Home';
 import ItineraryPlannerPage from './pages/ItineraryPlanner/ItineraryPlannerPage';
 import ItineraryDetailsPage from './pages/ItineraryPlanner/ItineraryDetailsPage';
 import ItemDetails from './pages/ItemDetails/ItemDetails';
 import DevelopersList from './pages/Developer/DevelopersList';
 import DeveloperPage from './pages/Developer/DeveloperPage';
+import ScrollToTop from './components/ScrollToTop/ScrollToTop';
 
 // Error Boundary Component
 class ErrorBoundary extends React.Component {
@@ -97,13 +98,14 @@ function App() {
       <AuthProvider>
         <ItineraryProvider>
           <Router>
+            <ScrollToTop />
             <div className="app">
               <Header />
               <ChatbasePageTracker />
               <Routes>
               <Route path="/" element={<Home />} />
+              {/* Tours route removed */}
               <Route path="/about" element={<About />} />
-              <Route path="/tours" element={<Tours />} />
               <Route path="/hotels" element={<Hotels />} />
               <Route path="/:type/:id" element={<ItemDetails />} />
               <Route path="/destinations" element={<Destinations />} />
