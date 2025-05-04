@@ -6,6 +6,7 @@ import { useAuth } from '../../context/AuthContext';
 import { getApiBaseUrl } from '../../utils/apiBaseUrl';
 import FavoritesSection from '../../components/FavoritesSection/FavoritesSection';
 import ReviewsSection from '../../components/ReviewsSection/ReviewsSection';
+import ItinerariesSection from '../../components/ItinerariesSection/ItinerariesSection';
 import './Profile.css';
 
 const Profile = () => {
@@ -169,7 +170,7 @@ const Profile = () => {
     <div className="profile-container">
       <div className="sidebar">
         <ul className="nav-tabs">
-          {['My Profile', 'Favorites', 'Reviews'].map((tab) => (
+          {['My Profile', 'Favorites', 'Reviews', 'Itineraries'].map((tab) => (
             <li
               key={tab}
               className={`nav-item ${selectedTab === tab ? 'active' : ''}`}
@@ -296,7 +297,12 @@ const Profile = () => {
           )
         )}
         {selectedTab === 'Favorites' && <FavoritesSection />}
-        {selectedTab === 'Reviews' && <ReviewsSection userId={currentUser._id} />}
+        {selectedTab === 'Reviews' && (
+          <ReviewsSection userId={currentUser._id} />
+        )}
+        {selectedTab === 'Itineraries' && (
+          <ItinerariesSection userId={currentUser._id} />
+        )}
       </div>
     </div>
   );
