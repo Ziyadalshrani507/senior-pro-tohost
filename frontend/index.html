@@ -4,54 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>tourist</title>
-    
-    <!-- Chatbase Widget Script - Direct in head -->
-    <script type="text/javascript">
-      window.chatbaseConfig = {
-        chatbotId: "XYO6VZr3RH1CTgejmNVYM",
-        domain: "www.chatbase.co",
-        forceShow: true,
-        autoOpen: false
-      };
-    </script>
-    <script src="https://www.chatbase.co/embed.min.js" id="XYO6VZr3RH1CTgejmNVYM" defer></script>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
-    
-    <!-- Alternative Chatbase initialization if needed -->
-    <script>
-      // Check if Chatbase initialized correctly
-      window.addEventListener('load', function() {
-        setTimeout(function() {
-          if (!document.querySelector('.chatbase-bubble')) {
-            console.log("Chatbase widget not detected, attempting fallback initialization");
-            
-            // Fallback initialization
-            (function(){
-              if(!window.chatbase||window.chatbase("getState")!=="initialized"){
-                window.chatbase=(...arguments)=>{
-                  if(!window.chatbase.q){window.chatbase.q=[]}
-                  window.chatbase.q.push(arguments)
-                };
-                window.chatbase=new Proxy(window.chatbase,{
-                  get(target,prop){
-                    if(prop==="q"){return target.q}
-                    return(...args)=>target(prop,...args)
-                  }
-                });
-                
-                const script=document.createElement("script");
-                script.src="https://www.chatbase.co/embed.min.js";
-                script.id="XYO6VZr3RH1CTgejmNVYM";
-                script.domain="www.chatbase.co";
-                document.body.appendChild(script);
-              }
-            })();
-          }
-        }, 3000);
-      });
-    </script>
   </body>
 </html>

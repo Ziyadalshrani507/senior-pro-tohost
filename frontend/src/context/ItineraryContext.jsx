@@ -197,6 +197,47 @@ export const ItineraryProvider = ({ children }) => {
     }
   };
 
+  // Save a temporary itinerary to user account
+  const saveItinerary = async (itineraryId, customName = null) => {
+    // Get authentication token
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setError('Please log in to save this itinerary');
+      return null;
+    }
+    
+    try {
+      const apiBaseUrl = getApiBaseUrl();
+      // Prepare data for saving
+      const saveData = {
+        itineraryId: itineraryId,
+      };
+      
+      // Add custom name if provided
+      if (customName) {
+        saveData.name = customName;
+      }
+      
+      const response = await axios.post(`${apiBaseUrl}/itinerary/save`, saveData, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      // Update our local state if saving was successful
+      if (response.data.success) {
+        setUserItineraries(prev => [response.data.data, ...prev]);
+      }
+      
+      return response.data.data;
+    } catch (error) {
+      console.error('Error saving itinerary:', error);
+      setError(error.response?.data?.message || 'Failed to save itinerary');
+      return null;
+    }
+  };
+
   return (
     <ItineraryContext.Provider
       value={{
@@ -214,7 +255,8 @@ export const ItineraryProvider = ({ children }) => {
         fetchUserItineraries,
         fetchItinerary,
         updateItinerary,
-        deleteItinerary
+        deleteItinerary,
+        saveItinerary
       }}
     >
       {children}

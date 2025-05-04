@@ -146,4 +146,82 @@ Project is: _in development_
 - [ ] Integrate payment gateway
 - [ ] Add user reviews and ratings
 - [ ] Implement advanced search features
-- [ ] Add itinerary generator 
+- [ ] Add itinerary generator
+
+## 🧪 Testing
+
+The project includes comprehensive test suites for both backend and frontend components.
+
+### Backend Tests
+
+#### Running Model Unit Tests
+
+```bash
+cd backend
+npm test -- tests/unit/models
+```
+
+#### Running Service/Middleware Unit Tests
+
+```bash
+cd backend
+npm test -- tests/unit/services
+```
+
+#### Running Controller Tests
+
+```bash
+cd backend
+npm test -- tests/controllers/like-functionality.test.js
+```
+
+#### Running E2E API Tests
+
+```bash
+cd backend
+npm test -- tests/e2e
+```
+
+#### Running All Backend Tests
+
+```bash
+cd backend
+npm test
+```
+
+#### Generate Backend Test Coverage Report
+
+```bash
+cd backend
+npm run test:coverage
+```
+
+### Frontend Tests
+
+#### Running Component Tests
+
+```bash
+cd frontend
+npm test
+```
+
+#### Testing Specific Components
+
+```bash
+cd frontend
+npm test -- src/__tests__/components/LikeButton.test.jsx
+```
+
+#### Generate Frontend Test Coverage Report
+
+```bash
+cd frontend
+npm run test:coverage
+```
+
+### Important Notes
+
+- **💾 Database Safety**: All backend tests use an in-memory MongoDB database to protect your real data
+- **🔄 Test Isolation**: Each test runs in isolation with its own test data
+- **🧩 Mocking**: Frontend tests use mocks for API calls to focus on UI testing
+- **📊 Coverage**: Test coverage reports help identify untested code areas

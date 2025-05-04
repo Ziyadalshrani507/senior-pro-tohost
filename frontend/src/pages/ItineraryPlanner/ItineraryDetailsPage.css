@@ -97,39 +97,135 @@
 
 .itinerary-actions {
   display: flex;
-  justify-content: center;
-  gap: 1rem;
-  margin-top: 3rem;
+  flex-direction: column;
+  gap: 20px;
+  margin-top: 40px;
+  padding: 20px 0;
+  border-top: 1px solid #eee;
 }
 
-.new-itinerary-btn, .save-itinerary-btn {
-  padding: 0.8rem 1.5rem;
-  border-radius: 6px;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background-color 0.2s;
+@media (min-width: 768px) {
+  .itinerary-actions {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+}
+
+.new-itinerary-btn, .save-itinerary-btn, .print-itinerary-btn, .custom-name-btn, .save-with-name-btn, .cancel-btn {
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
   text-decoration: none;
-  display: inline-block;
+  text-align: center;
+  transition: all 0.3s ease;
+  cursor: pointer;
 }
 
 .new-itinerary-btn {
-  background-color: transparent;
-  border: 1px solid #4CAF50;
-  color: #4CAF50;
+  background-color: #f8f9fa;
+  color: #333;
+  border: 1px solid #ddd;
 }
 
 .save-itinerary-btn {
-  background-color: #4CAF50;
-  border: none;
+  background-color: #28a745;
   color: white;
+  border: none;
+}
+
+.print-itinerary-btn {
+  background-color: #6c757d;
+  color: white;
+  border: none;
+}
+
+.custom-name-btn {
+  background-color: #007bff;
+  color: white;
+  border: none;
+}
+
+.save-with-name-btn {
+  background-color: #28a745;
+  color: white;
+  border: none;
+}
+
+.cancel-btn {
+  background-color: #dc3545;
+  color: white;
+  border: none;
 }
 
 .new-itinerary-btn:hover {
-  background-color: rgba(76, 175, 80, 0.1);
+  background-color: #e9ecef;
 }
 
 .save-itinerary-btn:hover {
-  background-color: #3e8e41;
+  background-color: #218838;
+}
+
+.print-itinerary-btn:hover {
+  background-color: #5a6268;
+}
+
+.custom-name-btn:hover {
+  background-color: #0069d9;
+}
+
+.cancel-btn:hover {
+  background-color: #c82333;
+}
+
+.save-itinerary-btn:disabled,
+.custom-name-btn:disabled,
+.save-with-name-btn:disabled,
+.cancel-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.save-itinerary-container {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  width: 100%;
+}
+
+.save-options {
+  display: flex;
+  gap: 10px;
+  flex-direction: column;
+}
+
+.custom-name-input {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.custom-name-input input {
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #ced4da;
+  font-size: 16px;
+}
+
+@media (min-width: 768px) {
+  .save-itinerary-container {
+    width: auto;
+  }
+  
+  .save-options {
+    flex-direction: row;
+  }
+  
+  .custom-name-input {
+    flex-direction: row;
+    align-items: center;
+  }
 }
 
 .itinerary-loading, .itinerary-error {

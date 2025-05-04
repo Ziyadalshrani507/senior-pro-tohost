@@ -1,0 +1,7 @@
+{
+  "email": "user@test.com",
+  "password": "Password123!",
+  "firstName": "Test",
+  "lastName": "User",
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InRlc3QtdXNlci1pZCIsImlhdCI6MTYxNjc2MjcwMCwiZXhwIjoxNjE2NzY2MzAwfQ.jkMxnwFH9-Lw4Ld9heU7eLibI2NoBKCnKcLNjkS0WYc"
+}

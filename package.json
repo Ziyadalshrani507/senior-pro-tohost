@@ -1,6 +1,25 @@
 {
+  "name": "saudi-tourism-platform",
+  "version": "1.0.0",
+  "description": "Comprehensive Saudi Tourism Platform",
+  "scripts": {
+    "start": "concurrently \"npm run start:backend\" \"npm run start:frontend\"",
+    "start:backend": "cd backend && npm start",
+    "start:frontend": "cd frontend && npm run dev",
+    "cypress:open": "cypress open",
+    "cypress:run": "cypress run",
+    "e2e": "start-server-and-test start http://localhost:5173 cypress:run",
+    "e2e:open": "start-server-and-test start http://localhost:5173 cypress:open",
+    "cypress:test": "concurrently \"cd backend && npm run start:cypress\" \"cd frontend && npm run dev\" \"npx cypress run\"",
+    "cypress:test:open": "concurrently \"cd backend && npm run start:cypress\" \"cd frontend && npm run dev\" \"npx cypress open\""
+  },
   "dependencies": {
     "@botpress/webchat": "^2.3.8",
     "nodemailer": "^6.10.0"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "cypress": "^14.3.2",
+    "start-server-and-test": "^2.0.11"
   }
 }

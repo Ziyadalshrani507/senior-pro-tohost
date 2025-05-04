@@ -119,6 +119,13 @@ const Header = () => {
                         <i className="bi bi-person-badge"></i> My Profile
                       </Link>
                     </li>
+                    {user && user.role === 'admin' && (
+                      <li>
+                        <Link className="dropdown-item" to="/developer/profile">
+                          <i className="bi bi-code-square"></i> Developer Profile
+                        </Link>
+                      </li>
+                    )}
                     <li>
                       <hr className="dropdown-divider" />
                     </li>
