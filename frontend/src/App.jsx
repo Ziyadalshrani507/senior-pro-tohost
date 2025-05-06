@@ -102,48 +102,50 @@ function App() {
             <div className="app">
               <Header />
               <ChatbasePageTracker />
-              <Routes>
-              <Route path="/" element={<Home />} />
-              {/* Tours route removed */}
-              <Route path="/about" element={<About />} />
-              <Route path="/hotels" element={<Hotels />} />
-              <Route path="/:type/:id" element={<ItemDetails />} />
-              <Route path="/destinations" element={<Destinations />} />
-              <Route path="/itinerary-planner" element={<ItineraryPlannerPage />} />
-              <Route path="/itinerary/:id" element={
-                <ProtectedRoute>
-                  <ItineraryDetailsPage />
-                </ProtectedRoute>
-              } />
-              
-              {/* Detailed view routes handled by individual components */}
-              <Route path="/search" element={<SearchAll />} />
-              <Route path="/signup" element={<SignUp />} />
-              <Route path="/signin" element={<SignIn />} />
-              <Route path="/request-password-reset" element={<RequestPasswordReset />} />
-              <Route path="/verify-reset-token" element={<VerifyResetToken />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/restaurants" element={<Restaurants />} />
-              <Route path="/developers" element={<DevelopersList />} />
-              <Route path="/developers/:id" element={<DeveloperPage />} />
-              <Route path="/developer/profile" element={
-                <AdminRoute>
-                  <DeveloperPage />
-                </AdminRoute>
-              } />
-              <Route path="/profile" element={
-                <ProtectedRoute>
-                  <Profile />
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/dashboard" element={
-                <AdminRoute>
-                  <Dashboard />
-                </AdminRoute>
-              } />
-              <Route path="*" element={<NotFound />} />
-              </Routes>
-              <ToastContainer />
+              <main className="main-content-wrapper">
+                <Routes>
+                <Route path="/" element={<Home />} />
+                {/* Tours route removed */}
+                <Route path="/about" element={<About />} />
+                <Route path="/hotels" element={<Hotels />} />
+                <Route path="/:type/:id" element={<ItemDetails />} />
+                <Route path="/destinations" element={<Destinations />} />
+                <Route path="/itinerary-planner" element={<ItineraryPlannerPage />} />
+                <Route path="/itinerary/:id" element={
+                  <ProtectedRoute>
+                    <ItineraryDetailsPage />
+                  </ProtectedRoute>
+                } />
+                
+                {/* Detailed view routes handled by individual components */}
+                <Route path="/search" element={<SearchAll />} />
+                <Route path="/signup" element={<SignUp />} />
+                <Route path="/signin" element={<SignIn />} />
+                <Route path="/request-password-reset" element={<RequestPasswordReset />} />
+                <Route path="/verify-reset-token" element={<VerifyResetToken />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/restaurants" element={<Restaurants />} />
+                <Route path="/developers" element={<DevelopersList />} />
+                <Route path="/developers/:id" element={<DeveloperPage />} />
+                <Route path="/developer/profile" element={
+                  <AdminRoute>
+                    <DeveloperPage />
+                  </AdminRoute>
+                } />
+                <Route path="/profile" element={
+                  <ProtectedRoute>
+                    <Profile />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/dashboard" element={
+                  <AdminRoute>
+                    <Dashboard />
+                  </AdminRoute>
+                } />
+                <Route path="*" element={<NotFound />} />
+                </Routes>
+                <ToastContainer />
+              </main>
               <Footer />
               <ChatWidget />
             </div>

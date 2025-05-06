@@ -13,10 +13,14 @@
   padding-bottom: 2rem;
 }
 
-/* Remove the problematic rule and replace with a more flexible one */
-.app > *:not(nav):not(footer) {
-  padding-top: 80px;
-  flex: 1;
+/* Main content wrapper takes all available space to push footer down */
+.main-content-wrapper {
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  width: 100%;
+  padding-top: 80px; /* Header height compensation */
 }
 
 h1 {

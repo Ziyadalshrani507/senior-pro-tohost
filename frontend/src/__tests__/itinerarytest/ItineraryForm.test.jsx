@@ -80,12 +80,11 @@ describe('ItineraryForm Component', () => {
     render(<ItineraryForm />);
     
     // Check progress bar is at correct position
-    const progressBar = screen.getByRole('progressbar', { hidden: true }) || 
-                       screen.getByClassName('progress');
+    const progressBar = document.querySelector('.progress');
     expect(progressBar).toHaveStyle({ width: `${(1 / 7) * 100}%` });
     
     // Check step indicators are showing correctly
-    const stepIndicators = screen.getAllByClassName('step');
+    const stepIndicators = document.querySelectorAll('.step');
     expect(stepIndicators).toHaveLength(7);
     expect(stepIndicators[0]).toHaveClass('active');
     expect(stepIndicators[1]).not.toHaveClass('active');
@@ -100,12 +99,11 @@ describe('ItineraryForm Component', () => {
     render(<ItineraryForm />);
     
     // Check progress bar is at correct position
-    const progressBar = screen.getByRole('progressbar', { hidden: true }) || 
-                       screen.getByClassName('progress');
+    const progressBar = document.querySelector('.progress');
     expect(progressBar).toHaveStyle({ width: `${(2 / 7) * 100}%` });
     
     // Check step indicators are showing correctly
-    const stepIndicators = screen.getAllByClassName('step');
+    const stepIndicators = document.querySelectorAll('.step');
     expect(stepIndicators[0]).toHaveClass('active');
     expect(stepIndicators[1]).toHaveClass('active');
     expect(stepIndicators[2]).not.toHaveClass('active');
@@ -120,7 +118,7 @@ describe('ItineraryForm Component', () => {
     render(<ItineraryForm />);
     
     // Check step indicators and content
-    const stepIndicators = screen.getAllByClassName('step');
+    const stepIndicators = document.querySelectorAll('.step');
     expect(stepIndicators[2]).toHaveClass('active');
     expect(screen.getByTestId('interests-step')).toBeInTheDocument();
   });
@@ -131,7 +129,7 @@ describe('ItineraryForm Component', () => {
     render(<ItineraryForm />);
     
     // Check step indicators and content
-    const stepIndicators = screen.getAllByClassName('step');
+    const stepIndicators = document.querySelectorAll('.step');
     expect(stepIndicators[3]).toHaveClass('active');
     expect(screen.getByTestId('food-preferences-step')).toBeInTheDocument();
   });
@@ -142,7 +140,7 @@ describe('ItineraryForm Component', () => {
     render(<ItineraryForm />);
     
     // Check step indicators and content
-    const stepIndicators = screen.getAllByClassName('step');
+    const stepIndicators = document.querySelectorAll('.step');
     expect(stepIndicators[4]).toHaveClass('active');
     expect(screen.getByTestId('budget-step')).toBeInTheDocument();
   });
@@ -153,7 +151,7 @@ describe('ItineraryForm Component', () => {
     render(<ItineraryForm />);
     
     // Check step indicators and content
-    const stepIndicators = screen.getAllByClassName('step');
+    const stepIndicators = document.querySelectorAll('.step');
     expect(stepIndicators[5]).toHaveClass('active');
     expect(screen.getByTestId('travelers-step')).toBeInTheDocument();
   });
@@ -164,12 +162,11 @@ describe('ItineraryForm Component', () => {
     render(<ItineraryForm />);
     
     // Check progress bar is at 100%
-    const progressBar = screen.getByRole('progressbar', { hidden: true }) || 
-                       screen.getByClassName('progress');
+    const progressBar = document.querySelector('.progress');
     expect(progressBar).toHaveStyle({ width: '100%' });
     
     // Check all step indicators are active
-    const stepIndicators = screen.getAllByClassName('step');
+    const stepIndicators = document.querySelectorAll('.step');
     stepIndicators.forEach(indicator => {
       expect(indicator).toHaveClass('active');
     });

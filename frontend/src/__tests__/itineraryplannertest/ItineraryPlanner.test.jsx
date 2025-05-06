@@ -1,7 +1,25 @@
 import React from 'react';
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi, afterEach, beforeAll } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { BrowserRouter } from 'react-router-dom';
 import ItineraryPlannerPage from '../../pages/ItineraryPlanner/ItineraryPlannerPage';
+
+// Mock axios with a simpler approach (this is the key fix for the tests)
+vi.mock('axios', () => ({
+  default: {
+    get: vi.fn(() => Promise.resolve({ data: {} })),
+    post: vi.fn(() => Promise.resolve({ data: {} }))
+  },
+  get: vi.fn(() => Promise.resolve({ data: {} })),
+  post: vi.fn(() => Promise.resolve({ data: {} })),
+  create: vi.fn().mockReturnThis(),
+  interceptors: {
+    request: { use: vi.fn(), eject: vi.fn() },
+    response: { use: vi.fn(), eject: vi.fn() }
+  }
+}));
+
+// Now we can safely import these
 import { mockApiSuccess, mockApiError, destinations, hotels, restaurants } from '../../test/apiMocks';
 import axios from 'axios';
 
@@ -18,10 +36,138 @@ vi.mock('../../context/ItineraryContext', () => ({
   })
 }));
 
-// Mock the ItineraryForm component
+// Mock the AuthContext
+vi.mock('../../context/AuthContext', () => ({
+  AuthProvider: ({ children }) => children,
+  useAuth: () => ({
+    user: { id: 'test-user-id', firstName: 'Test', role: 'user' },
+    isAuthenticated: true,
+    login: vi.fn(),
+    logout: vi.fn()
+  })
+}));
+
+// Mock the ItineraryForm component for the first test suite
 vi.mock('../../components/ItineraryPlanner/ItineraryForm', () => ({
   default: () => <div data-testid="itinerary-form">Mocked Itinerary Form</div>
 }));
+
+// Define MockedItineraryForm outside of any describe blocks to avoid hoisting issues
+const MockedItineraryForm = () => {
+  const [formData, setFormData] = React.useState({
+    city: '',
+    duration: 3,
+    interests: [],
+    budget: 'medium',
+    travelersType: 'solo'
+  });
+  
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState(null);
+  const [itinerary, setItinerary] = React.useState(null);
+  
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
+  
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await axios.post('/api/itinerary/generate', formData);
+      setItinerary(response.data.data);
+    } catch (err) {
+      setError(err.response?.data?.message || 'An error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  return (
+    <div data-testid="full-itinerary-form">
+      <form onSubmit={handleSubmit}>
+        <div>
+          <label htmlFor="city">City</label>
+          <select 
+            id="city" 
+            name="city" 
+            value={formData.city} 
+            onChange={handleInputChange}
+            data-testid="city-select"
+          >
+            <option value="">Select a city</option>
+            <option value="Riyadh">Riyadh</option>
+            <option value="Jeddah">Jeddah</option>
+            <option value="Mecca">Mecca</option>
+          </select>
+        </div>
+        
+        <div>
+          <label htmlFor="duration">Duration (days)</label>
+          <input 
+            type="number" 
+            id="duration" 
+            name="duration" 
+            min="1" 
+            max="7"
+            value={formData.duration} 
+            onChange={handleInputChange}
+            data-testid="duration-input"
+          />
+        </div>
+        
+        <div>
+          <label>Interests</label>
+          <div>
+            {['Historical', 'Cultural', 'Adventure', 'Relaxation'].map(interest => (
+              <label key={interest}>
+                <input 
+                  type="checkbox" 
+                  name="interests" 
+                  value={interest}
+                  onChange={(e) => {
+                    const newInterests = e.target.checked
+                      ? [...formData.interests, interest]
+                      : formData.interests.filter(i => i !== interest);
+                    setFormData({ ...formData, interests: newInterests });
+                  }}
+                  data-testid={`interest-${interest.toLowerCase()}`}
+                />
+                {interest}
+              </label>
+            ))}
+          </div>
+        </div>
+        
+        <button type="submit" data-testid="generate-button">Generate Itinerary</button>
+      </form>
+      
+      {loading && <div data-testid="loading-indicator">Loading your itinerary...</div>}
+      {error && <div data-testid="error-message">Error: {error}</div>}
+      
+      {itinerary && (
+        <div data-testid="itinerary-result">
+          <h2>Your Itinerary for {itinerary.city}</h2>
+          <p>Duration: {itinerary.days.length} days</p>
+          {/* ... more itinerary details would be displayed here ... */}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Custom render function that wraps components in BrowserRouter
+const renderWithRouter = (ui, options) => {
+  return render(
+    <BrowserRouter>
+      {ui}
+    </BrowserRouter>,
+    options
+  );
+};
 
 describe('ItineraryPlanner Page', () => {
   afterEach(() => {
@@ -29,7 +175,7 @@ describe('ItineraryPlanner Page', () => {
   });
   
   it('renders the itinerary planner page with correct title', () => {
-    render(<ItineraryPlannerPage />);
+    renderWithRouter(<ItineraryPlannerPage />);
     
     // Check for the main title
     expect(screen.getByText('AI Travel Planner')).toBeInTheDocument();
@@ -42,7 +188,7 @@ describe('ItineraryPlanner Page', () => {
   });
   
   it('renders the itinerary form within the provider', () => {
-    render(<ItineraryPlannerPage />);
+    renderWithRouter(<ItineraryPlannerPage />);
     
     // Check that the form is rendered inside the provider
     const provider = screen.getByTestId('itinerary-provider');
@@ -52,119 +198,16 @@ describe('ItineraryPlanner Page', () => {
 
 // Now let's test the form component itself
 // Note: In a real implementation, you'd import the actual ItineraryForm component
-// Instead of mocking it as we did above
+// Instead of mocking it as we defined above
 
 describe('ItineraryForm Component', () => {
-  // Mock implementation of the form for testing
-  const MockedItineraryForm = () => {
-    const [formData, setFormData] = React.useState({
-      city: '',
-      duration: 3,
-      interests: [],
-      budget: 'medium',
-      travelersType: 'solo'
-    });
+  // Use different approach for the second test suite - manual mock override
+  beforeAll(() => {
+    // Reset the mock and provide a new implementation for this test suite
+    vi.resetModules();
     
-    const [loading, setLoading] = React.useState(false);
-    const [error, setError] = React.useState(null);
-    const [itinerary, setItinerary] = React.useState(null);
-    
-    const handleInputChange = (e) => {
-      const { name, value } = e.target;
-      setFormData({ ...formData, [name]: value });
-    };
-    
-    const handleSubmit = async (e) => {
-      e.preventDefault();
-      setLoading(true);
-      setError(null);
-      
-      try {
-        const response = await axios.post('/api/itinerary/generate', formData);
-        setItinerary(response.data.data);
-      } catch (err) {
-        setError(err.response?.data?.message || 'An error occurred');
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    return (
-      <div data-testid="full-itinerary-form">
-        <form onSubmit={handleSubmit}>
-          <div>
-            <label htmlFor="city">City</label>
-            <select 
-              id="city" 
-              name="city" 
-              value={formData.city} 
-              onChange={handleInputChange}
-              data-testid="city-select"
-            >
-              <option value="">Select a city</option>
-              <option value="Riyadh">Riyadh</option>
-              <option value="Jeddah">Jeddah</option>
-              <option value="Mecca">Mecca</option>
-            </select>
-          </div>
-          
-          <div>
-            <label htmlFor="duration">Duration (days)</label>
-            <input 
-              type="number" 
-              id="duration" 
-              name="duration" 
-              min="1" 
-              max="7"
-              value={formData.duration} 
-              onChange={handleInputChange}
-              data-testid="duration-input"
-            />
-          </div>
-          
-          <div>
-            <label>Interests</label>
-            <div>
-              {['Historical', 'Cultural', 'Adventure', 'Relaxation'].map(interest => (
-                <label key={interest}>
-                  <input 
-                    type="checkbox" 
-                    name="interests" 
-                    value={interest}
-                    onChange={(e) => {
-                      const newInterests = e.target.checked
-                        ? [...formData.interests, interest]
-                        : formData.interests.filter(i => i !== interest);
-                      setFormData({ ...formData, interests: newInterests });
-                    }}
-                    data-testid={`interest-${interest.toLowerCase()}`}
-                  />
-                  {interest}
-                </label>
-              ))}
-            </div>
-          </div>
-          
-          <button type="submit" data-testid="generate-button">Generate Itinerary</button>
-        </form>
-        
-        {loading && <div data-testid="loading-indicator">Loading your itinerary...</div>}
-        {error && <div data-testid="error-message">Error: {error}</div>}
-        
-        {itinerary && (
-          <div data-testid="itinerary-result">
-            <h2>Your Itinerary for {itinerary.city}</h2>
-            <p>Duration: {itinerary.days.length} days</p>
-            {/* ... more itinerary details would be displayed here ... */}
-          </div>
-        )}
-      </div>
-    );
-  };
-  
-  beforeEach(() => {
-    // Make the MockedItineraryForm available by mocking the import
-    vi.mock('../../components/ItineraryPlanner/ItineraryForm', () => ({
+    // Create a new mock for the ItineraryForm component using our predefined MockedItineraryForm
+    vi.doMock('../../components/ItineraryPlanner/ItineraryForm', () => ({
       default: MockedItineraryForm
     }));
   });
@@ -203,84 +246,101 @@ describe('ItineraryForm Component', () => {
   });
   
   it('shows loading state during API call', async () => {
-    // Set up a delayed API response to show loading state
-    vi.mock('axios', () => ({
-      post: vi.fn(() => new Promise(res => setTimeout(() => {
-        res({ data: { success: true, data: { city: 'Riyadh', days: [] } } });
-      }, 100))),
-    }));
+    // Create a delayed promise to show loading state
+    const delayedPromise = new Promise(resolve => {
+      setTimeout(() => {
+        resolve({ data: { success: true } });
+      }, 100);
+    });
     
-    render(<MockedItineraryForm />);
+    // Set up axios mock to use the delayed promise
+    axios.post.mockImplementationOnce(() => delayedPromise);
     
-    // Fill form
-    fireEvent.change(screen.getByTestId('city-select'), { target: { value: 'Riyadh' } });
-    fireEvent.click(screen.getByTestId('interest-historical'));
+    renderWithRouter(<MockedItineraryForm />);
     
-    // Submit the form
-    fireEvent.click(screen.getByTestId('generate-button'));
+    // Fill out form
+    const citySelect = screen.getByTestId('city-select');
+    fireEvent.change(citySelect, { target: { value: 'Riyadh' } });
     
-    // Check that loading indicator appears
-    expect(await screen.findByTestId('loading-indicator')).toBeInTheDocument();
+    // Submit form
+    const submitButton = screen.getByTestId('generate-button');
+    fireEvent.click(submitButton);
+    
+    // The loading element should appear during the API call
+    const loadingElement = await screen.findByText('Loading your itinerary...');
+    expect(loadingElement).toBeInTheDocument();
+    
+    // Wait for the delayed promise to resolve
+    await waitFor(() => expect(axios.post).toHaveBeenCalled());
   });
   
   it('shows error message when API call fails', async () => {
-    // Mock API error
-    mockApiError('/api/itinerary/generate', 'Failed to generate itinerary', 400);
+    // Mock a rejected promise for this test
+    const errorResponse = { 
+      response: { 
+        data: { message: 'Failed to create itinerary' } 
+      } 
+    };
     
-    // Override the post method specifically
-    vi.mocked(axios.post).mockRejectedValueOnce({
-      response: {
-        data: { success: false, message: 'Failed to generate itinerary' },
-        status: 400
-      }
-    });
+    axios.post.mockRejectedValueOnce(errorResponse);
     
-    render(<MockedItineraryForm />);
+    renderWithRouter(<MockedItineraryForm />);
     
-    // Fill and submit form
-    fireEvent.change(screen.getByTestId('city-select'), { target: { value: 'Riyadh' } });
-    fireEvent.click(screen.getByTestId('generate-button'));
+    // Fill out form
+    const citySelect = screen.getByTestId('city-select');
+    fireEvent.change(citySelect, { target: { value: 'Riyadh' } });
     
-    // Check for error message
-    expect(await screen.findByTestId('error-message')).toBeInTheDocument();
-    expect(screen.getByTestId('error-message')).toHaveTextContent('Failed to generate itinerary');
+    // Submit form
+    const submitButton = screen.getByTestId('generate-button');
+    fireEvent.click(submitButton);
+    
+    // Check that error message appears
+    const errorElement = await screen.findByText('Error: Failed to create itinerary');
+    expect(errorElement).toBeInTheDocument();
   });
   
   it('displays itinerary results when API call succeeds', async () => {
-    // Mock a successful itinerary response
     const mockItinerary = {
       city: 'Riyadh',
-      duration: 3,
-      interests: ['Historical', 'Adventure'],
       days: [
         {
           day: 1,
-          morning: { activity: 'Historical Museum', description: 'Visit the national museum' },
-          lunch: { restaurant: 'Local Cuisine', description: 'Traditional lunch' },
-          afternoon: { activity: 'Adventure Park', description: 'Outdoor activities' }
+          activities: [
+            { time: '09:00', activity: 'Visit National Museum', type: 'attraction' },
+            { time: '12:00', activity: 'Lunch at Al Orjouan', type: 'food' },
+            { time: '15:00', activity: 'Kingdom Centre Tower', type: 'attraction' }
+          ]
         },
-        {
-          day: 2,
-          morning: { activity: 'City Tour', description: 'Explore the city' }
+        { 
+          day: 2, 
+          activities: [
+            { time: '10:00', activity: 'Explore Diriyah', type: 'attraction' },
+            { time: '13:00', activity: 'Lunch at Najdi Village', type: 'food' }
+          ] 
         }
       ]
     };
     
-    // Override the post method to return our mock data
-    vi.mocked(axios.post).mockResolvedValueOnce({
+    // Set up the mock to return successful data
+    axios.post.mockResolvedValueOnce({
       data: { success: true, data: mockItinerary }
     });
     
-    render(<MockedItineraryForm />);
+    renderWithRouter(<MockedItineraryForm />);
     
-    // Fill and submit form
-    fireEvent.change(screen.getByTestId('city-select'), { target: { value: 'Riyadh' } });
-    fireEvent.click(screen.getByTestId('generate-button'));
+    // Fill out form
+    const citySelect = screen.getByTestId('city-select');
+    fireEvent.change(citySelect, { target: { value: 'Riyadh' } });
+    
+    // Submit form
+    const submitButton = screen.getByTestId('generate-button');
+    fireEvent.click(submitButton);
     
     // Check that results are displayed
-    const results = await screen.findByTestId('itinerary-result');
-    expect(results).toBeInTheDocument();
-    expect(results).toHaveTextContent('Your Itinerary for Riyadh');
-    expect(results).toHaveTextContent('Duration: 2 days');
+    const cityHeading = await screen.findByText('Your Itinerary for Riyadh');
+    expect(cityHeading).toBeInTheDocument();
+    
+    const durationText = await screen.findByText('Duration: 2 days');
+    expect(durationText).toBeInTheDocument();
   });
 });
