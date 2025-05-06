@@ -35,6 +35,16 @@ const app = express();
 app.use(express.json());
 app.post('/api/itinerary/generate', protect, generateItinerary);
 
+let server;
+
+beforeAll(() => {
+  server = app.listen(0);
+});
+
+afterAll(async () => {
+  await new Promise(resolve => server.close(resolve));
+});
+
 describe('Itinerary Controller Tests', () => {
   
   // Mock data

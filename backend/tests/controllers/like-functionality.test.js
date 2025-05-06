@@ -371,6 +371,15 @@ describe('Like Functionality Tests', () => {
       expect(responseNoType.status).toBe(404); // Express returns 404 for unmatched routes
     });
     
+    test('Should handle invalid place type', async () => {
+      const response = await request(app)
+        .post(`/api/likes/invalidType/${restaurant._id}`);
+      
+      expect(response.status).toBe(500);
+      expect(response.body.message).toBe('Error toggling like');
+      expect(response.body.error).toBe('Invalid place type: invalidType');
+    });
+    
     test('Should fix inconsistent likes data structures', async () => {
       // Manually set restaurant likes to null to test repair functionality
       await Restaurant.findByIdAndUpdate(restaurant._id, { likes: null, likeCount: null });

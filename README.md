@@ -172,21 +172,16 @@ npm test -- tests/unit/services
 
 ```bash
 cd backend
-npm test -- tests/controllers/like-functionality.test.js
+npm test -- tests/controllers
 ```
 
-#### Running E2E API Tests
 
-```bash
-cd backend
-npm test -- tests/e2e
-```
 
 #### Running All Backend Tests
 
 ```bash
 cd backend
-npm test
+npx jest
 ```
 
 #### Generate Backend Test Coverage Report

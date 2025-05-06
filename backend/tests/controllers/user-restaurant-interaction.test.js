@@ -52,6 +52,18 @@ describe('User Restaurant Interaction Tests', () => {
         email: 'popular@example.com',
         website: 'https://popular-restaurant.test'
       },
+      openingHours: {
+        open: {
+          hour: 9,
+          minute: 0,
+          period: 'AM'
+        },
+        close: {
+          hour: 10,
+          minute: 0,
+          period: 'PM'
+        }
+      },
       likes: [secondUserId], // Pre-liked by second user
       likeCount: 1
     });
@@ -72,6 +84,18 @@ describe('User Restaurant Interaction Tests', () => {
         phone: '+966987654321',
         email: 'new@example.com',
         website: 'https://new-restaurant.test'
+      },
+      openingHours: {
+        open: {
+          hour: 11,
+          minute: 30,
+          period: 'AM'
+        },
+        close: {
+          hour: 11,
+          minute: 0,
+          period: 'PM'
+        }
       },
       likes: [],
       likeCount: 0
