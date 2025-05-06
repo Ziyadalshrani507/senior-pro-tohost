@@ -10,26 +10,28 @@ const Footer = () => {
     <footer className="footer">
       <div className="footer-content">
         <div className="footer-section">
-          <h3>About Us</h3>
-          <p>Discover amazing destinations and create unforgettable memories with our tourism platform.</p>
+          <h3>Saudi Tourism</h3>
+          <p>Explore the beauty and culture of Saudi Arabia through our comprehensive tourism platform.</p>
         </div>
         <div className="footer-section">
           <h3>Quick Links</h3>
           <ul>
+            <li><Link to="/">Home</Link></li>
             <li><Link to="/destinations">Destinations</Link></li>
             <li><Link to="/about">About</Link></li>
             <li><Link to="/developers">Developers</Link></li>
-            <li><Link to="/contact">Contact</Link></li>
           </ul>
         </div>
         <div className="footer-section">
-          <h3>Contact Info</h3>
-          <p>Email: info@tourismplatform.com</p>
-          <p>Phone: +1 234 567 890</p>
+          <h3>Resources</h3>
+          <ul>
+            <li><Link to="/itinerary">Plan Your Trip</Link></li>
+            <li><a href="https://www.visitsaudi.com" target="_blank" rel="noopener noreferrer">Visit Saudi</a></li>
+          </ul>
         </div>
       </div>
       <div className="footer-bottom">
-        <p>&copy; {new Date().getFullYear()} Tourism Platform. All rights reserved.</p>
+        <p>&copy; {new Date().getFullYear()} Saudi Tourism Platform. All rights reserved.</p>
       </div>
     </footer>
   );

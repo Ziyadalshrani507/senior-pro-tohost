@@ -201,15 +201,15 @@ describe('FilterPanel Component', () => {
     
     // Check city options
     const cityOptions = screen.getAllByTestId('city-option');
-    expect(cityOptions.length).toBe(mockProps.cities.length + 1); // +1 for the default empty option
+    expect(cityOptions.length).toBe(mockProps.cities.length); // We're only testing the city options, not the default
     
     // Check type options
     const typeOptions = screen.getAllByTestId('type-option');
-    expect(typeOptions.length).toBe(mockProps.types.length + 1); // +1 for the default empty option
+    expect(typeOptions.length).toBe(mockProps.types.length); // We're only testing the type options, not the default
     
     // Check category options
     const categoryOptions = screen.getAllByTestId('category-option');
-    expect(categoryOptions.length).toBe(mockProps.categories.length + 1); // +1 for the default empty option
+    expect(categoryOptions.length).toBe(mockProps.categories.length); // We're only testing the category options, not the default
   });
 
   it('handles range inputs correctly', async () => {

@@ -31,14 +31,12 @@ const ItineraryDetailsPage = () => {
       const savedItinerary = await saveItinerary(itinerary._id, name);
       
       if (savedItinerary) {
+      
+        setShowCustomNameInput(false);
         setSaveSuccess(true);
         // Update the itinerary in state to reflect changes
         setItinerary(savedItinerary);
-        
-        // Automatically navigate to my itineraries after short delay
-        setTimeout(() => {
-          navigate('/my-itineraries');
-        }, 2000);
+        // No navigation, just show success state
       }
     } catch (err) {
       setError('Failed to save itinerary');
@@ -211,9 +209,9 @@ const ItineraryDetailsPage = () => {
                   />
                   <div className="input-actions">
                     <button 
-                      className="save-with-name-btn" 
+                      className={`save-with-name-btn ${isSaving ? 'saving-btn' : ''}`}
                       onClick={handleSaveItinerary}
-                      disabled={isSaving}
+                      disabled={isSaving || saveSuccess}
                     >
                       <FaSave className="btn-icon" />
                       {isSaving ? 'Saving...' : 'Save'}
@@ -221,7 +219,7 @@ const ItineraryDetailsPage = () => {
                     <button 
                       className="cancel-btn" 
                       onClick={() => setShowCustomNameInput(false)}
-                      disabled={isSaving}
+                      disabled={isSaving || saveSuccess}
                     >
                       Cancel
                     </button>
@@ -230,13 +228,28 @@ const ItineraryDetailsPage = () => {
               ) : (
                 <div className="save-options">
                   <button 
-                    className="custom-name-btn" 
-                    onClick={() => setShowCustomNameInput(true)}
+                    className={`custom-name-btn ${saveSuccess ? 'saved-btn' : ''}`}
+                    onClick={() => !saveSuccess && setShowCustomNameInput(true)}
                     disabled={isSaving || saveSuccess}
                   >
-                    <FaEdit className="btn-icon" />
-                    Save Itinerary
+                    {saveSuccess ? (
+                      <>
+                        <FaSave className="btn-icon" />
+                        Saved
+                      </>
+                    ) : (
+                      <>
+                        <FaEdit className="btn-icon" />
+                        Save Itinerary
+                      </>
+                    )}
                   </button>
+                  {saveSuccess && (
+                    <div className="save-success-message">
+                      <FaSave className="success-icon" />
+                      Your itinerary has been saved successfully!
+                    </div>
+                  )}
                 </div>
               )}
             </div>
