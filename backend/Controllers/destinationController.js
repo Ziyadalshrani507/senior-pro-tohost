@@ -307,3 +307,6 @@ exports.deleteActivity = async (req, res) => {
     res.status(500).json({ message: 'Error deleting activity', error: error.message });
   }
 };
+
+
+//Handles operations related to travel destinations (CRUD, listing, etc.).

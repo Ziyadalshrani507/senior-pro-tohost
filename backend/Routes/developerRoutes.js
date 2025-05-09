@@ -98,3 +98,8 @@ router.put('/profile', protect, admin, createUpdateDeveloper);
 router.post('/profile/photo', protect, admin, upload.single('photo'), handleFileUploadError, uploadDeveloperPhoto);
 
 module.exports = router;
+
+// : Routes related to developer information or actions.
+// : This includes fetching developer profiles, creating/updating profiles, and uploading photos.
+// : This controller manages developer data, including creating, updating, deleting, and fetching developer profiles.
+// : It also includes schema options for developer attributes.

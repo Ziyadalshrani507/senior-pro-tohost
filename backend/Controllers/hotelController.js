@@ -240,3 +240,5 @@ exports.hardDeleteHotel = async (req, res) => {
     res.status(500).json({ message: 'Error permanently deleting hotel', error: error.message });
   }
 };
+
+//Handles hotel-related operations (CRUD, listing, etc.).

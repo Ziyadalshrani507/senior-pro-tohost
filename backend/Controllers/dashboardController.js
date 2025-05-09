@@ -146,3 +146,5 @@ exports.getSchemaOptions = async (req, res) => {
     });
   }
 };
+
+//: Manages dashboard-related data and endpoints.

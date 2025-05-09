@@ -77,3 +77,15 @@ exports.admin = (req, res, next) => {
   
   next();
 };
+
+
+
+// Provides functions to protect routes by verifying JWT tokens and to restrict access to admin users only.
+// The protect function checks for a token in the request headers or cookies, verifies it, and attaches the user to the request object.
+// The admin function checks if the authenticated user has an admin role.
+//
+// This middleware is essential for securing routes and ensuring that only authorized users can access certain functionalities.
+// It uses JWT for authentication and role-based access control to restrict certain routes to admin users only.
+// The middleware functions are designed to be reusable and can be applied to any route that requires authentication or admin access.
+// The protect function checks for a token in the request headers or cookies, verifies it, and attaches the user to the request object.
+// The admin function checks if the authenticated user has an admin rolE

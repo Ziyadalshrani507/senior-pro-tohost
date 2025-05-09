@@ -309,3 +309,12 @@ exports.getPlaceLikes = async (req, res) => {
     res.status(500).json({ message: 'Error fetching place likes', error: error.message });
   }
 };
+
+
+// Handles liking/unliking functionality for resources.
+// This includes toggling likes, fetching user likes, and checking like status for specific places.
+// This controller is designed to work with multiple place types (e.g., destinations, hotels, restaurants).
+// It uses Mongoose for MongoDB interactions and includes error handling for various scenarios.
+// The code also includes helper functions to get the appropriate model based on the place type.
+// The toggleLike function updates the likes array and like count atomically.
+// The getUserLikes function retrieves all places liked by the user, while the getPlaceLikes function checks if a specific place is liked by the user.

@@ -25,3 +25,10 @@ router.put('/:id', protect, admin, updateRestaurant);
 router.delete('/:id', protect, admin, deleteRestaurant);
 
 module.exports = router;
+
+
+// Endpoints for restaurant management.
+// This includes creating, updating, deleting, and fetching restaurants.
+// It also includes search functionality and schema options for restaurant attributes.
+//
+// Handles restaurant-related operations (CRUD, listing, etc.).

@@ -236,3 +236,10 @@ module.exports = {
     CUISINES,
     CATEGORIES
 };
+
+
+//Defines the schema for restaurants (e.g., name, location, cuisine).
+// : The schema includes fields for name, description, cuisine, price range, location, contact information, opening hours, categories, images, and ratings.
+// : The schema also includes fields for likes and like count, with validation for coordinates and timestamps.
+// : The schema uses a 2dsphere index for geospatial queries and a compound index to ensure unique names per city.
+// : The schema also includes pre-save middleware to update the updatedAt timestamp.

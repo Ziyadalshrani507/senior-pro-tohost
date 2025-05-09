@@ -22,3 +22,8 @@ router.get('/schema-options', getSchemaOptions);
 
 
 module.exports = router;
+
+
+//: Routes for dashboard-related data and actions.
+// This includes fetching paginated and filtered items, batch deletion, and schema options.
+//  // Handles dashboard-related operations (CRUD, listing, etc.).

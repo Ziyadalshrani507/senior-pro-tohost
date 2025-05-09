@@ -37,3 +37,8 @@ const developerSchema = new Schema({
 }, { timestamps: true });
 
 module.exports = mongoose.model('Developer', developerSchema);
+
+//  Defines the schema for developer profiles or information.
+//Hotel.js: Defines the schema for hotels (e.g., name, location, amenities).
+
+// : The schema includes fields for user reference, photo, major, description, skills, and timestamps.

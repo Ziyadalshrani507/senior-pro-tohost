@@ -107,3 +107,16 @@ exports.deleteProfilePicture = async (req, res) => {
     res.status(500).json({ message: 'Error deleting profile picture' });
   }
 };
+
+
+//Handles user profile updates and retrieval.
+// This includes updating user information, uploading profile pictures, and deleting profile pictures.
+// The code uses async/await for asynchronous operations and handles errors appropriately.
+// It also includes validation checks for required fields and checks for existing email addresses.
+// The profile picture upload functionality converts the image to Base64 format before saving it to the database.
+// The delete functionality clears the profile picture from the user's record in the database.
+// The code is structured to provide clear and informative error messages in case of failures.
+// It also includes console logging for debugging purposes, which can be helpful during development.
+// The code is designed to be part of a larger Express.js application, where it would be used in conjunction with other controllers and middleware.
+// The code is modular, allowing for easy integration into a larger codebase.
+// The code is designed to be part of a larger Express.js application, where it would be used in conjunction with other controllers and middleware.

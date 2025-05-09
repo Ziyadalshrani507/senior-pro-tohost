@@ -68,3 +68,9 @@ ratingSchema.methods.isDuplicate = async function() {
 };
 
 module.exports = mongoose.model('Rating', ratingSchema);
+
+
+//Defines the schema for user ratings (e.g., ratings for destinations, hotels, or restaurants).
+// : The schema includes fields for user ID, item ID, item type, rating value, comment, status, likes, and moderation notes.
+// : This schema is used to create a MongoDB model for storing and managing user ratings and reviews.
+// : The schema includes fields for user ID, item ID, item type, rating value, comment, status, likes, and moderation notes.

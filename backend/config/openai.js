@@ -41,3 +41,6 @@ const openRouter = {
 };
 
 module.exports = openRouter;
+
+
+//CONFIGRATION TO INGRATE OPENAI API

@@ -10,3 +10,7 @@ router.post('/refresh-token', protect, refreshToken);
 router.post('/signout', signout);
 
 module.exports = router;
+
+//Handles user authentication routes (sign up, sign in, sign out, etc.).
+// Compare this snippet from backend/Routes/itineraryRoutes.js:
+// const express = require('express');

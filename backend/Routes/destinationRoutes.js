@@ -42,3 +42,10 @@ router.put('/activities/:id', validateActivity, updateActivity);
 router.delete('/activities/:id', deleteActivity);
 
 module.exports = router;
+
+
+//Routes for dashboard-related data and actions.
+// This includes fetching paginated and filtered items, batch deletion, and schema options.
+//
+// Handles destination-related operations (CRUD, listing, etc.).
+// This controller manages destination data, including creating, updating, deleting, and fetching destinations.

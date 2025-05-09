@@ -38,3 +38,11 @@ async function markHotelsAsFeatured() {
 }
 
 markHotelsAsFeatured();
+
+
+// (Likely) does a similar operation for hotels, marking some as featured.  
+//
+// Usage: node markFeaturedHotels.js
+//
+// Make sure to set the MONGO_URI environment variable to your MongoDB connection string
+// before running this script. You can do this by creating a .env file in the same directory

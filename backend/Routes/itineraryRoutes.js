@@ -29,3 +29,10 @@ router.put("/:id", protect, updateItinerary);
 router.delete("/:id", protect, deleteItinerary);
 
 module.exports = router;
+
+
+//Routes for creating and managing itineraries.
+// This includes generating itineraries, saving them to user accounts, and managing user itineraries.
+// It also includes fetching, updating, and deleting itineraries.
+//
+// Handles itinerary-related operations (CRUD, listing, etc.).

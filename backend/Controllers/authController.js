@@ -143,3 +143,6 @@ exports.signout = async (req, res) => {
     res.status(500).json({ message: 'Error signing out', error: error.message });
   }
 };
+
+
+// Handles user authentication (sign up, sign in, sign out, token refresh).

@@ -73,3 +73,12 @@ itinerarySchema.index({ isTemporary: 1, expiresAt: 1 });
 const Itinerary = mongoose.model('Itinerary', itinerarySchema);
 
 module.exports = Itinerary;
+
+
+
+//Define the schema for travel itineraries (planned trips, activities, etc.).
+// Compare this snippet from backend/Models/Restaurant.js:
+// const mongoose = require('mongoose');
+// const Schema = mongoose.Schema;
+//
+// const restaurantSchema = new Schema({

@@ -52,3 +52,13 @@ router.put('/:id', protect, async (req, res) => {
 });
 
 module.exports = router;
+
+
+
+// Endpoints for user management and related actions.
+// This includes user registration, login, and profile management.
+// Handles user-related operations (CRUD, listing, etc.).
+
+// This controller manages user accounts, including registration, login, and profile management.
+// This controller manages user accounts, including registration, login, and profile management.
+// This controller manages user accounts, including registration, login, and profile management.

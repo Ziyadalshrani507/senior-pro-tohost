@@ -26,3 +26,13 @@ router.get('/test-environment-check', (req, res) => {
 });
 
 module.exports = router;
+
+
+//Routes used for testing purposes.
+//
+// These routes are specifically designed for end-to-end testing with Cypress.
+// They provide endpoints to check the test environment and to verify the connection to the test server.
+// The routes are protected to ensure they are only accessible in the test environment.
+// The routes include a test environment check that verifies the connection to the test server
+// and returns relevant information about the test environment.
+// The routes are designed to be secure and to prevent accidental access in production environments.

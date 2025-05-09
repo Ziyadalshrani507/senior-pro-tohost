@@ -67,3 +67,8 @@ const itinerarySchema = new mongoose.Schema({
 const Itinerary = mongoose.model("Itinerary", itinerarySchema);
 
 module.exports = Itinerary;
+
+
+//Define the schema for travel itineraries (planned trips, activities, etc.).
+// : The schema includes fields for user reference, name, city, duration, interests, budget, travelers type, and timestamps.
+// : The itinerary can include a list of days with activities, hotels, and other details.

@@ -29,3 +29,9 @@ router.delete('/:id', authenticateToken, admin, deleteHotel);
 router.delete('/:id/hard', authenticateToken, admin, hardDeleteHotel);
 
 module.exports = router;
+
+//Endpoints for hotel management.
+// This includes creating, updating, deleting, and fetching hotels.
+// It also includes search functionality and schema options for hotel attributes.
+//
+// Handles hotel-related operations (CRUD, listing, etc.).

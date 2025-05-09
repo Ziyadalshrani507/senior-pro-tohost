@@ -17,3 +17,10 @@ router.post('/picture', protect, upload.single('profilePicture'), profileControl
 router.delete('/picture', protect, profileController.deleteProfilePicture);
 
 module.exports = router;
+
+
+
+//Endpoints for user profile management.
+// This includes fetching user profiles, updating profiles, and managing profile pictures.
+// Handles user profile-related operations (CRUD, listing, etc.).
+// This controller manages user profiles, including fetching, updating, and deleting profile information.

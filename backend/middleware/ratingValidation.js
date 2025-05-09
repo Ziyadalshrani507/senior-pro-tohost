@@ -49,3 +49,15 @@ module.exports = {
   validateRating,
   validateRatingUpdate
 };
+
+
+
+// : Validates rating data in requests to ensure it meets required criteria before proceeding.
+// : This includes checking the item type, rating value, and comment length.
+// : It also sanitizes the comment to prevent XSS attacks.
+// : The validation functions are used as middleware in the rating-related routes.
+// : The code uses the xss library to sanitize user input, ensuring that any potentially harmful scripts are removed.
+// : The validateRating function checks that the item type is one of the allowed values,
+// : that the rating is an integer between 1 and 5, and that the comment is at least 10 characters long.
+// : If any validation fails, an appropriate error message is returned to the client.
+// : The validateRatingUpdate function performs similar checks but allows for partial updates,

@@ -107,3 +107,10 @@ router.patch('/moderation/:id', protect, admin, async (req, res) => {
 });
 
 module.exports = router;
+
+
+
+//  Routes for submitting and retrieving ratings.
+//  The routes include adding a rating, updating a rating, deleting a rating,
+//  getting ratings for a specific item, getting ratings by a specific user,
+//  toggling the like status of a rating, and getting rating statistics.

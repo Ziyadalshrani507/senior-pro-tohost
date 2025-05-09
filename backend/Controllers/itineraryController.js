@@ -808,3 +808,6 @@ module.exports = {
   deleteItinerary,
   saveItinerary
 };
+
+
+// Manages travel itineraries (create, update, delete, fetch).

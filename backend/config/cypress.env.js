@@ -16,3 +16,6 @@ module.exports = {
   // Testing flags
   IS_CYPRESS: true
 };
+
+
+//END TO END TESTING 

@@ -13,3 +13,9 @@ router.get('/user', protect, getUserLikes);
 router.get('/:placeType/:placeId', protect, getPlaceLikes);
 
 module.exports = router;
+
+
+// Endpoints for liking/unliking resources.
+// This includes toggling like status, fetching user likes, and fetching likes for a specific place.
+// Handles like-related operations (CRUD, listing, etc.).
+// This controller manages user likes, including toggling like status and fetching likes for specific places.

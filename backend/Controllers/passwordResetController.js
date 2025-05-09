@@ -108,3 +108,6 @@ exports.resetPassword = async (req, res) => {
     res.status(500).json({ message: 'Error resetting password', error: error.message });
   }
 };
+
+
+// Manages password reset requests and logic.

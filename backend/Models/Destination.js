@@ -130,3 +130,14 @@ destinationSchema.index({ coordinates: '2dsphere' });
 destinationSchema.index({ name: 1, locationCity: 1 }, { unique: true });
 
 module.exports = mongoose.model('Destination', destinationSchema);
+
+
+// : Defines the schema for travel destinations (e.g., name, location, description).
+// : This schema is used to create a MongoDB model for storing and managing destination data.
+//
+// : The schema includes fields for name, description, location (with coordinates), type, cost, rating, categories, and more.
+// : It also includes validation for coordinates to ensure they are in the correct format and range.
+// : The schema uses a 2dsphere index for geospatial queries and a compound index to ensure unique names per city.
+// : The model is exported for use in other parts of the application, allowing for CRUD operations on destination data.
+// : The schema is designed to be flexible and extensible, making it easy to add new fields or modify existing ones as needed.
+// : The code uses Mongoose, a popular ODM (Object Data Modeling) library for MongoDB and Node.js, to define the schema and model.

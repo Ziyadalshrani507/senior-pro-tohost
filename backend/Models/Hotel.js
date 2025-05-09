@@ -1,4 +1,3 @@
-const mongoose = require('mongoose');
 
 // Room type schema for nested room types
 const roomTypeSchema = new mongoose.Schema({
@@ -180,3 +179,10 @@ hotelSchema.index({ name: 1, locationCity: 1 }, { unique: true });
 
 const Hotel = mongoose.model('Hotel', hotelSchema);
 module.exports = Hotel;
+
+//
+//
+//Defines the schema for hotels (e.g., name, location, amenities).
+//
+// : The schema includes fields for name, description, location, amenities, room types, and timestamps.
+// : This schema is used to create a MongoDB model for storing and managing hotel data.
