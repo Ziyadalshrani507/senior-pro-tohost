@@ -435,7 +435,7 @@ const generateItinerary = async (req, res) => {
       try {
         // Try to get a response from OpenAI
         const completion = await openai.createChatCompletion({
-          model: "anthropic/claude-3-opus:beta", // Using Claude 3 Opus through OpenRouter
+          model: "mistralai/mistral-7b-instruct", // Using Mistral, which is a free model on OpenRouter
           messages: [
             { role: "system", content: "You are a travel expert specialized in Saudi Arabian tourism, with deep knowledge of local culture, attractions, and dining options." },
             { role: "user", content: prompt }
