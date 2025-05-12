@@ -11,7 +11,8 @@
     "e2e": "start-server-and-test start http://localhost:5173 cypress:run",
     "e2e:open": "start-server-and-test start http://localhost:5173 cypress:open",
     "cypress:test": "concurrently \"cd backend && npm run start:cypress\" \"cd frontend && npm run dev\" \"npx cypress run\"",
-    "cypress:test:open": "concurrently \"cd backend && npm run start:cypress\" \"cd frontend && npm run dev\" \"npx cypress open\""
+    "cypress:test:open": "concurrently \"cd backend && npm run start:cypress\" \"cd frontend && npm run dev\" \"npx cypress open\"",
+    "postinstall": "cd backend && npm install && cd ../frontend && npm install"
   },
   "dependencies": {
     "@botpress/webchat": "^2.3.8",

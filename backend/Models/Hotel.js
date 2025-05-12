@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 
 // Room type schema for nested room types
 const roomTypeSchema = new mongoose.Schema({
