@@ -24,9 +24,9 @@ const Home = () => {
   // Hero images for carousel
   const [imagesLoaded, setImagesLoaded] = useState(false);
   const heroImages = [
-    { url: '/assets/riyadh.jpeg', alt: 'Riyadh Skyline' },
-    { url: '/assets/jeddah.jpeg', alt: 'Jeddah Waterfront' },
-    { url: '/assets/khobar.jpeg', alt: 'Khobar Corniche' }
+    { url: '/assets/images/riyadh.jpeg', alt: 'Riyadh Skyline' },
+    { url: '/assets/images/Jeddah.jpeg', alt: 'Jeddah Waterfront' },
+    { url: '/assets/images/Khobar.jpeg', alt: 'Khobar Corniche' }
   ];
 
   // Preload images
