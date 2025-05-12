@@ -19,7 +19,7 @@ const DestinationStep = () => {
       try {
         // Get all destinations from the API using the baseUrl utility
         const apiBaseUrl = getApiBaseUrl();
-        const response = await axios.get(`${apiBaseUrl}/destinations`);
+        const response = await axios.get('/destinations');
         
         if (response.data && response.data.length > 0) {
           // Create a map of cities to their image URLs

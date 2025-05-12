@@ -78,7 +78,7 @@ const FoodPreferencesStep = () => {
         setError(null);
         
         const apiBaseUrl = getApiBaseUrl();
-        const response = await axios.get(`${apiBaseUrl}/restaurants/schema-options`);
+        const response = await axios.get('/restaurants/schema-options');
         
         if (response.data) {
           // Process cuisines

@@ -25,7 +25,7 @@ const ItineraryDay = ({ day }) => {
         
         // Find destination ID for morning activity
         if (day.morning?.activity) {
-          const morningResponse = await axios.get(`${apiBaseUrl}/destinations/search?name=${encodeURIComponent(day.morning.activity)}`);
+          const morningResponse = await axios.get(`/destinations/search?name=${encodeURIComponent(day.morning.activity)}`);
           if (morningResponse.data.data && morningResponse.data.data.length > 0) {
             links.morning = { 
               id: morningResponse.data.data[0]._id,
@@ -36,7 +36,7 @@ const ItineraryDay = ({ day }) => {
         
         // Find destination ID for afternoon activity
         if (day.afternoon?.activity) {
-          const afternoonResponse = await axios.get(`${apiBaseUrl}/destinations/search?name=${encodeURIComponent(day.afternoon.activity)}`);
+          const afternoonResponse = await axios.get(`/destinations/search?name=${encodeURIComponent(day.afternoon.activity)}`);
           if (afternoonResponse.data.data && afternoonResponse.data.data.length > 0) {
             links.afternoon = { 
               id: afternoonResponse.data.data[0]._id,
@@ -47,7 +47,7 @@ const ItineraryDay = ({ day }) => {
         
         // Find restaurant ID for lunch
         if (day.lunch?.restaurant) {
-          const lunchResponse = await axios.get(`${apiBaseUrl}/restaurants/search?name=${encodeURIComponent(day.lunch.restaurant)}`);
+          const lunchResponse = await axios.get(`/restaurants/search?name=${encodeURIComponent(day.lunch.restaurant)}`);
           if (lunchResponse.data.data && lunchResponse.data.data.length > 0) {
             links.lunch = { 
               id: lunchResponse.data.data[0]._id,
@@ -58,7 +58,7 @@ const ItineraryDay = ({ day }) => {
         
         // Find restaurant ID for dinner
         if (day.dinner?.restaurant) {
-          const dinnerResponse = await axios.get(`${apiBaseUrl}/restaurants/search?name=${encodeURIComponent(day.dinner.restaurant)}`);
+          const dinnerResponse = await axios.get(`/restaurants/search?name=${encodeURIComponent(day.dinner.restaurant)}`);
           if (dinnerResponse.data.data && dinnerResponse.data.data.length > 0) {
             links.dinner = { 
               id: dinnerResponse.data.data[0]._id,

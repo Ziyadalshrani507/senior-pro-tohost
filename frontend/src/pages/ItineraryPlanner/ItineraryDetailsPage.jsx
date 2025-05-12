@@ -74,7 +74,7 @@ const ItineraryDetailsPage = () => {
   const findHotelLink = async (hotelName) => {
     try {
       const apiBaseUrl = getApiBaseUrl();
-      const response = await axios.get(`${apiBaseUrl}/hotels/search?name=${encodeURIComponent(hotelName)}`);
+      const response = await axios.get(`/hotels/search?name=${encodeURIComponent(hotelName)}`);
       
       if (response.data.data && response.data.data.length > 0) {
         setHotelLink({

@@ -32,7 +32,7 @@ const InterestsStep = () => {
         setError(null);
         
         const apiBaseUrl = getApiBaseUrl();
-        const response = await axios.get(`${apiBaseUrl}/destinations/schema-options`);
+        const response = await axios.get('/destinations/schema-options');
         
         // Process destination types into interest options
         if (response.data && response.data.types) {

@@ -110,7 +110,7 @@ export const ItineraryProvider = ({ children }) => {
 
     try {
       const apiBaseUrl = getApiBaseUrl();
-      const response = await axios.get(`${apiBaseUrl}/itinerary`, {
+      const response = await axios.get('/itinerary', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -143,7 +143,7 @@ export const ItineraryProvider = ({ children }) => {
     
     try {
       const apiBaseUrl = getApiBaseUrl();
-      const response = await axios.get(`${apiBaseUrl}/itinerary/${id}`, {
+      const response = await axios.get(`/itinerary/${id}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'

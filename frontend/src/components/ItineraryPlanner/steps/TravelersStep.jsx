@@ -26,7 +26,7 @@ const TravelersStep = () => {
         setError(null);
         
         const apiBaseUrl = getApiBaseUrl();
-        const response = await axios.get(`${apiBaseUrl}/destinations/schema-options`);
+        const response = await axios.get('/destinations/schema-options');
         
         if (response.data && response.data.categories) {
           const relevantCategories = response.data.categories.filter(category => 
