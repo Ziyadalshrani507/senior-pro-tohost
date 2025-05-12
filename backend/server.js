@@ -45,7 +45,10 @@ const PORT = process.env.PORT || 5001;
 
 // Middleware
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173', 
+  origin: [
+    process.env.FRONTEND_URL || 'http://localhost:5173',
+    'https://senior-project-zovs.onrender.com'
+  ],
   credentials: true
 }));
 app.use(cookieParser());
