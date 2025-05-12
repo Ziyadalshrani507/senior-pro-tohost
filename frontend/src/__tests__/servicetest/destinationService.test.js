@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import axios from 'axios';
+import getApiBaseUrl from '../../utils/apiBaseUrl';
 
 // Import safeguards to prevent real API calls
 import '../../test/safeguards';
@@ -12,7 +13,7 @@ const destinationService = {
   // Get all destinations
   getAllDestinations: async () => {
     try {
-      const response = await axios.get('/api/destinations');
+      const response = await axios.get(`${getApiBaseUrl()}/destinations`);
       return response.data;
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Error fetching destinations');
@@ -22,7 +23,7 @@ const destinationService = {
   // Get destination by ID
   getDestinationById: async (id) => {
     try {
-      const response = await axios.get(`/api/destinations/${id}`);
+      const response = await axios.get(`${getApiBaseUrl()}/destinations/${id}`);
       return response.data;
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Error fetching destination');
@@ -32,7 +33,7 @@ const destinationService = {
   // Get destinations by filters
   getDestinationsByFilter: async (filters) => {
     try {
-      const response = await axios.get('/api/destinations/filter', { params: filters });
+      const response = await axios.get(`${getApiBaseUrl()}/destinations/filter`, { params: filters });
       return response.data;
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Error filtering destinations');
@@ -42,7 +43,7 @@ const destinationService = {
   // Get popular destinations
   getPopularDestinations: async () => {
     try {
-      const response = await axios.get('/api/destinations/popular');
+      const response = await axios.get(`${getApiBaseUrl()}/destinations/popular`);
       return response.data;
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Error fetching popular destinations');
@@ -80,7 +81,7 @@ describe('Destination Service', () => {
     const result = await destinationService.getAllDestinations();
     
     // Assertions
-    expect(axios.get).toHaveBeenCalledWith('/api/destinations');
+    expect(axios.get).toHaveBeenCalledWith(`${getApiBaseUrl()}/destinations`);
     expect(result.success).toBe(true);
     expect(result.data).toHaveLength(2);
     expect(result.data[0].name).toBe('AlUla');
@@ -99,7 +100,7 @@ describe('Destination Service', () => {
     
     // Assertions
     await expect(destinationService.getAllDestinations()).rejects.toThrow('Server error occurred');
-    expect(axios.get).toHaveBeenCalledWith('/api/destinations');
+    expect(axios.get).toHaveBeenCalledWith(`${getApiBaseUrl()}/destinations`);
   });
   
   it('fetches destination by ID successfully', async () => {
@@ -134,7 +135,7 @@ describe('Destination Service', () => {
     const result = await destinationService.getDestinationById('1');
     
     // Assertions
-    expect(axios.get).toHaveBeenCalledWith('/api/destinations/1');
+    expect(axios.get).toHaveBeenCalledWith(`${getApiBaseUrl()}/destinations/1`);
     expect(result.success).toBe(true);
     expect(result.data._id).toBe('1');
     expect(result.data.name).toBe('AlUla');
@@ -153,7 +154,7 @@ describe('Destination Service', () => {
     
     // Assertions
     await expect(destinationService.getDestinationById('999')).rejects.toThrow('Destination not found');
-    expect(axios.get).toHaveBeenCalledWith('/api/destinations/999');
+    expect(axios.get).toHaveBeenCalledWith(`${getApiBaseUrl()}/destinations/999`);
   });
   
   it('fetches destinations by filter successfully', async () => {
@@ -182,7 +183,7 @@ describe('Destination Service', () => {
     const result = await destinationService.getDestinationsByFilter(filters);
     
     // Assertions
-    expect(axios.get).toHaveBeenCalledWith('/api/destinations/filter', { params: filters });
+    expect(axios.get).toHaveBeenCalledWith(`${getApiBaseUrl()}/destinations/filter`, { params: filters });
     expect(result.success).toBe(true);
     expect(result.data).toHaveLength(1);
     expect(result.data[0].category).toBe('Historical');
@@ -209,7 +210,7 @@ describe('Destination Service', () => {
     const result = await destinationService.getDestinationsByFilter(filters);
     
     // Assertions
-    expect(axios.get).toHaveBeenCalledWith('/api/destinations/filter', { params: filters });
+    expect(axios.get).toHaveBeenCalledWith(`${getApiBaseUrl()}/destinations/filter`, { params: filters });
     expect(result.success).toBe(true);
     expect(result.data).toHaveLength(0);
     expect(result.message).toBe('No destinations match the criteria');
@@ -235,7 +236,7 @@ describe('Destination Service', () => {
     const result = await destinationService.getPopularDestinations();
     
     // Assertions
-    expect(axios.get).toHaveBeenCalledWith('/api/destinations/popular');
+    expect(axios.get).toHaveBeenCalledWith(`${getApiBaseUrl()}/destinations/popular`);
     expect(result.success).toBe(true);
     expect(result.data).toHaveLength(2);
     expect(result.data[0].popularity).toBe(98);
