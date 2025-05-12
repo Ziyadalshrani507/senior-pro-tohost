@@ -10,7 +10,7 @@ export function getApiBaseUrl() {
   // Force using the backend server port when in development mode
   // This is crucial for the Saudi tourism platform API to work correctly
   if (import.meta.env.DEV) {
-    return 'http://localhost:5001/api';
+    return '/api';
   }
   
   // Otherwise, default to same host as frontend, with '/api' path
