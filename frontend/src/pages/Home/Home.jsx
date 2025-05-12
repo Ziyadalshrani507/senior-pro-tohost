@@ -93,7 +93,11 @@ const Home = () => {
         const restaurantsRes = await axios.get('/api/restaurants?limit=5&featured=true&sort=rating');
         
         // Process the destination data
-        const destinationData = destinationsRes.data?.destinations || destinationsRes.data || [];
+        const destinationData = Array.isArray(destinationsRes.data?.destinations)
+          ? destinationsRes.data.destinations
+          : Array.isArray(destinationsRes.data)
+          ? destinationsRes.data
+          : [];
         // Ensure we have proper image data and descriptions
         const processedDestinations = Array.isArray(destinationData) 
           ? destinationData.map(dest => ({
