@@ -165,7 +165,7 @@ app.listen(PORT, () => {
 
 
 
-const path = require('path');
+
 
 // Serve frontend build
 app.use(express.static(path.join(__dirname, '../frontend/dist')));
