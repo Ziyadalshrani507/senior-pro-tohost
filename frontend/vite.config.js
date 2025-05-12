@@ -6,7 +6,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:5001',
+        target: process.env.NODE_ENV === 'production' ? 'https://senior-project-zovs.onrender.com' : 'http://localhost:5001',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, '')
       },

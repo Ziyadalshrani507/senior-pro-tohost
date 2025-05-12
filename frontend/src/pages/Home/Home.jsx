@@ -26,7 +26,11 @@ const Home = () => {
   const heroImages = [
     { url: '/assets/images/riyadh.jpeg', alt: 'Riyadh Skyline' },
     { url: '/assets/images/Jeddah.jpeg', alt: 'Jeddah Waterfront' },
-    { url: '/assets/images/Khobar.jpeg', alt: 'Khobar Corniche' }
+    { url: '/assets/images/Khobar.jpeg', alt: 'Khobar Corniche' },
+    { url: '/assets/images/taif_front.jpg', alt: 'Taif Front' },
+    { url: '/assets/images/terrace.jpg', alt: 'Terrace' },
+    { url: '/assets/images/dining.jpg', alt: 'Dining' },
+    { url: '/assets/images/burger.jpg', alt: 'Burger' }
   ];
 
   // Preload images
