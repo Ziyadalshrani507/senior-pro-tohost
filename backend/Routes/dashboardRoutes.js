@@ -5,7 +5,7 @@ const {
   getItems,
   batchDelete,
   getSchemaOptions
-} = require('../controllers/dashboardController');
+} = require('../Controllers/dashboardController');
 
 
 // All routes are protected and require admin access
