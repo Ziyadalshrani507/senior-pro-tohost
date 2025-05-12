@@ -20,17 +20,19 @@ const DestinationStep = () => {
         // Get all destinations from the API using the baseUrl utility
         const apiBaseUrl = getApiBaseUrl();
         const response = await axios.get('/destinations');
-        
-        if (response.data && response.data.length > 0) {
+
+        const destinations = Array.isArray(response.data) ? response.data : [];
+
+        if (destinations.length > 0) {
           // Create a map of cities to their image URLs
           const imageMap = {};
           const allCities = [];
-          
+
           // Process all destinations
-          response.data.forEach(destination => {
+          destinations.forEach(destination => {
             if (destination.locationCity) {
               allCities.push(destination.locationCity);
-              
+
               // Get image URL from destination if available
               if (destination.pictureUrls && destination.pictureUrls.length > 0) {
                 // If we already have an image for this city, only replace it if this one is better
