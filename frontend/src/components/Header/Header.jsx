@@ -51,7 +51,7 @@ const Header = () => {
         <div className="container-fluid px-3">
           {/* Logo on the leftmost edge */}
           <Link className="navbar-brand ms-0 ps-0" to="/">
-            <img src="/logo.png" alt="Logo" className="navbar-logo" />
+            <img src="/assets/images/logo.png" alt="Logo" className="navbar-logo" />
           </Link>
           
           {/* Hamburger menu for mobile */}

@@ -23,7 +23,7 @@ const Header = () => {
       )}
       
       <nav className={`navbar ${scrolled ? 'scrolled' : ''}`} data-testid="navbar">
-        <img src="/logo.png" alt="Logo" />
+        <img src="/assets/images/logo.png" alt="Logo" />
         
         <div className="nav-links">
           <a href="/destinations">Destinations</a>
